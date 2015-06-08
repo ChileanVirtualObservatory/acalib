@@ -1,0 +1,25 @@
+2015-05-26 19:57:41	INFO	casa::::casa	---
+2015-05-26 19:57:41	INFO	casa::::casa	CASA Version 4.2.1 (release r29047)
+2015-05-26 19:57:41	INFO	casa::::casa	  Tagged on: Thu, 27 Mar 2014
+2015-05-26 19:57:43	INFO	msview::::casa	
+2015-05-26 19:57:43	INFO	msview::::casa+	##########################################
+2015-05-26 19:57:43	INFO	msview::::casa+	##### Begin Task: msview             #####
+2015-05-26 19:57:43	INFO	msview::::casa	msview(infile="",displaytype="raster",channel=0,zoom=1,
+2015-05-26 19:57:43	INFO	msview::::casa+	        outfile="",outscale=1.0,outdpi=300,outformat="jpg",outlandscape=False,
+2015-05-26 19:57:43	INFO	msview::::casa+	        gui=True)
+2015-05-26 19:57:44	INFO	msview::::casa	##### End Task: msview               #####
+2015-05-26 19:57:44	INFO	msview::::casa+	##########################################
+2015-05-26 19:57:48	WARN	FITSCoordinateUtil::fromFITSHeader	Direction system FK5 with equinox 2 is not supported
+2015-05-26 19:57:48	WARN	FITSImage::getImageAttributes (file /var/rpmbuild/BUILD/casapy421/casapy421-42.1.29047/casacore/images/Images/FITSImage.cc, line 705)	No proper coordinate system defined in FITS file. Using dummy linear system instead.
+2015-05-26 19:57:48	WARN	FITSCoordinateUtil::fromFITSHeader	Direction system FK5 with equinox 2 is not supported
+2015-05-26 19:57:48	WARN	FITSImage::getImageAttributes (file /var/rpmbuild/BUILD/casapy421/casapy421-42.1.29047/casacore/images/Images/FITSImage.cc, line 705)	No proper coordinate system defined in FITS file. Using dummy linear system instead.
+2015-05-26 19:57:51	WARN	FITSCoordinateUtil::fromFITSHeader	Direction system FK5 with equinox 2 is not supported
+2015-05-26 19:57:51	WARN	FITSImage::getImageAttributes (file /var/rpmbuild/BUILD/casapy421/casapy421-42.1.29047/casacore/images/Images/FITSImage.cc, line 705)	No proper coordinate system defined in FITS file. Using dummy linear system instead.
+2015-05-26 19:57:51	WARN	FITSCoordinateUtil::fromFITSHeader	Direction system FK5 with equinox 2 is not supported
+2015-05-26 19:57:51	WARN	FITSImage::getImageAttributes (file /var/rpmbuild/BUILD/casapy421/casapy421-42.1.29047/casacore/images/Images/FITSImage.cc, line 705)	No proper coordinate system defined in FITS file. Using dummy linear system instead.
+2015-05-26 19:57:51	WARN	FITSCoordinateUtil::fromFITSHeader	Direction system FK5 with equinox 2 is not supported
+2015-05-26 19:57:51	WARN	FITSImage::getImageAttributes (file /var/rpmbuild/BUILD/casapy421/casapy421-42.1.29047/casacore/images/Images/FITSImage.cc, line 705)	No proper coordinate system defined in FITS file. Using dummy linear system instead.
+2015-05-26 19:57:51	WARN	FITSCoordinateUtil::fromFITSHeader	Direction system FK5 with equinox 2 is not supported
+2015-05-26 19:57:51	WARN	FITSImage::getImageAttributes (file /var/rpmbuild/BUILD/casapy421/casapy421-42.1.29047/casacore/images/Images/FITSImage.cc, line 705)	No proper coordinate system defined in FITS file. Using dummy linear system instead.
+2015-05-26 19:57:54	WARN	FITSCoordinateUtil::fromFITSHeader	Direction system FK5 with equinox 2 is not supported
+2015-05-26 19:57:54	WARN	FITSImage::getImageAttributes (file /var/rpmbuild/BUILD/casapy421/casapy421-42.1.29047/casacore/images/Images/FITSImage.cc, line 705)	No proper coordinate system defined in FITS file. Using dummy linear system instead.
