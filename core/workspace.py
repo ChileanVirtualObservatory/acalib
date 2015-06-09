@@ -10,6 +10,7 @@ from astropy import __version__
 from urlparse import urlparse, urljoin
 import time
 import tempfile
+import cube as cb
 
 def create(name):
    ws=dict()
@@ -21,10 +22,72 @@ _ws_df=create("DEFAULT")
 #def send(name,ws=_ws_df,destination='all'):
 #   _send(ws[name],name,destination)
 
-def elements(ws=_ws_df):
+def elemeZZlnts(ws=_ws_df):
    retval=ws.copy()
    del retval['workspace']
    return retval
+
+def _fits_consumer(path,name,ws=_ws_df):
+#TODO: Support more filetypes
+   wname=ws['workspace']
+   log.info("Loading "+name+".fits into "+wname)
+   hdulist = fits.open(path)
+   counter=0
+   for hdu in hdulist:
+      if isinstance(hdu,fits.PrimaryHDU) or isinstance(hdu,fits.ImageHDU):
+         log.info("Processing HDU "+str(counter)+" (Image)")
+         #TODO: check for WCS data...
+         ndd=cb.Cube(hdu.data,hdu.header)
+         ide=name+"-"+str(counter)
+         ws[ide]=ndd
+      elif isinstance(hdu,fits.BinTableHDU) or isinstance(hdu,fits.TableHDU):
+         log.info("Processing HDU "+str(counter)+" (Table)")
+          #TODO: check for WCS data...
+         ntt=Table(hdu.data,meta=hdu.header)
+         ide=name+"-"+str(counter)
+         ws[ide]=ntt
+      else:
+         log.warning("HDU type not recognized, ignoring "+hdu.name+" ("+counter+")")
+      counter+=1
+
+def _hdf5_consumer(path,name,ws):
+   log.warning("HDF5 format not supported yet. Ignoring file "+name+".hdf5")
+def _votable_consumer(path,name,ws):
+   log.warning("VOTable format not supported yet. Ignoring file "+name+".xml")
+def _ascii_consumer(path,name,ws):
+   log.warning("ASCII format not supported yet. Ignoring file "+name)
+
+def import_file(path,ws=_ws_df):
+   filename=os.path.basename(path)
+   name,ext=os.path.splitext(filename)
+   if ext == '.fits':
+      _fits_consumer(path,name,ws)
+   elif ext == '.hdf5':
+      _hdf5_consumer(path,name,ws)
+   elif ext == '.xml':
+      _votable_consumer(path,name,ws)
+   else:
+      _ascii_consumer(path,name,ws)
+
+#def real_dims(ndd):
+#   shape=[]
+#   dim=0
+#
+#   for i in range(ndd.data.ndim):
+#      if ndd.data.shape[i] != 1:
+#         shape.append(ndd.data.shape[i])
+#         dim+=1
+#   if dim==1:
+#      otype="Spectra"
+#   elif dim==2:
+#      otype="Image"
+#   elif dim>=3:
+#      otype="Cube"
+#   else:
+#      log.warning("NDData of 0 dimension? ignoring...")
+#      return 
+#   return (dim,shape,otype)
+
 
 #def declare_metadata(client):
 #
@@ -128,64 +191,4 @@ def elements(ws=_ws_df):
 #
 #    output_file.close()
 
-def _fits_consumer(path,name,ws=_ws_df):
-#TODO: Support more filetypes
-   wname=ws['workspace']
-   log.info("Loading "+name+".fits into "+wname)
-   hdulist = fits.open(path)
-   counter=0
-   for hdu in hdulist:
-      if isinstance(hdu,fits.PrimaryHDU) or isinstance(hdu,fits.ImageHDU):
-         log.info("Processing HDU "+str(counter)+" (Image)")
-         #TODO: check for WCS data...
-         ndd=NDData(hdu.data,meta=hdu.header)
-         ide=name+"-"+str(counter)
-         ws[ide]=ndd
-      elif isinstance(hdu,fits.BinTableHDU) or isinstance(hdu,fits.TableHDU):
-         log.info("Processing HDU "+str(counter)+" (Table)")
-          #TODO: check for WCS data...
-         ntt=Table(hdu.data,meta=hdu.header)
-         ide=name+"-"+str(counter)
-         ws[ide]=ntt
-      else:
-         log.warning("HDU type not recognized, ignoring "+hdu.name+" ("+counter+")")
-      counter+=1
-
-def _hdf5_consumer(path,name,ws):
-   log.warning("HDF5 format not supported yet. Ignoring file "+name+".hdf5")
-def _votable_consumer(path,name,ws):
-   log.warning("VOTable format not supported yet. Ignoring file "+name+".xml")
-def _ascii_consumer(path,name,ws):
-   log.warning("ASCII format not supported yet. Ignoring file "+name)
-
-def import_file(path,ws=_ws_df):
-   filename=os.path.basename(path)
-   name,ext=os.path.splitext(filename)
-   if ext == '.fits':
-      _fits_consumer(path,name,ws)
-   elif ext == '.hdf5':
-      _hdf5_consumer(path,name,ws)
-   elif ext == '.xml':
-      _votable_consumer(path,name,ws)
-   else:
-      _ascii_consumer(path,name,ws)
-
-def real_dims(ndd):
-   shape=[]
-   dim=0
-
-   for i in range(ndd.data.ndim):
-      if ndd.data.shape[i] != 1:
-         shape.append(ndd.data.shape[i])
-         dim+=1
-   if dim==1:
-      otype="Spectra"
-   elif dim==2:
-      otype="Image"
-   elif dim>=3:
-      otype="Cube"
-   else:
-      log.warning("NDData of 0 dimension? ignoring...")
-      return 
-   return (dim,shape,otype)
 
