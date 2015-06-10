@@ -4,8 +4,8 @@ import copy
 from astropy import constants as const
 from astropy import units as u
 from astropy.io import fits 
-import astropy.nddata as nd
-import astropy.wcs as wcs
+import astropy.nddata as ndd
+import astropy.wcs as astrowcs
 
 # ## Helper constants ###
 #SPEED_OF_LIGHT = 299792458.0
@@ -29,7 +29,7 @@ import astropy.wcs as wcs
 #def cube_data_stack(data):
 #   return data.sum(axis=0)
 
-class Cube(nd.NDData):
+class Cube(ndd.NDData):
     """
     A generic represenation of astronomical data.
     A spectra is a 3D cube with ra_axis and dec_axis of size 1
@@ -54,33 +54,10 @@ class Cube(nd.NDData):
         
         # Put data in physically-meaninful values
         data=data*bscale+bzero
-        w=wcs.WCS(meta)
-        w.printwcs()
+        wcs=astrowcs.WCS(meta)
         # Call super constructor
-        nd.NDData.__init__(self,data,None,mask,w,meta,bunit)
-        print data.shape
- 
-        #ra_value=float(meta['CRVAL1'])
-        #self.ra_delta=np.abs(float(meta['CDELT1']))
-        #ra_cpix=int(meta['CRPIX1']) -1
-        #ra_elms=int(meta['NAXIS1'])
-        #self.ra_axis=np.linspace(ra_value-ra_cpix*self.ra_delta,ra_value+(ra_elms-ra_cpix)*self.ra_delta, num=ra_elms)
 
-        #dec_value=float(meta['CRVAL2'])
-        #self.dec_delta=np.abs(float(meta['CDELT2']))
-        #dec_cpix=int(meta['CRPIX2']) -1
-        #dec_elms=int(meta['NAXIS2'])
-        #self.dec_axis=np.linspace(dec_value-dec_cpix*self.dec_delta,dec_value+(dec_elms-dec_cpix)*self.dec_delta, num=dec_elms)
-
-        #nu_value=float(meta['CRVAL3'])
-        #self.nu_delta=np.abs(float(meta['CDELT3']))
-        #nu_cpix=int(meta['CRPIX3']) -1   
-        #nu_elms=int(meta['NAXIS3'])
-        #self.nu_axis=np.linspace(nu_value-nu_cpix*self.nu_delta,nu_value+(nu_elms-nu_cpix)*self.nu_delta, num=nu_elms)
-        #hdu = fits.PrimaryHDU(header=self.meta)
-        #hdu.data = self.data
-        #self.hdulist = fits.HDUList([hdu])
-    
+        ndd.NDData.__init__(self,data,None,mask,wcs,meta,bunit)
 
     def copy(self):
         return copy.deepcopy(self)
@@ -88,12 +65,6 @@ class Cube(nd.NDData):
     def empty_like(self):
         dat=np.zeros_like(self.data)
         cb=Cube(dat,self.meta)
-        cb.ra_delta=self.ra_delta
-        cb.ra_axis=self.ra_axis
-        cb.dec_delta=self.dec_delta
-        cb.dec_axis=self.dec_axis
-        cb.nu_delta=self.nu_delta
-        cb.nu_axis=self.nu_axis
         return cb
     
     def ravel(self,idx=np.array([])):
