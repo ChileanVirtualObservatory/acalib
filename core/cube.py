@@ -4,6 +4,7 @@ import copy
 from astropy import constants as const
 from astropy import units as u
 from astropy.io import fits 
+from astropy import log
 import astropy.nddata as ndd
 import astropy.wcs as astrowcs
 
@@ -51,6 +52,10 @@ class Cube(ndd.NDData):
         
         # Create astropy units
         bunit=u.Unit(bsu,format="fits")
+        
+        if len(data.shape) != 4:
+           log.error("Only 4D data is allowed for now (like CASA-generated ones). Talk to the core team to include your datatype")
+           raise TypeError
         
         # Put data in physically-meaninful values
         data=data*bscale+bzero
