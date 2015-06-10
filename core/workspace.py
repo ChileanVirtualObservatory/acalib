@@ -22,7 +22,7 @@ _ws_df=create("DEFAULT")
 #def send(name,ws=_ws_df,destination='all'):
 #   _send(ws[name],name,destination)
 
-def elemeZZlnts(ws=_ws_df):
+def elements(ws=_ws_df):
    retval=ws.copy()
    del retval['workspace']
    return retval

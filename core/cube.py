@@ -5,6 +5,7 @@ from astropy import constants as const
 from astropy import units as u
 from astropy.io import fits 
 import astropy.nddata as nd
+import astropy.wcs as wcs
 
 # ## Helper constants ###
 #SPEED_OF_LIGHT = 299792458.0
@@ -53,19 +54,10 @@ class Cube(nd.NDData):
         
         # Put data in physically-meaninful values
         data=data*bscale+bzero
-
+        w=wcs.WCS(meta)
+        w.printwcs()
         # Call super constructor
-        nd.NDData.__init__(self,data,None,mask,None,meta,bunit)
-
-        print "NAXIS =",meta['NAXIS']
-        for i in range(1,meta['NAXIS']+1):
-           print "Axis",i
-           print "NAXIS ",meta['NAXIS'+str(i)]
-           print "CTYPE ",meta['CTYPE'+str(i)]
-           print "CRVAL ",meta['CRVAL'+str(i)]
-           print "CDELT ",meta['CDELT'+str(i)]
-           print "CRPIX ",meta['CRPIX'+str(i)]
-           print "CUNIT ",meta['CUNIT'+str(i)]
+        nd.NDData.__init__(self,data,None,mask,w,meta,bunit)
         print data.shape
  
         #ra_value=float(meta['CRVAL1'])
