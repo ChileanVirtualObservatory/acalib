@@ -54,143 +54,77 @@ class Cube(ndd.NDData):
         bunit=u.Unit(bsu,format="fits")
         
         if len(data.shape) != 4:
-           log.error("Only 4D data is allowed for now (like CASA-generated ones). Talk to the core team to include your datatype")
-           raise TypeError
+            log.error("Only 4D data is allowed for now (like CASA-generated ones). Talk to the core team to include your datatype")
+            raise TypeError
         
         # Put data in physically-meaninful values
         data=data*bscale+bzero
         wcs=astrowcs.WCS(meta)
-        # Call super constructor
 
+        # Call super constructor with transposed data 
         ndd.NDData.__init__(self,data,None,mask,wcs,meta,bunit)
 
     def copy(self):
         return copy.deepcopy(self)
 
-    def empty_like(self):
+    def emptyLike(self):
         dat=np.zeros_like(self.data)
         cb=Cube(dat,self.meta)
         return cb
-    
-    def ravel(self,idx=np.array([])):
-        if len(idx)!=6:
-           lss=self.data
-        else:
-           lss=self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]]
-        return lss.ravel()
+     
+    def _slice(self,lower,upper):
+        if lower=None:
+            lower=(0,0,0,0)
+        if upper=None:
+            upper=self.data.shape
+        if isinstance(lower,tuple):
+            lower=np.array(lower)
+        if isinstance(upper,tuple):
+            upper=np.array(upper)
+        llc=lower < 0
+        ulc=lower > self.data.shape
+        luc=upper < 0
+        uuc=upper > self.data.shape
+        if llc.any():
+            log.warning("Negative lower index "+str(lower)+". Correcting to zero.")
+            lower[llc]=0
+        if ulc.any():
+            log.warning("Lower index out of bounds "+str(lower)+" > "+str(self.data.shape)+". Correcting to max.")
+            upper[ulc]=self.data.shape[ulc]
+        if luc.any():
+            log.warning("Negative upper index "+str(upper)+". Correcting to zero.")
+            lower[luc]=0
+        if uuc.any():
+            log.warning("Upper index out of bounds "+str(upper)+" > "+str(self.data.shape)+". Correcting to max.")
+            upper[uuc]=self.data.shape[uuc]
+        return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2]),slice(lower[3],lower[3])]
+          
+    def getStackedData(self,lower=None,upper=None,axes=(0,1)):
+        sli=self._slice(lower,upper)
+        return self.data[sli].sum(axes)
 
-    def stack(self,idx=np.array([]),axis=0):
-        if len(idx)!=6:
-           lss=self.data
-        else:
-           lss=self.data[idx[4]:idx[5]+1,idx[2]:idx[3]+1,idx[0]:idx[1]+1]
-        return lss.sum(axis)
-
-    def max_energy(self,sc,idx):
-          target=self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]]
-          if target.shape != sc.shape:
-            si=np.array([0,sc.shape[2],0,sc.shape[1],0,sc.shape[0]])
-            mm=target.min()
-            datum=mm*np.ones_like(sc)
-            if idx[4] == 0:
-               si[4]=si[5]  - idx[5]
-            if idx[2] == 0:
-               si[2]=si[3]  - idx[3]
-            if idx[0] == 0:
-               si[0]=si[1]  - idx[1]
-            if idx[5] == self.nu_axis.size:
-               si[5] =idx[5] - idx[4] 
-            if idx[3] == self.dec_axis.size:
-               si[3] =idx[3] - idx[2] 
-            if idx[1] == self.ra_axis.size:
-               si[1] =idx[1] - idx[0]
-            datum[si[4]:si[5],si[2]:si[3],si[0]:si[1]]=target
-            #max_energy=(self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]]/sc[si[4]:si[5],si[2]:si[3],si[0]:si[1]]).min()
-          else:
-            datum=target
-          max_energy=(datum/sc).min()
-          return max_energy
-
-
-    def add(self,sc,idx=np.array([])):
-        if (len(idx)!=6):
-           self.data=self.data + sc
-        else:
-           si=np.array([0,sc.shape[2],0,sc.shape[1],0,sc.shape[0]])
-           if idx[4] == 0:
-              si[4]=si[5]  - idx[5]
-           if idx[2] == 0:
-              si[2]=si[3]  - idx[3]
-           if idx[0] == 0:
-              si[0]=si[1]  - idx[1]
-           if idx[5] == self.nu_axis.size:
-              si[5] =idx[5] - idx[4] 
-           if idx[3] == self.dec_axis.size:
-              si[3] =idx[3] - idx[2] 
-           if idx[1] == self.ra_axis.size:
-              si[1] =idx[1] - idx[0] 
-           #try:
-           self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]] =self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]] + sc[si[4]:si[5],si[2]:si[3],si[0]:si[1]]
-           #except ValueError:
-           #   print self.ra_axis.size,self.dec_axis.size,self.nu_axis.size
-           #   print idx,si
-           #   raise ValueError
-
-#    def standarize(self):
-#        y_min=self.data.min()
-#        self.data=self.data - y_min
-#        y_fact=self.data.sum()
-#        self.data=self.data/y_fact
-#        ra_min=self.ra_axis[0]
-#        self.ra_axis=self.ra_axis - ra_min
-#        ra_fact=self.ra_axis[-1]
-#        self.ra_axis=self.ra_axis/ra_fact
-#        self.ra_delta=self.ra_delta/ra_fact
-#        dec_min=self.dec_axis[0]
-#        self.dec_axis=self.dec_axis - dec_min
-#        dec_fact=self.dec_axis[-1]
-#        self.dec_axis=self.dec_axis/dec_fact
-#        self.dec_delta=self.dec_delta/dec_fact
-#        nu_min=self.nu_axis[0]
-#        self.nu_axis=self.nu_axis - nu_min
-#        nu_fact=self.nu_axis[-1]
-#        self.nu_axis=self.nu_axis/nu_fact
-#        self.nu_delta=self.nu_delta/nu_fact
-#        return (y_min,y_fact,ra_min,ra_fact,dec_min,dec_fact,nu_min,nu_fact)
-
-#    def unstandarize(self,(y_min,y_fact,ra_min,ra_fact,dec_min,dec_fact,nu_min,nu_fact#)):
-#        self.data=self.data*y_fact + y_min
-#        self.ra_axis=self.ra_axis*ra_fact + ra_min
-#        self.dec_axis=self.dec_axis*dec_fact + dec_min
-#        self.nu_axis=self.nu_axis*nu_fact + nu_fact
-#        self.ra_delta=self.ra_delta*ra_fact
-#        self.dec_delta=self.dec_delta*dec_fact
-#        self.nu_delta=self.nu_delta*nu_fact
+    def addFlux(self,flux,lower=None,upper=None)
+        sli=self._slice(lower,upper)
+        fl=np.array([0,0,0,0])
+        fu=np.array(flux.shape)
+        for i in range(0,4):
+           if sli[i].start == 0:
+              fl[i]=flux.shape[i] - sli[i].stop
+           if sli[i].stop == self.data.shape[i]
+              fu[i]=sli[i].stop - sli[i].start
+        self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2],fl[3]:fu[3]]
 
     def max(self):
         index=np.unravel_index(self.data.argmax(),self.data.shape)
         y=self.data[index]
-        x=np.empty(3)
-        x[0]=self.ra_axis[index[2]]
-        x[1]=self.dec_axis[index[1]]
-        x[2]=self.nu_axis[index[0]]
-        return (y,x)
+        return (y,index)
 
     def min(self):
         index=np.unravel_index(self.data.argmin(),self.data.shape)
         y=self.data[index]
-        x=np.empty(3)
-        x[0]=self.ra_axis[index[2]]
-        x[1]=self.dec_axis[index[1]]
-        x[2]=self.nu_axis[index[0]]
-        return (y,x)
+        return (y,index)
+#HERE
 
-    def index_center(self,index):
-        ra=(self.ra_axis[index[0]]+self.ra_axis[index[1]-1])/2.0
-        dec=(self.dec_axis[index[2]]+self.dec_axis[index[3]-1])/2.0
-        nu=(self.nu_axis[index[4]]+self.nu_axis[index[5]-1])/2.0
-        return np.array([ra,dec,nu])
-    
     def compute_window(self,center,window):
         ra_ui=np.argmin(np.abs(self.ra_axis-center[0]-window[0]))+1;
         ra_li=np.argmin(np.abs(self.ra_axis-center[0]+window[0]));
@@ -265,4 +199,72 @@ class Cube(ndd.NDData):
         ani = animation.FuncAnimation(fig, self._updatefig, frames=range(len(self.freq_axis)), interval=inte, blit=True,
                                       repeat=rep)
         plt.show()
+
+#    def index_center(self,index):
+#        ra=(self.ra_axis[index[0]]+self.ra_axis[index[1]-1])/2.0
+#        dec=(self.dec_axis[index[2]]+self.dec_axis[index[3]-1])/2.0
+#        nu=(self.nu_axis[index[4]]+self.nu_axis[index[5]-1])/2.0
+#        return np.array([ra,dec,nu])
+
+   #def ravel(self,idx=np.array([])):
+   #     if len(idx)!=6:
+   #        lss=self.data
+   #     else:
+   #        lss=self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]]
+   #     return lss.ravel()
+#    def standarize(self):
+#        y_min=self.data.min()
+#        self.data=self.data - y_min
+#        y_fact=self.data.sum()
+#        self.data=self.data/y_fact
+#        ra_min=self.ra_axis[0]
+#        self.ra_axis=self.ra_axis - ra_min
+#        ra_fact=self.ra_axis[-1]
+#        self.ra_axis=self.ra_axis/ra_fact
+#        self.ra_delta=self.ra_delta/ra_fact
+#        dec_min=self.dec_axis[0]
+#        self.dec_axis=self.dec_axis - dec_min
+#        dec_fact=self.dec_axis[-1]
+#        self.dec_axis=self.dec_axis/dec_fact
+#        self.dec_delta=self.dec_delta/dec_fact
+#        nu_min=self.nu_axis[0]
+#        self.nu_axis=self.nu_axis - nu_min
+#        nu_fact=self.nu_axis[-1]
+#        self.nu_axis=self.nu_axis/nu_fact
+#        self.nu_delta=self.nu_delta/nu_fact
+#        return (y_min,y_fact,ra_min,ra_fact,dec_min,dec_fact,nu_min,nu_fact)
+
+#    def unstandarize(self,(y_min,y_fact,ra_min,ra_fact,dec_min,dec_fact,nu_min,nu_fact#)):
+#        self.data=self.data*y_fact + y_min
+#        self.ra_axis=self.ra_axis*ra_fact + ra_min
+#        self.dec_axis=self.dec_axis*dec_fact + dec_min
+#        self.nu_axis=self.nu_axis*nu_fact + nu_fact
+#        self.ra_delta=self.ra_delta*ra_fact
+#        self.dec_delta=self.dec_delta*dec_fact
+#        self.nu_delta=self.nu_delta*nu_fact
+
+#    def max_energy(self,sc,idx):
+#          target=self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]]
+#          if target.shape != sc.shape:
+#            si=np.array([0,sc.shape[2],0,sc.shape[1],0,sc.shape[0]])
+#            mm=target.min()
+#            datum=mm*np.ones_like(sc)
+#            if idx[4] == 0:
+#               si[4]=si[5]  - idx[5]
+#            if idx[2] == 0:
+#               si[2]=si[3]  - idx[3]
+#            if idx[0] == 0:
+#               si[0]=si[1]  - idx[1]
+#            if idx[5] == self.nu_axis.size:
+#               si[5] =idx[5] - idx[4] 
+#            if idx[3] == self.dec_axis.size:
+#               si[3] =idx[3] - idx[2] 
+#            if idx[1] == self.ra_axis.size:
+#               si[1] =idx[1] - idx[0]
+#            datum[si[4]:si[5],si[2]:si[3],si[0]:si[1]]=target
+#            #max_energy=(self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]]/sc[si[4]:si[5],si[2]:si[3],si[0]:si[1]]).min()
+#          else:
+#            datum=target
+#          max_energy=(datum/sc).min()
+#          return max_energy
 
