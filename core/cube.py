@@ -6,29 +6,9 @@ from astropy import units as u
 from astropy.io import fits 
 from astropy import log
 import astropy.nddata as ndd
+import numpy.ma as ma
 import astropy.wcs as astrowcs
-
-# ## Helper constants ###
-#SPEED_OF_LIGHT = 299792458.0
-#S_FACTOR = 2.354820045031  # sqrt(8*ln2)
-#DEG2ARCSEC = 3600.0
-
-#def fwhm2sigma(freq,fwhm):
-#    """
-#    Compute the sigma in Hz given a frequency in Hz and a fwhm in m/s
-#    """
-#    sigma = (fwhm / S_FACTOR) * (freq / const.c.value)
-#    return sigma
-
-#def doppler(freq,rv):
-#    freq_new = math.sqrt((1 + rv / const.c.value) / (1 - rv / const.c.value)) * freq
-#    return freq_new
-
-#def cube_data_unravel(data,idx):
-#   return data.reshape((idx[5]-idx[4],idx[3]-idx[2],idx[1]-idx[0]))
-
-#def cube_data_stack(data):
-#   return data.sum(axis=0)
+import matplotlib.pyplot as plt
 
 class Cube(ndd.NDData):
     """
@@ -52,7 +32,6 @@ class Cube(ndd.NDData):
         
         # Create astropy units
         bunit=u.Unit(bsu,format="fits")
-        
         if len(data.shape) != 4:
             log.error("Only 4D data is allowed for now (like CASA-generated ones). Talk to the core team to include your datatype")
             raise TypeError
@@ -62,20 +41,25 @@ class Cube(ndd.NDData):
         wcs=astrowcs.WCS(meta)
 
         # Call super constructor with transposed data 
-        ndd.NDData.__init__(self,data,None,mask,wcs,meta,bunit)
+        ndd.NDData.__init__(self,data,mask=mask,uncertainty=None,wcs=wcs,meta=meta,unit=bunit)
+        
+        # TODO: it seems that masked arrays are not working in NDData, please double check this!
+        # print self.data.__class__.__name__
+        # print ma.masked_array(self.data,mask=mask).__class__.__name__
 
+        
     def copy(self):
         return copy.deepcopy(self)
 
-    def emptyLike(self):
+    def empty_like(self):
         dat=np.zeros_like(self.data)
         cb=Cube(dat,self.meta)
         return cb
      
     def _slice(self,lower,upper):
-        if lower=None:
+        if lower==None:
             lower=(0,0,0,0)
-        if upper=None:
+        if upper==None:
             upper=self.data.shape
         if isinstance(lower,tuple):
             lower=np.array(lower)
@@ -97,42 +81,46 @@ class Cube(ndd.NDData):
         if uuc.any():
             log.warning("Upper index out of bounds "+str(upper)+" > "+str(self.data.shape)+". Correcting to max.")
             upper[uuc]=self.data.shape[uuc]
-        return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2]),slice(lower[3],lower[3])]
+        return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2]),slice(lower[3],upper[3])]
           
-    def getStackedData(self,lower=None,upper=None,axes=(0,1)):
+    def get_stacked(self,lower=None,upper=None,axes=(0,1)):
         sli=self._slice(lower,upper)
-        return self.data[sli].sum(axes)
+        print sli
+        # TODO: nan values must be excluded using mask (data.sum), but they are not working!
+        return np.nansum(self.data[sli],axis=axes)
 
-    def addFlux(self,flux,lower=None,upper=None)
+    def add_flux(self,flux,lower=None,upper=None):
         sli=self._slice(lower,upper)
         fl=np.array([0,0,0,0])
         fu=np.array(flux.shape)
         for i in range(0,4):
            if sli[i].start == 0:
               fl[i]=flux.shape[i] - sli[i].stop
-           if sli[i].stop == self.data.shape[i]
+           if sli[i].stop == self.data.shape[i]:
               fu[i]=sli[i].stop - sli[i].start
         self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2],fl[3]:fu[3]]
 
     def max(self):
-        index=np.unravel_index(self.data.argmax(),self.data.shape)
+        # TODO: here we should use only self.data.argmax(), but nanargmax is used
+        # because the bloody masked arrays are not working in the NDData
+        index=np.unravel_index(np.nanargmax(self.data),self.data.shape)
         y=self.data[index]
         return (y,index)
 
     def min(self):
-        index=np.unravel_index(self.data.argmin(),self.data.shape)
+        # TODO: here we should use only self.data.argmin(), but nanargmin is used
+        # because the bloody masked arrays are not working in the NDData
+        index=np.unravel_index(np.nanargmin(self.data),self.data.shape)
         y=self.data[index]
         return (y,index)
-#HERE
-
-    def compute_window(self,center,window):
-        ra_ui=np.argmin(np.abs(self.ra_axis-center[0]-window[0]))+1;
-        ra_li=np.argmin(np.abs(self.ra_axis-center[0]+window[0]));
-        dec_ui=np.argmin(np.abs(self.dec_axis-center[1]-window[1]))+1;
-        dec_li=np.argmin(np.abs(self.dec_axis-center[1]+window[1]));
-        nu_ui=np.argmin(np.abs(self.nu_axis-center[2]-window[2]))+1;
-        nu_li=np.argmin(np.abs(self.nu_axis-center[2]+window[2]));
-        return (ra_li,ra_ui,dec_li,dec_ui,nu_li,nu_ui)
+    
+    def index_to_wcs(self,index):
+        return self.wcs.wcs_pix2world([index[::-1]],0)[0][::-1]
+        
+    def index_window(self,wcs_center,wcs_window):
+        lower=np.rint(self.wcs.wcs_world2pix([wcs_center[::-1]-wcs_window[::-1]],0))
+        upper=np.rint(self.wcs.wcs_world2pix([wcs_center[::-1]+wcs_window[::-1]],0))
+        return (lower[0][::-1],upper[0][::-1])
         
 
     def feature_space(self,center,window):
@@ -178,13 +166,6 @@ class Cube(ndd.NDData):
         """ Animate helper function """
         self.im.set_array(self.data[j, :, :])
         return self.im,
-
-    def estimate_ssnr(self):
-        mneg=np.abs((self.data[self.data < 0]).mean())
-        mpos=(self.data[self.data > mneg]).mean()
-        s=abs(mpos-mneg)
-        ssnr=s/(s+mneg)
-        return ssnr
 
     def animate(self, inte, rep=True):
         """ Simple animation of the cube.
