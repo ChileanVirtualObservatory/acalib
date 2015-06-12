@@ -33,12 +33,14 @@ class Cube(ndd.NDData):
         # Create astropy units
         bunit=u.Unit(bsu,format="fits")
         if len(data.shape) != 4:
-            log.error("Only 4D data is allowed for now (like CASA-generated ones). Talk to the core team to include your datatype")
+            log.error("Only 4D data (RA-DEC-FREQ-STOKES) is allowed for now (like CASA-generated ones). Talk to the core team to include your datatype.")
             raise TypeError
         
-        # Put data in physically-meaninful values
-        data=data*bscale+bzero
+        # Put data in physically-meaninful values, and remove stokes
+        # TODO: Stokes is removed by summing (is this correct? maybe is averaging?) 
+        data=data.sum(axis=0)*bscale+bzero
         wcs=astrowcs.WCS(meta)
+        wcs=wcs.dropaxis(3)
 
         # Call super constructor with transposed data 
         ndd.NDData.__init__(self,data,mask=mask,uncertainty=None,wcs=wcs,meta=meta,unit=bunit)
@@ -58,7 +60,7 @@ class Cube(ndd.NDData):
      
     def _slice(self,lower,upper):
         if lower==None:
-            lower=(0,0,0,0)
+            lower=(0,0,0)
         if upper==None:
             upper=self.data.shape
         if isinstance(lower,tuple):
@@ -81,24 +83,23 @@ class Cube(ndd.NDData):
         if uuc.any():
             log.warning("Upper index out of bounds "+str(upper)+" > "+str(self.data.shape)+". Correcting to max.")
             upper[uuc]=self.data.shape[uuc]
-        return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2]),slice(lower[3],upper[3])]
+        return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2])]
           
-    def get_stacked(self,lower=None,upper=None,axes=(0,1)):
+    def get_stacked(self,lower=None,upper=None,axes=(0)):
         sli=self._slice(lower,upper)
-        print sli
         # TODO: nan values must be excluded using mask (data.sum), but they are not working!
         return np.nansum(self.data[sli],axis=axes)
 
     def add_flux(self,flux,lower=None,upper=None):
         sli=self._slice(lower,upper)
-        fl=np.array([0,0,0,0])
+        fl=np.array([0,0,0])
         fu=np.array(flux.shape)
-        for i in range(0,4):
+        for i in range(0,3):
            if sli[i].start == 0:
               fl[i]=flux.shape[i] - sli[i].stop
            if sli[i].stop == self.data.shape[i]:
               fu[i]=sli[i].stop - sli[i].start
-        self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2],fl[3]:fu[3]]
+        self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
 
     def max(self):
         # TODO: here we should use only self.data.argmax(), but nanargmax is used
@@ -115,51 +116,44 @@ class Cube(ndd.NDData):
         return (y,index)
     
     def index_to_wcs(self,index):
-        return self.wcs.wcs_pix2world([index[::-1]],0)[0][::-1]
-        
-    def index_window(self,wcs_center,wcs_window):
-        lower=np.rint(self.wcs.wcs_world2pix([wcs_center[::-1]-wcs_window[::-1]],0))
-        upper=np.rint(self.wcs.wcs_world2pix([wcs_center[::-1]+wcs_window[::-1]],0))
+        val=self.wcs.wcs_pix2world([index[::-1]],0)
+        if val.shape[0]==1: val=val[0]
+        return val
+    
+    def get_axis_names(self):
+        return self.wcs.axis_type_names
+
+    def get_features(self,lower=None,upper=None):
+        sli=self._slice(lower,upper)
+        x=np.arange(sli[0].start,sli[0].stop)
+        y=np.arange(sli[1].start,sli[1].stop)
+        z=np.arange(sli[2].start,sli[2].stop)
+        xyz=np.meshgrid(x,y,z,indexing='ij')
+        ii=np.empty((3,len(x)*len(y)*len(z)))
+        ii[2]=xyz[0].ravel()
+        ii[1]=xyz[1].ravel()
+        ii[0]=xyz[2].ravel()
+        f=self.wcs.wcs_pix2world(ii.T,0)
+        return f
+    
+    def get_slice(self,lower=None,upper=None):
+        sli=self._slice(lower,upper)
+        return self.data[sli[0],sli[1],sli[2]]
+
+    def index_from_window(self,wcs_center,wcs_window):
+        ld=np.rint(self.wcs.wcs_world2pix([wcs_center-wcs_window],0))
+        lu=np.rint(self.wcs.wcs_world2pix([wcs_center+wcs_window],0))
+        lower=np.array([ld,lu]).min(axis=0)
+        upper=np.array([ld,lu]).max(axis=0)
         return (lower[0][::-1],upper[0][::-1])
-        
-
-    def feature_space(self,center,window):
-        ra_ci=np.argmin(np.abs(self.ra_axis-center[0]));
-        ra_ui=np.argmin(np.abs(self.ra_axis-center[0]-window[0]))+1;
-        ra_li=np.argmin(np.abs(self.ra_axis-center[0]+window[0]));
-        dec_ci=np.argmin(np.abs(self.dec_axis-center[1]));
-        dec_ui=np.argmin(np.abs(self.dec_axis-center[1]-window[1]))+1;
-        dec_li=np.argmin(np.abs(self.dec_axis-center[1]+window[1]));
-        nu_ci=np.argmin(np.abs(self.nu_axis-center[2]));
-        nu_ui=np.argmin(np.abs(self.nu_axis-center[2]-window[2]))+1;
-        nu_li=np.argmin(np.abs(self.nu_axis-center[2]+window[2]));
-        
-
-        crval1=self.ra_axis[ra_ci]
-        crval2=self.dec_axis[dec_ci]
-        crval3=self.nu_axis[nu_ci]
-        crpix1=ra_ci - ra_li 
-        crpix2=dec_ci - dec_li 
-        crpix3=nu_ci - nu_li 
-        naxis1=ra_ui-ra_li  
-        naxis2=dec_ui-dec_li 
-        naxis3=nu_ui-nu_li 
-        ra_axis=np.linspace(crval1-crpix1*self.ra_delta,crval1+(naxis1-crpix1)*self.ra_delta, num=naxis1)
-        dec_axis=np.linspace(crval2-crpix2*self.dec_delta,crval2+(naxis2-crpix2)*self.dec_delta, num=naxis2)
-        nu_axis=np.linspace (crval3-crpix3*self.nu_delta,crval3+(naxis3-crpix3)*self.nu_delta, num=naxis3)
-        adn=np.meshgrid(nu_axis,dec_axis,ra_axis, indexing='ij')
-        X=np.empty((3,len(ra_axis)*len(dec_axis)*len(nu_axis)))
-        X[2]=adn[0].ravel()
-        X[1]=adn[1].ravel()
-        X[0]=adn[2].ravel()
-        yidx=(ra_li,ra_ui,dec_li,dec_ui,nu_li,nu_ui)
-        return X,yidx
-
+    
     def _add_HDU(self, hdu):
         self.hdulist.append(hdu)
 
     def save_fits(self, filename):
         """ Simple as that... saves the whole cube """
+        # TODO: Check this, I think we should add STOKES to be 100% compatible to ALMA
+        # TODO: Add a proper wcs._to_header or wcs._to_fits...
         self.hdulist.writeto(filename, clobber=True)
 
     def _updatefig(self, j):
@@ -168,6 +162,7 @@ class Cube(ndd.NDData):
         return self.im,
 
     def animate(self, inte, rep=True):
+        #TODO: this is not ported to the new wcs usage: maybe we must use wcsaxes to plot the wcs information...
         """ Simple animation of the cube.
             - inte       : time interval between frames
             - rep[=True] : boolean to repeat the animation
@@ -180,6 +175,39 @@ class Cube(ndd.NDData):
         ani = animation.FuncAnimation(fig, self._updatefig, frames=range(len(self.freq_axis)), interval=inte, blit=True,
                                       repeat=rep)
         plt.show()
+
+    #def feature_space(self,center,window):
+    #    ra_ci=np.argmin(np.abs(self.ra_axis-center[0]));
+    #    ra_ui=np.argmin(np.abs(self.ra_axis-center[0]-window[0]))+1;
+    #    ra_li=np.argmin(np.abs(self.ra_axis-center[0]+window[0]));
+    #    dec_ci=np.argmin(np.abs(self.dec_axis-center[1]));
+    #    dec_ui=np.argmin(np.abs(self.dec_axis-center[1]-window[1]))+1;
+    #    dec_li=np.argmin(np.abs(self.dec_axis-center[1]+window[1]));
+    #    nu_ci=np.argmin(np.abs(self.nu_axis-center[2]));
+    #    nu_ui=np.argmin(np.abs(self.nu_axis-center[2]-window[2]))+1;
+    #    nu_li=np.argmin(np.abs(self.nu_axis-center[2]+window[2]));
+        
+
+    #    crval1=self.ra_axis[ra_ci]
+    #    crval2=self.dec_axis[dec_ci]
+    #    crval3=self.nu_axis[nu_ci]
+    #    crpix1=ra_ci - ra_li 
+    #    crpix2=dec_ci - dec_li 
+    #    crpix3=nu_ci - nu_li 
+    #    naxis1=ra_ui-ra_li  
+    #    naxis2=dec_ui-dec_li 
+    #    naxis3=nu_ui-nu_li 
+    #    ra_axis=np.linspace(crval1-crpix1*self.ra_delta,crval1+(naxis1-crpix1)*self.ra_delta, num=naxis1)
+    #    dec_axis=np.linspace(crval2-crpix2*self.dec_delta,crval2+(naxis2-crpix2)*self.dec_delta, num=naxis2)
+    #    nu_axis=np.linspace (crval3-crpix3*self.nu_delta,crval3+(naxis3-crpix3)*self.nu_delta, num=naxis3)
+    #    adn=np.meshgrid(nu_axis,dec_axis,ra_axis, indexing='ij')
+    #    X=np.empty((3,len(ra_axis)*len(dec_axis)*len(nu_axis)))
+    #    X[2]=adn[0].ravel()
+   #     X[1]=adn[1].ravel()
+   #     X[0]=adn[2].ravel()
+   #     yidx=(ra_li,ra_ui,dec_li,dec_ui,nu_li,nu_ui)
+   #     return X,yidx
+
 
 #    def index_center(self,index):
 #        ra=(self.ra_axis[index[0]]+self.ra_axis[index[1]-1])/2.0
