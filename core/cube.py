@@ -51,8 +51,9 @@ class Cube(ndd.NDData):
         wcs=astrowcs.WCS(meta)
         wcs=wcs.dropaxis(3)
 
+        print mask.shape
         # Call super constructor with transposed data 
-        ndd.NDData.__init__(self,data,mask=mask,uncertainty=None,wcs=wcs,meta=meta,unit=bunit)
+        ndd.NDData.__init__(self,data, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=bunit)
         
         # TODO: it seems that masked arrays are not working in NDData, please double check this!
         # print self.data.__class__.__name__
