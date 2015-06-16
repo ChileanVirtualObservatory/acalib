@@ -50,13 +50,14 @@ class Universe:
         # TODO: add a proper constructor to the Cube class in core
         #cube = Cube(name, alpha, delta, freq, ang_res, ang_fov, spe_res, spe_bw)
 
-        tables=dict()
+        tables = dict()
         tables['sources'] = self._gen_sources_table()
 
-        for src in self.sources:
-            log.info('[Synthetic] Projecting source ' + src)
-            dsource=self.sources[src].project(cube)
+        for source in self.sources:
+            log.info('[Synthetic] Projecting source ' + source)
+            dsource = source.project(cube)
             tables.update(dsource)
+
         return cube, tables
 
     def save_cube(self, cube, filename):
@@ -71,11 +72,12 @@ class Source:
     """
 
     def __init__(self, name, alpha, delta):
-        """ Parameters:
-               * name: a name of the source
-               * alpha: right ascension 
-               * delta: declination
         """
+        :param name: a name of the source
+        :param alpha: right ascension
+        :param delta: declination
+        """
+
         log.info('[Synthetic] Source \'' + name + '\' added\n')
         self.alpha = alpha
         self.delta = delta
@@ -86,7 +88,7 @@ class Source:
         """ Defines a new component from a model.
         """
         code = self.name + '::' + str(len(self.comp) + 1)
-        self.comp.append(model)
+        self.comp.append(copy.deepcopy(model))
         model.register(code, self.alpha, self.delta)
         log.info('Added component ' + code + ' with model '+ model.info())
 
@@ -94,13 +96,16 @@ class Source:
         """
         Projects all components in the source to a cube.
         """
-        ctable=dict()
+        component_tables = dict()
+
         for component in self.comp:
             log.info('Projecting ' + component.comp_name)
-            table=component.project(cube)
-            if table!=None:
-               ctable[component.comp_name]=table
-        return ctable
+            table = component.project(cube)
+
+            if table is not None:
+                component_tables[component.comp_name] = table
+
+        return component_tables
 
 class Component:
     """Abstract component model"""
@@ -109,7 +114,7 @@ class Component:
         """
         Assume object in rest velocity/redshift
         """
-        self.z = 0*u.Unit("")
+        self.z = 0 * u.Unit("")
 
     def set_velocity(self, rvel):
         """Set radial velocity rvel. If rvel has no units, we assume km/s"""
@@ -123,22 +128,35 @@ class Component:
         self.z = z
  
     def get_velocity(self):
-        """Get radial velocity rvel"""
-        z=self.z
-        c=const.c.to('km/s')
+        """
+        Get radial velocity rvel
+        """
+        z = self.z
+        c = const.c.to('km/s')
+
         rv = c*(2*z + np.square(z))/(2*z + np.square(z) + 2)
+
         return rv
 
     def get_redshift(self, z):
-        """Get the redshift"""
-        return(self.z)
+        """
+        Get the redshift
+        """
+
+        return self.z
 
     def info(self):
-        """Print relevant information of the component"""
+        """
+        Print relevant information of the component
+        """
+
         return "(none)"
 
     def register(self, comp_name, alpha, delta):
-        """Register the component name and angular position (alpha,delta)"""
+        """
+        Register the component name and angular position (alpha, delta)
+        """
+
         self.comp_name = comp_name
         self.alpha = alpha
         self.delta = delta
