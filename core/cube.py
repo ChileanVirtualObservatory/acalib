@@ -55,7 +55,7 @@ class Cube(ndd.NDData):
         # Call super constructor with transposed data 
         ndd.NDData.__init__(self,data, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=bunit)
         
-        # TODO: it seems that masked arrays are not working in NDData, please double check this!
+        # TODO: it seems that masked arrays are not working in NDData, please double   check this!
         # print self.data.__class__.__name__
         # print ma.masked_array(self.data,mask=mask).__class__.__name__
 
@@ -67,6 +67,11 @@ class Cube(ndd.NDData):
         dat=np.zeros_like(self.data)
         cb=Cube(dat,self.meta)
         return cb
+
+
+    def scale(self, scale):
+        if (scale == 1):
+          return self.data     
      
     def _slice(self,lower,upper):
         if lower==None:
@@ -148,7 +153,7 @@ class Cube(ndd.NDData):
     
     def get_slice(self,lower=None,upper=None):
         sli=self._slice(lower,upper)
-        return self.data[sli[0],sli[1],sli[2]]
+        return np.array([self.data[sli[0],sli[1],sli[2]]])
 
     def index_from_window(self,wcs_center,wcs_window):
         ld=np.rint(self.wcs.wcs_world2pix([wcs_center-wcs_window],0))

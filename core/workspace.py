@@ -40,6 +40,25 @@ def _fits_consumer(path,name,ws=_ws_df):
          ndd=cb.Cube(hdu.data,hdu.header)
          ide=name+"-"+str(counter)
          ws[ide]=ndd
+            
+         #### SCALE DATA TEST ###
+
+         scale = ndd.scale(1)
+         print scale 
+
+
+
+         ### CUT DATA TEST ####
+         cut = ndd.get_slice((50,50,50))
+         print cut
+         cut = cb.Cube(cut, hdu.header)
+         counter+=1
+         ide=name+"-"+str(counter)
+         ws[ide]=cut
+
+         ### END CUT DATA TEST ####
+
+
       elif isinstance(hdu,fits.BinTableHDU) or isinstance(hdu,fits.TableHDU):
          log.info("Processing HDU "+str(counter)+" (Table)")
           #TODO: check for WCS data...
