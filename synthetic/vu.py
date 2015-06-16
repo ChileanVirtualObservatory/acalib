@@ -28,7 +28,8 @@ class Universe:
         self.sources[source_name].add_component(model)
 
     def _gen_sources_table(self):
-        #TODO: generate table
+        # TODO: generate table
+        pass
     
     def gen_cube(self, name, alpha, delta, freq, ang_res, ang_fov, spe_res, spe_bw):
         """
@@ -48,15 +49,15 @@ class Universe:
         """
         # TODO: add a proper constructor to the Cube class in core
         #cube = Cube(name, alpha, delta, freq, ang_res, ang_fov, spe_res, spe_bw)
-        
+
         tables=dict()
-        tables['sources']=self._gen_sources_table():              
- 
+        tables['sources'] = self._gen_sources_table()
+
         for src in self.sources:
             log.info('[Synthetic] Projecting source ' + src)
             dsource=self.sources[src].project(cube)
             tables.update(dsource)
-        return cube,tables
+        return cube, tables
 
     def save_cube(self, cube, filename):
         """
@@ -128,7 +129,7 @@ class Component:
         rv = c*(2*z + np.square(z))/(2*z + np.square(z) + 2)
         return rv
 
-    def set_redshift(self, z):
+    def get_redshift(self, z):
         """Get the redshift"""
         return(self.z)
 
