@@ -40,17 +40,20 @@ def _fits_consumer(path,name,ws=_ws_df):
          ndd=cb.Cube(hdu.data,hdu.header)
          ide=name+"-"+str(counter)
          ws[ide]=ndd
-            
-         #### SCALE DATA TEST ###
+         
 
-         scale = ndd.scale(1)
-         print scale 
+         #### SCALE DATA TEST ###
+         scale = ndd.scale(0.5)
+         scale = cb.Cube(np.array([scale]), hdu.header)
+         counter+=1
+         ide = name+"-"+str(counter)
+         ws[ide] = scale 
 
 
 
          ### CUT DATA TEST ####
          cut = ndd.get_slice((50,50,50))
-         print cut
+         #print cut
          cut = cb.Cube(cut, hdu.header)
          counter+=1
          ide=name+"-"+str(counter)
