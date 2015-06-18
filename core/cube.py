@@ -10,6 +10,23 @@ import numpy.ma as ma
 import astropy.wcs as astrowcs
 import matplotlib.pyplot as plt
 
+# Mmmm
+#def gaussian_flux(cube,intens,mu,sigma,phi,gradient):
+#   # Axes bounderies.
+#   =np.sin(phi)
+#   cube=index_from_window(mu,2*sigma): 
+#
+#   C=np.empty_like(features)
+#   C[0]=features[0] - mu[0]
+#   C[1]=features[1] - mu[1]
+#   C[2]=features[2] - mu[2]
+#   V=C*(L.dot(C))
+#   quad=V.sum(axis=0)
+#   v=np.exp(-quad/2.0)
+#   v=v/v.sum()
+#   retval=b + a*v;
+#   return retval
+
 class Cube(ndd.NDData):
     """
     A generic represenation of astronomical data.
@@ -67,7 +84,6 @@ class Cube(ndd.NDData):
         dat=np.zeros_like(self.data)
         cb=Cube(dat,self.meta)
         return cb
-
 
     def scale(self, scale):
         if (scale == 1):

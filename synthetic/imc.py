@@ -1,10 +1,9 @@
 
-
-
-# TODO: Maybe
-
+INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H')]
+INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
+DEFAULT_ISO_ABUND = {'13C': 1.0 / 30, '18O': 1.0 / 60, '17O': 1.0 / 120, '34S': 1.0 / 30, '33S': 1.0 / 120,
+                         '13N': 1.0 / 30, 'D': 1.0 / 30}
 DEFAULT_ABUND_RANGE=[10**-5,10**-6]
-
 GAUSS_STRINGS = ["Gaussian", "gaussian", "Gauss", "gauss", "normal", "Normal"]
 
 class IMC(Component):
@@ -57,13 +56,13 @@ class IMC(Component):
        #     self.spe_form) + ", z=" + str(self.z) + ", grad=" + str(self.z_grad)
 
     def project(self, cube):
-        arr_code = []
-        arr_mol = []
-        arr_chname = []
-        arr_rest_freq = []
-        arr_rad_vel = []
-        arr_fwhm = []
-        arr_temp = []
+        #arr_code = []
+        #arr_mol = []
+        #arr_chname = []
+        #arr_rest_freq = []
+        #arr_rad_vel = []
+        #arr_fwhm = []
+        #arr_temp = []
         dba = db.lineDB(self.dbpath) # Maybe we can have an always open DB
         dba.connect()
         fwin= cube.get_freq_band()
@@ -76,10 +75,10 @@ class IMC(Component):
 
             linlist = dba.getSpeciesLines(mol, cor_fwin[0],
                                           cor_fwin[1])  # Selected spectral lines for this molecule
-            rinte = inten_values[0]
-            for j in range(len(inten_group)):  # TODO: baaad python, try a more pythonic way..
-                if mol in inten_group[j]:
-                    rinte = inten_values[j]
+            rinte = INTEN_VALUES[0]
+            for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
+                if mol in INTEN_GROUP[j]:
+                    rinte = INTEN_VALUESs[j]
             rinte = random.uniform(rinte[0], rinte[1])
 
             for lin in linlist:
