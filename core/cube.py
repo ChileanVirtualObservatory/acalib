@@ -22,6 +22,7 @@ class Cube(ndd.NDData):
         """ data = numpy data
             meta = header of fits
         """
+
         mask=np.isnan(data)
         try:
           bscale=meta['BSCALE']
@@ -59,7 +60,9 @@ class Cube(ndd.NDData):
         # print self.data.__class__.__name__
         # print ma.masked_array(self.data,mask=mask).__class__.__name__
 
-        
+    def get_flux(self):
+      return sum(sum(sum(self.data)))   
+  
     def copy(self):
         return copy.deepcopy(self)
 
@@ -69,9 +72,27 @@ class Cube(ndd.NDData):
         return cb
 
 
+
     def scale(self, scale):
         if (scale == 1):
-          return self.data     
+          return self.data
+        elif (scale < 1):
+          new_data = np.zeros((round(len(self.data)*scale+1),round(len(self.data[0])*scale+1), round(len(self.data[0][0])*scale+1)))
+          print new_data.shape
+          for z in range(len(self.data)):
+            for y in range(len(self.data[0])):
+                for x in range(len(self.data[0][0])):
+                    new_data[round(z*scale)][round(y*scale)][round(x*scale)] = self.data[z][y][x]
+          return new_data
+        else:
+          return
+
+    #def scale(self,scale):
+    #  new_data = list()
+    #  for data in self.data:
+    #    new_data.append(self.scale_layer(scale))
+    #  return np.array(new_data)         
+                 
      
     def _slice(self,lower,upper):
         if lower==None:
