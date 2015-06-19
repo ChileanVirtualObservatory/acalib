@@ -9,7 +9,7 @@ GAUSS_STRINGS = ["Gaussian", "gaussian", "Gauss", "gauss", "normal", "Normal"]
 class IMC(Component):
     """ Interstellar Molecular Core """
 
-    def __init__(self, template, fov, angle, mol_list, temp, fwhm, gradient, 
+    def __init__(self, template, semi_axes, angle, mol_list, temp, fwhm, gradient, 
                  abun_range=DEFAULT_ABUND_RANGE, abun_CO=DEFAULT_CO_ABUND, iso_abun=DEFAULT_ISO_ABUND,dbpath=DEFAULT_DBPATH):
         Component.__init__(self)
         self.dbpath = dbpath
@@ -65,7 +65,7 @@ class IMC(Component):
         #arr_temp = []
         dba = db.lineDB(self.dbpath) # Maybe we can have an always open DB
         dba.connect()
-        fwin= cube.get_freq_band()
+        fwin= cube.get_wcs_limits(axis=2)
         cor_fwin =  fwin / (1 + self.z)
         counter = 0
         used = False
