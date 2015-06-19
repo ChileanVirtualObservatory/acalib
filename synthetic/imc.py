@@ -1,3 +1,5 @@
+from numpy import random
+from synthetic.vu import Component
 
 INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H')]
 INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
@@ -14,14 +16,14 @@ class IMC(Component):
         Component.__init__(self)
         self.dbpath = dbpath
         self.temp = temp
-        self.fov = fov
+        self.semi_axes = semi_axes
         self.angle = angle
         self.fwhm = fwhm
         self.gradient = gradient
         self.intens = dict()
         if template in GAUSS_STRINGS:
            self._draw_func=self._draw_gauss
-        else
+        else:
            # Assuming an image template URI (fits format)
            # Download the URI
            # Maybe rotate it? (not sure)
