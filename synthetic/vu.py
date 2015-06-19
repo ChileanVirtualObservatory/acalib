@@ -1,3 +1,4 @@
+from astropy.table import table
 from core.cube import *
 from astropy import log
 import numpy as np
@@ -27,8 +28,44 @@ class Universe:
         self.sources[source_name].add_component(model)
 
     def _gen_sources_table(self):
-        # TODO: generate table
-        pass
+        """
+        Will generate a table with the following columns:
+            - Component ID
+            - Source name
+            - Model
+            - Alpha
+            - Delta
+            - Red shift (z)
+            - Radial velocity
+
+        :return: an astropy table.
+        """
+
+        # create columns for all fields.
+        col_comp_id = []
+        col_source_name = []
+        col_model = []
+        col_alpha = []
+        col_delta = []
+        col_redshift = []
+        col_radial_velocity = []
+
+        # run through all sources and components, and add those values to the above lists.
+        for source in self.sources:
+            for component in source.comp:
+                col_comp_id.append(component.comp_name)
+                col_source_name.append(source.name)
+                col_model.append("Not yet.")
+                col_alpha.append(component.alpha)
+                col_delta.append(component.delta)
+                col_redshift.append(component.get_redshift())
+                col_radial_velocity.append(component.get_velocity())
+
+        # create two lists for the table, this is to not pollute the table construction line.
+        col_values = [col_comp_id, col_source_name, col_model, col_alpha, col_delta, col_redshift, col_radial_velocity]
+        col_names = ["Comp ID", "Source name", "Model", "Alpha", "Delta", "Redshift", "Radial Vel"]
+
+        return table.Table(col_values, col_names)
     
     def gen_cube(self, name, alpha, delta, freq, ang_res, ang_fov, spe_res, spe_bw):
         """
