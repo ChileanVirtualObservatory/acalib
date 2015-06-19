@@ -1,4 +1,5 @@
 from numpy import random
+from synthetic import db
 from synthetic.vu import Component
 
 INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H')]
@@ -80,7 +81,7 @@ class IMC(Component):
             rinte = INTEN_VALUES[0]
             for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
                 if mol in INTEN_GROUP[j]:
-                    rinte = INTEN_VALUESs[j]
+                    rinte = INTEN_VALUES[j]
             rinte = random.uniform(rinte[0], rinte[1])
 
             for lin in linlist:
