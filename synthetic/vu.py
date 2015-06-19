@@ -4,7 +4,6 @@ import numpy as np
 import astropy.units as u
 import astropy.constants as const
 
-### Core ASYDO Classes ###
 
 class Universe:
     """
@@ -33,7 +32,7 @@ class Universe:
     
     def gen_cube(self, name, alpha, delta, freq, ang_res, ang_fov, spe_res, spe_bw):
         """
-        Returns a Cube object where all the sources within the FOV and BW are projected, and 
+        Returns a Cube object where all the sources within the FOV and BW are projected, and
         a dictionary with a sources astropy Table and all the parameters of the components
         in the succesive Tables
 
@@ -73,29 +72,37 @@ class Source:
 
     def __init__(self, name, alpha, delta):
         """
-        :param name: a name of the source
-        :param alpha: right ascension
-        :param delta: declination
+        :param name:    a name of the source
+        :param alpha:   right ascension
+        :param delta:   declination
         """
 
-        log.info('[Synthetic] Source \'' + name + '\' added\n')
         self.alpha = alpha
         self.delta = delta
         self.name = name
         self.comp = list()
 
+        log.info('[Synthetic] Source \'' + name + '\' added\n')
+
     def add_component(self, model):
-        """ Defines a new component from a model.
         """
+        Defines a new component from a model.
+        """
+
         code = self.name + '::' + str(len(self.comp) + 1)
-        self.comp.append(copy.deepcopy(model))
-        model.register(code, self.alpha, self.delta)
-        log.info('Added component ' + code + ' with model '+ model.info())
+
+        # create a deep copy of the model.
+        model_cpy = copy.deepcopy(model)
+        model_cpy.register(code, self.alpha, self.delta)
+        self.comp.append(model_cpy)
+
+        log.info('Added component ' + code + ' with model ' + model_cpy.info())
 
     def project(self, cube):
         """
         Projects all components in the source to a cube.
         """
+
         component_tables = dict()
 
         for component in self.comp:
@@ -114,13 +121,16 @@ class Component:
         """
         Assume object in rest velocity/redshift
         """
+
         self.z = 0 * u.Unit("")
 
     def set_velocity(self, rvel):
         """Set radial velocity rvel. If rvel has no units, we assume km/s"""
-        c=const.c.to('km/s')
-        if not isinstance(rvel,u.Quantity):
-            rvel=rvel*u.km/u.s
+        c = const.c.to('km/s')
+
+        if not isinstance(rvel, u.Quantity):
+            rvel = rvel*u.km/u.s
+
         self.z = np.sqrt((1 + rvel/c) / (1 - rvel/c)) - 1
 
     def set_redshift(self, z):
@@ -134,7 +144,7 @@ class Component:
         z = self.z
         c = const.c.to('km/s')
 
-        rv = c*(2*z + np.square(z))/(2*z + np.square(z) + 2)
+        rv = c * (2 * z + np.square(z)) / (2 * z + np.square(z) + 2)
 
         return rv
 
@@ -162,6 +172,7 @@ class Component:
         self.delta = delta
 
     def project(self, cube):
-        """Project the component in the cube and return the component astropy Table"""
+        """
+        Project the component in the cube and return the component astropy Table
+        """
         pass
-
