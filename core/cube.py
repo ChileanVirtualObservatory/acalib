@@ -10,23 +10,6 @@ import numpy.ma as ma
 import astropy.wcs as astrowcs
 import matplotlib.pyplot as plt
 
-# Mmmm
-#def gaussian_flux(cube,intens,mu,sigma,phi,gradient):
-#   # Axes bounderies.
-#   =np.sin(phi)
-#   cube=index_from_window(mu,2*sigma): 
-#
-#   C=np.empty_like(features)
-#   C[0]=features[0] - mu[0]
-#   C[1]=features[1] - mu[1]
-#   C[2]=features[2] - mu[2]
-#   V=C*(L.dot(C))
-#   quad=V.sum(axis=0)
-#   v=np.exp(-quad/2.0)
-#   v=v/v.sum()
-#   retval=b + a*v;
-#   return retval
-
 class Cube(ndd.NDData):
     """
     A generic represenation of astronomical data.
@@ -35,11 +18,25 @@ class Cube(ndd.NDData):
     A spectroscopic cube is a 3D cube
     Stokes 4D cubes are not supported.
     """
+
+    def __init__(self, pos, ang_res, fov, freq, spe_res, bw):
+        # Create a new WCS object.  The number of axes must be set
+        # from the start
+        wcs = atrowcs.WCS(naxis=3)
+        wcs.wcs.crval = numpy.array([pos[0], pos[1],freq])
+        wcs.wcs.cdelt = numpy.array([ang_res[0], ang_res[1],spe_res])
+        mm = [int(abs([fov[0]/ang_res[0])),int(abs([fov[1]/ang_res[1])),int(abs([bw/spe_res))]
+        wcs.wcs.crpix = mm/2
+        wcs.wcs.crpix = [0,0,0]
+        wcs.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
+        data=np.zeros((mm[2],mm[1],mm[0]))
+        ndd.NDData.__init__(self,data, uncertainty=None, mask=np.isnan(data), wcs=wcs, meta=None, unit=None)
+
+
     def __init__(self,data,meta):
         """ data = numpy data
             meta = header of fits
         """
-
         mask=np.isnan(data)
         try:
           bscale=meta['BSCALE']
@@ -76,6 +73,11 @@ class Cube(ndd.NDData):
         # TODO: it seems that masked arrays are not working in NDData, please double   check this!
         # print self.data.__class__.__name__
         # print ma.masked_array(self.data,mask=mask).__class__.__name__
+
+    def get_wcs_limits(axis):
+       lower=wcs.wcs_pix2world(np.array([0,0,0]), 0) - wcs.cdelt/2.0
+       upper=wcs.wcs_pix2world(data.shape, 1) + wcs.cdelt/2.0
+       return (lower[axis],upper[axis])    
 
     def get_flux(self):
       return sum(sum(sum(self.data)))   

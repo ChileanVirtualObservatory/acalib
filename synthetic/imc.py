@@ -24,6 +24,10 @@ class IMC(Component):
         self.intens = dict()
         if template in GAUSS_STRINGS:
            self._draw_func=self._draw_gauss
+           cphi=np.cos(angle)
+           sphi=np.sin(angle)
+           rmatrix=np.array([[cphi,-sphi],[sphi,cphi]])
+           
         else:
            # Assuming an image template URI (fits format)
            # Download the URI
@@ -45,8 +49,19 @@ class IMC(Component):
         self.intens = intens
 
     def __draw_gauss(self,cube,flux,freq):
-       # TODO: implement
-       pass
+        cube=index_from_window(mu,2*sigma): 
+         
+        C=np.empty_like(features)
+        C[0]=features[0] - mu[0]
+        C[1]=features[1] - mu[1]
+        C[2]=features[2] - mu[2]
+        V=C*(L.dot(C))
+        quad=V.sum(axis=0)
+        v=np.exp(-quad/2.0)
+        v=v/v.sum()
+        retval=b + a*v;
+   return retval
+
 
     def __draw_image(self,cube,flux,freq):
        # TODO: implement
@@ -58,7 +73,7 @@ class IMC(Component):
        #return "mol_list = " + str(self.intens.keys()) + " @ spa_form=" + str(self.spa_form) + ", spe_form=" + str(
        #     self.spe_form) + ", z=" + str(self.z) + ", grad=" + str(self.z_grad)
 
-    def project(self, cube):
+    def project(self, cube, limit):
         #arr_code = []
         #arr_mol = []
         #arr_chname = []
@@ -88,7 +103,7 @@ class IMC(Component):
                 counter += 1
                 trans_temp = lin[5]
                 flux = np.exp(-abs(trans_temp - self.temp) / self.temp) * rinte
-                if flux < 2 * cube.rms: # TODO: astropy units!
+                if flux < limit: # TODO: astropy units!
                     continue
                 freq = (1 + self.z) * lin[3]  # TODO: astropy unit... Catalog in Mhz
                 #self.log.write('      |- Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') around ' + str(

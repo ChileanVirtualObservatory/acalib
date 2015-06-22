@@ -67,7 +67,7 @@ class Universe:
 
         return table.Table(col_values, col_names)
     
-    def gen_cube(self, name, alpha, delta, freq, ang_res, ang_fov, spe_res, spe_bw):
+    def gen_cube(self, pos, ang_res, fov, freq, spe_res, bw, noise):
         """
         Returns a Cube object where all the sources within the FOV and BW are projected, and
         a dictionary with a sources astropy Table and all the parameters of the components
@@ -75,25 +75,23 @@ class Universe:
 
         This function needs the following parameters:
         - name    : name of the cube
-        - alpha   : right-ascension center
-        - delta   : declination center
+        - pos     : right-ascension and declination center
+        - ang_res : angular resolution x2
+        - fov     : angular field of view x 2
         - freq    : spectral center (frequency)
-        - ang_res : angular resolution
-        - ang_fov : angular field of view
         - spe_res : spectral resolution
-        - spe_bw  : spectral bandwidth
+        - bw  : spectral bandwidth
         """
-        # TODO: add a proper constructor to the Cube class in core
-        #cube = Cube(name, alpha, delta, freq, ang_res, ang_fov, spe_res, spe_bw)
+        cube = Cube(pos, ang_res, fov, freq, spe_res, bw)
 
         tables = dict()
         tables['sources'] = self._gen_sources_table()
 
         for source in self.sources:
             log.info('[Synthetic] Projecting source ' + source)
-            dsource = source.project(cube)
+            dsource = source.project(cube,2*sigma)
             tables.update(dsource)
-
+        cube.add_flux(2*sigma*(np.random.random(cube.data.shape) - 0.5))
         return cube, tables
 
     def save_cube(self, cube, filename):
@@ -135,7 +133,7 @@ class Source:
 
         log.info('Added component ' + code + ' with model ' + model_cpy.info())
 
-    def project(self, cube):
+    def project(self, cube,limit):
         """
         Projects all components in the source to a cube.
         """
@@ -144,7 +142,7 @@ class Source:
 
         for component in self.comp:
             log.info('Projecting ' + component.comp_name)
-            table = component.project(cube)
+            table = component.project(cube,limit)
 
             if table is not None:
                 component_tables[component.comp_name] = table
@@ -208,7 +206,7 @@ class Component:
         self.alpha = alpha
         self.delta = delta
 
-    def project(self, cube):
+    def project(self, cube, limit):
         """
         Project the component in the cube and return the component astropy Table
         """
