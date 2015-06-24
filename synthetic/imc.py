@@ -23,10 +23,8 @@ class IMC(Component):
         self.gradient = gradient
         self.intens = dict()
         if template in GAUSS_STRINGS:
+           # 3 Sigma square
            self._draw_func=self._draw_gauss
-           cphi=np.cos(angle)
-           sphi=np.sin(angle)
-           rmatrix=np.array([[cphi,-sphi],[sphi,cphi]])
            
         else:
            # Assuming an image template URI (fits format)
@@ -49,7 +47,7 @@ class IMC(Component):
         self.intens = intens
 
     def __draw_gauss(self,cube,flux,freq):
-        cube=index_from_window(mu,2*sigma): 
+        cube=index_from_window(np.,self._box): 
          
         C=np.empty_like(features)
         C[0]=features[0] - mu[0]
