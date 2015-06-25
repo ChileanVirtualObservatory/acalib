@@ -25,7 +25,7 @@ class IMC(Component):
         if template in GAUSS_STRINGS:
            # 3 Sigma square
            self._draw_func=self._draw_gauss
-           
+        
         else:
            # Assuming an image template URI (fits format)
            # Download the URI
