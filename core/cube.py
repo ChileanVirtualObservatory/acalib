@@ -89,7 +89,6 @@ class Cube(ndd.NDData):
 		cb=Cube(dat,self.meta)
 		return cb
 
-
 	def scale(self, scale):
 		zflag = 0
 		start_time = time.time()
@@ -100,18 +99,21 @@ class Cube(ndd.NDData):
 			for z in self.data:
 				yflag = 0
 				for y in z:
-						xflag = 0
-						for x in y:
-								new_data[round(zflag*scale)][round(yflag*scale)][round(xflag*scale)] = x
-								xflag+=1
-						yflag+=1
+					xflag = 0
+					for x in y:
+						new_data[round(zflag*scale)][round(yflag*scale)][round(xflag*scale)] = x
+						xflag+=1
+					yflag+=1
 				zflag+=1				
+			#for z in range(len(self.data)):
+			#	for y in range(len(self.data[0])):
+			#			for x in range(len(self.data[0][0])):
+			#					new_data[round(z*scale)][round(y*scale)][round(x*scale)] = self.data[z][y][x]
 			print("--- %s seconds ---" % (time.time() - start_time))
-			return new_data
+			return (new_data/np.sum(new_data))*np.sum(self.data)
 		else:
 			new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
 			for z in self.data:
-				print zflag
 				new_data[zflag] = scipy.ndimage.zoom(z,round(scale),order=3)
 				zflag+=1
 			print("--- %s seconds ---" % (time.time() - start_time))
