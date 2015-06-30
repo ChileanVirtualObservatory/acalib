@@ -2,6 +2,11 @@ from numpy import random
 from synthetic import db
 from synthetic.vu import Component
 
+import urllib
+import shutil
+import os.path
+from astropy.io import fits
+
 INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H')]
 INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
 DEFAULT_ISO_ABUND = {'13C': 1.0 / 30, '18O': 1.0 / 60, '17O': 1.0 / 120, '34S': 1.0 / 30, '33S': 1.0 / 120,
@@ -12,8 +17,9 @@ GAUSS_STRINGS = ["Gaussian", "gaussian", "Gauss", "gauss", "normal", "Normal"]
 class IMC(Component):
     """ Interstellar Molecular Core """
 
+
     def __init__(self, template, semi_axes, angle, mol_list, temp, fwhm, gradient, 
-                 abun_range=DEFAULT_ABUND_RANGE, abun_CO=DEFAULT_CO_ABUND, iso_abun=DEFAULT_ISO_ABUND,dbpath=DEFAULT_DBPATH):
+                 abun_range=DEFAULT_ABUND_RANGE, abun_CO=DEFAULT_CO_ABUND, iso_abun=DEFAULT_ISO_ABUND,dbpath=DEFAULT_DBPATH, URI=""):
         Component.__init__(self)
         self.dbpath = dbpath
         self.temp = temp
@@ -31,7 +37,7 @@ class IMC(Component):
            # Download the URI
            # Maybe rotate it? (not sure)
            # Load the URI and put it in _image
-           self._image=None
+           self._image=self.loader(URI)
            self._draw_func=self._draw_image
         for mol in mol_list.split(','):
             abun = random.uniform(abun_range[1], abun_range[0])
@@ -41,6 +47,29 @@ class IMC(Component):
                 if iso in mol:
                     abun *= iso_abun[iso]
             self.intens[mol] = abun
+
+
+    def loader(self, uri, destination=""):
+        """
+        Gets the image/Fits to use as model
+        Supports Fits only.
+        """
+
+        fileName = uri.split("/")[-1]
+        self.fullDestination = os.path.join(destination, fileName)
+        s = urllib.urlretrieve(uri)
+
+        # Copy the file to the selected destination
+        shutil.copy2(s[0], self.fullDestination)
+        self.extension = os.path.splitext(self.fileName)[-1]
+        if (self.extension == "fits"):
+            return fits.open(self.fullDestination)[0].data
+        else:
+            raise ValueError("Wrong File Type (Only .fits Currently supported)")
+
+
+
+
 
     def change_intensities(self, intens):
         '''User defined dictionary in the form {molecule: intensity}'''

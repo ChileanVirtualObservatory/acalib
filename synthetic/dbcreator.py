@@ -65,8 +65,6 @@ elif (len(sys.argv)>2):
         database.VOGetLines(log,URI,w_range)
         database.loadVoTable("./votables/customVOTable.xml",{3:"FREQ",4:"SPECIES",5:"CHEM_NAME",7:"INTENSITY",11:"EL"})
         complete = True
-
-
     else:
         helper(log)
 else:
