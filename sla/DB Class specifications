@@ -1,0 +1,7 @@
+name :  lineDB
+methods:
+    def getSpeciesLines(self,mol,freq_i,freq_e):
+    def getMoleculeList(self,freq_i,freq_e):
+    def getSpeciesList(self,chem_name,freq_i,freq_e):
+Other:
+    Must Use AstroPy Units
