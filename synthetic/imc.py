@@ -2,6 +2,7 @@ from numpy import random
 from synthetic import db
 from synthetic.vu import Component
 import core.flux as flx
+import astropy.units as u
 
 INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H')]
 INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
@@ -9,6 +10,8 @@ DEFAULT_ISO_ABUND = {'13C': 1.0 / 30, '18O': 1.0 / 60, '17O': 1.0 / 120, '34S': 
                          '13N': 1.0 / 30, 'D': 1.0 / 30}
 DEFAULT_ABUND_RANGE=[10**-5,10**-6]
 GAUSS_STRINGS = ["Gaussian", "gaussian", "Gauss", "gauss", "normal", "Normal"]
+DEFAULT_CO_ABUND=1.0
+
 
 DEFAULT_DBPATH= 'ASYDO'
 
@@ -61,7 +64,7 @@ class IMC(Component):
 
     def info(self):
        # TODO: implement
-       pass
+       return "IMC"
        #return "mol_list = " + str(self.intens.keys()) + " @ spa_form=" + str(self.spa_form) + ", spe_form=" + str(
        #     self.spe_form) + ", z=" + str(self.z) + ", grad=" + str(self.z_grad)
 

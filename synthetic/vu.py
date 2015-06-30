@@ -52,14 +52,15 @@ class Universe:
 
         # run through all sources and components, and add those values to the above lists.
         for source in self.sources:
-            for component in source.comp:
-                col_comp_id.append(component.comp_name)
+            so=self.sources[source].comp
+            for component in so:
+                col_comp_id.append(so[component].comp_name)
                 col_source_name.append(source.name)
                 col_model.append("Not yet.")
-                col_alpha.append(component.alpha)
-                col_delta.append(component.delta)
-                col_redshift.append(component.get_redshift())
-                col_radial_velocity.append(component.get_velocity())
+                col_alpha.append(so[component].alpha)
+                col_delta.append(so[component].delta)
+                col_redshift.append(so[component].get_redshift())
+                col_radial_velocity.append(so[component].get_velocity())
 
         # create two lists for the table, this is to not pollute the table construction line.
         col_values = [col_comp_id, col_source_name, col_model, col_alpha, col_delta, col_redshift, col_radial_velocity]
