@@ -30,14 +30,26 @@ def clump_to_gauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
    # Construct the precision Matrix!
    sphi=np.sin(angle)
    cphi=np.cos(angle)
-   R=np.array([[cphi,-sphi,-grad_freq[0]],[sphi,cphim-grad_freq[1]],[0,0,1]])
+   R=np.array([[cphi,-sphi,-grad_freq[0]],[sphi,cphi,-grad_freq[1]],[0,0,1]])
    D=np.diag([1./std[0],1./std[1],1./sigma_freq])
    RD=R.dot(D)
    P=RD.dot(RD.T)
    mu=np.array([pos[0],pos[1],freq])
    return (mu,P)
 
-# Create a gassian flux on a cube with compact support 
-def create_gauss_flux(wcs,mu,P,peak,cutoff):
-   pass
+# Create a gassian flux given a WCS with compact support 
+def create_gauss_flux(cube,mu,P,peak,cutoff):
+   Sigma=P.inv()
+   window=np.sqrt(2*np.log(peak/cutoff)*np.diag())
+   lower,upper=cube.index_from_window(mu,window)
+   feat=cube.get_features(lower,upper)
+   C=np.empty_like(feat)
+   C[0]=feat[0] - mu[0]
+   C[1]=feat[1] - mu[1]
+   C[2]=feat[2] - mu[2]
+   V=C*(P.dot(C))
+   quad=V.sum(axis=0)
+   res=np.exp(-quad/2.0)
+   res=res.reshape(upper[0]-lower[0],upper[1]-lower[1],upper[2]-lower[2])
+   return res,lower,upper
 

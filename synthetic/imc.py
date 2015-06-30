@@ -1,6 +1,8 @@
 from numpy import random
 from synthetic import db
 from synthetic.vu import Component
+import core.flux as flx
+import astropy.units as u
 
 import urllib
 import shutil
@@ -13,25 +15,27 @@ DEFAULT_ISO_ABUND = {'13C': 1.0 / 30, '18O': 1.0 / 60, '17O': 1.0 / 120, '34S': 
                          '13N': 1.0 / 30, 'D': 1.0 / 30}
 DEFAULT_ABUND_RANGE=[10**-5,10**-6]
 GAUSS_STRINGS = ["Gaussian", "gaussian", "Gauss", "gauss", "normal", "Normal"]
+DEFAULT_CO_ABUND=1.0
+
+
+DEFAULT_DBPATH= 'ASYDO'
 
 class IMC(Component):
     """ Interstellar Molecular Core """
 
-
-    def __init__(self, template, semi_axes, angle, mol_list, temp, fwhm, gradient, 
-                 abun_range=DEFAULT_ABUND_RANGE, abun_CO=DEFAULT_CO_ABUND, iso_abun=DEFAULT_ISO_ABUND,dbpath=DEFAULT_DBPATH, URI=""):
+    def __init__(self, template,std, angle, mol_list, temp, fwhm, gradient, 
+                 abun_range=DEFAULT_ABUND_RANGE, abun_CO=DEFAULT_CO_ABUND, iso_abun=DEFAULT_ISO_ABUND,dbpath=DEFAULT_DBPATH,equiv=u.doppler_radio, URI=""):
         Component.__init__(self)
+        self.equiv=equiv
         self.dbpath = dbpath
         self.temp = temp
-        self.semi_axes = semi_axes
+        self.std= std
         self.angle = angle
         self.fwhm = fwhm
         self.gradient = gradient
         self.intens = dict()
         if template in GAUSS_STRINGS:
-           # 3 Sigma square
            self._draw_func=self._draw_gauss
-        
         else:
            # Assuming an image template URI (fits format)
            # Download the URI
@@ -75,32 +79,24 @@ class IMC(Component):
         '''User defined dictionary in the form {molecule: intensity}'''
         self.intens = intens
 
-    def __draw_gauss(self,cube,flux,freq):
-        cube=index_from_window(np.,self._box): 
-         
-        C=np.empty_like(features)
-        C[0]=features[0] - mu[0]
-        C[1]=features[1] - mu[1]
-        C[2]=features[2] - mu[2]
-        V=C*(L.dot(C))
-        quad=V.sum(axis=0)
-        v=np.exp(-quad/2.0)
-        v=v/v.sum()
-        retval=b + a*v;
-   return retval
+    def _draw_gauss(self,cube,flux,freq,cutoff):
+       pos=np.array([self.alpha,self.delta])
+       (mu,P)=flx.clump_to_gauss(pos,self.std,self.angle,freq,self.fwhm,self.gradient,equiv)
+       (mcub,lower,upper)=flx.create_gauss_flux(cube,mu,P,flux,cutoff)
+       cube.add_flux(mcub,lower,upper)
+       return retval
 
-
-    def __draw_image(self,cube,flux,freq):
-       # TODO: implement
+    def _draw_image(self,cube,flux,freq,cutoff):
+       # TODO      
        pass
 
     def info(self):
        # TODO: implement
-       pass
+       return "IMC"
        #return "mol_list = " + str(self.intens.keys()) + " @ spa_form=" + str(self.spa_form) + ", spe_form=" + str(
        #     self.spe_form) + ", z=" + str(self.z) + ", grad=" + str(self.z_grad)
 
-    def project(self, cube, limit):
+    def project(self, cube, cutoff):
         #arr_code = []
         #arr_mol = []
         #arr_chname = []
@@ -130,12 +126,12 @@ class IMC(Component):
                 counter += 1
                 trans_temp = lin[5]
                 flux = np.exp(-abs(trans_temp - self.temp) / self.temp) * rinte
-                if flux < limit: # TODO: astropy units!
+                if flux < cutoff: # TODO: astropy units!
                     continue
                 freq = (1 + self.z) * lin[3]  # TODO: astropy unit... Catalog in Mhz
                 #self.log.write('      |- Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') around ' + str(
                 #    freq) + ' Mhz, at ' + str(temp) + ' K\n')
-                self._draw_func(cube,flux,freq)
+                self._draw_func(cube,flux,freq,cutoff)
                 used = True
                 # TODO: generate a table: example:All the next commented lines were for generating a table: 
                 #arr_code.append(self.comp_name + '-r' + str(self.alpha) + '-d' + str(self.delta) + "-l" + str(counter))

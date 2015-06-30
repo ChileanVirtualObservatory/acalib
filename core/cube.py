@@ -22,22 +22,30 @@ class Cube(ndd.NDData):
     A spectroscopic cube is a 3D cube
     Stokes 4D cubes are not supported.
     """
-
-    def __init__(self, pos, ang_res, fov, freq, spe_res, bw):
-        # Create a new WCS object.  The number of axes must be set
-        # from the start
-        wcs = atrowcs.WCS(naxis=3)
-        wcs.wcs.crval = numpy.array([pos[0], pos[1],freq])
-        wcs.wcs.cdelt = numpy.array([ang_res[0], ang_res[1],spe_res])
-        mm = [int(abs([fov[0]/ang_res[0])),int(abs([fov[1]/ang_res[1])),int(abs([bw/spe_res))]
-        wcs.wcs.crpix = mm/2
+    def __init__(self, *args, **kwargs):
+        #args -- tuple of anonymous arguments
+        #kwargs -- dictionary of named arguments
+        if len(args) == 2:
+           self.__init_from_meta(args[0])
+        else:
+           self._init_from_params(args[0],args[1],args[2],args[3],args[4],args[5])
+     
+    def _init_from_params(self, pos, ang_res, fov, freq, spe_res, bw):
+        # Create a new WCS object.
+        # TODO: pass everything to deg,deg,Hz...
+        wcs = astrowcs.WCS(naxis=3)
+        wcs.wcs.crval = np.array([pos[0].value, pos[1].value,freq.value])
+        wcs.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value,spe_res.value])
+        mm = np.array([int(abs(fov[0]/ang_res[0])),int(abs(fov[1]/ang_res[1])),int(abs(bw/spe_res))])
+        wcs.wcs.crpix = mm/2.0
         wcs.wcs.crpix = [0,0,0]
         wcs.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
         data=np.zeros((mm[2],mm[1],mm[0]))
+        wcs.wcs.print_contents()
         ndd.NDData.__init__(self,data, uncertainty=None, mask=np.isnan(data), wcs=wcs, meta=None, unit=None)
 
 
-    def __init__(self,data,meta):
+    def _init_from_meta(self,data,meta):
         """ data = numpy data
             meta = header of fits
         """
