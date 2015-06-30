@@ -3,7 +3,7 @@ import time
 import urllib
 import os
 
-from asydopy import *
+import db
 
 default_url = "http://www.csrg.cl/~maray/splatalogue.csv"
 default_csv_name = "lines2.csv"
