@@ -2,8 +2,8 @@ from astropy.table import table
 from core.cube import *
 from astropy import log
 import numpy as np
-import astropy.units as u
 import astropy.constants as const
+import core.parameter as par
 
 
 class Universe:
@@ -52,21 +52,19 @@ class Universe:
 
         # run through all sources and components, and add those values to the above lists.
         for source in self.sources:
-            so=self.sources[source].comp
-            for component in so:
-                col_comp_id.append(so[component].comp_name)
-                col_source_name.append(source.name)
+            for component in self.sources[source].comp:
+                col_comp_id.append(component.comp_name)
+                col_source_name.append(self.sources[source].name)
                 col_model.append("Not yet.")
-                col_alpha.append(so[component].alpha)
-                col_delta.append(so[component].delta)
-                col_redshift.append(so[component].get_redshift())
-                col_radial_velocity.append(so[component].get_velocity())
+                col_alpha.append(component.alpha.value)
+                col_delta.append(component.delta.value)
+                col_redshift.append(component.get_redshift().value)
+                col_radial_velocity.append(component.get_velocity().value)
 
         # create two lists for the table, this is to not pollute the table construction line.
         col_values = [col_comp_id, col_source_name, col_model, col_alpha, col_delta, col_redshift, col_radial_velocity]
         col_names = ["Comp ID", "Source name", "Model", "Alpha", "Delta", "Redshift", "Radial Vel"]
-
-        return table.Table(col_values, col_names)
+        return table.Table(col_values, names=col_names)
     
     def gen_cube(self, pos, ang_res, fov, freq, spe_res, bw, noise):
         """
@@ -89,10 +87,10 @@ class Universe:
         tables['sources'] = self._gen_sources_table()
 
         for source in self.sources:
-            log.info('[Synthetic] Projecting source ' + source)
-            dsource = source.project(cube,2*sigma)
+            log.info('Projecting source ' + source)
+            dsource = self.sources[source].project(cube,2*noise)
             tables.update(dsource)
-        cube.add_flux(2*sigma*(np.random.random(cube.data.shape) - 0.5))
+        cube.add_flux(2*noise*(np.random.random(cube.data.shape) - 0.5))
         return cube, tables
 
     def save_cube(self, cube, filename):
@@ -118,7 +116,7 @@ class Source:
         self.name = name
         self.comp = list()
 
-        log.info('[Synthetic] Source \'' + name + '\' added\n')
+        log.info('Source \'' + name + '\' added\n')
 
     def add_component(self, model):
         """
@@ -140,7 +138,7 @@ class Source:
         """
 
         component_tables = dict()
-
+        log.info('Projecting Source at '+str((self.alpha,self.delta)))
         for component in self.comp:
             log.info('Projecting ' + component.comp_name)
             table = component.project(cube,limit)
@@ -162,10 +160,8 @@ class Component:
 
     def set_velocity(self, rvel):
         """Set radial velocity rvel. If rvel has no units, we assume km/s"""
-        c = const.c.to('km/s')
-
-        if not isinstance(rvel, u.Quantity):
-            rvel = rvel*u.km/u.s
+        c = const.c.to('m/s')
+        rvel = par.to_m_s(rvel)
 
         self.z = np.sqrt((1 + rvel/c) / (1 - rvel/c)) - 1
 
@@ -178,13 +174,13 @@ class Component:
         Get radial velocity rvel
         """
         z = self.z
-        c = const.c.to('km/s')
+        c = const.c.to('m/s')
 
         rv = c * (2 * z + np.square(z)) / (2 * z + np.square(z) + 2)
 
         return rv
 
-    def get_redshift(self, z):
+    def get_redshift(self):
         """
         Get the redshift
         """

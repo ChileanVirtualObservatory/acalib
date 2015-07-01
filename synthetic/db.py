@@ -59,10 +59,12 @@ class lineDB:
         return self.executeSQL(select)
  
     def getMoleculeList(self,freq_i,freq_e):
+        # TODO: fix units or remove it
         select = "SELECT DISTINCT CHEM_NAME FROM Lines WHERE FREQ > " + str(freq_i) + " AND FREQ < " + str(freq_e)
         return self.executeSQL(select)
 
     def getSpeciesList(self,chem_name,freq_i,freq_e):
+        # TODO: fix units this or remove it
         select = "SELECT DISTINCT SPECIES FROM Lines WHERE CHEM_NAME like '" + chem_name + "' AND FREQ > " + str(freq_i) + " AND FREQ < " + str(freq_e)
         return self.executeSQL(select)
    

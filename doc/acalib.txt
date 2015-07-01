@@ -11,17 +11,17 @@ require computational methods to reduce, visualize and infer astrophysical
 quantities from them, and because most of the techniques are directly applicable
 either to images or to spectra. 
 
-ACALib philosophy is to use a persistent workspace abstraction where
+The ACALib philosophy is to use a persistent workspace abstraction where
 spectroscopic data cubes can be loaded from files, created from other cubes or
 artificially generated from astrophysical parameters. Then, computational
 methods can be applied to them, resulting in new data cube instances or new data
-tables in the workspace.  The idea is to provide not only API bindings for the
+tables in the workspace. The idea is to provide not only API bindings for the
 workspace and the cubes, but also web-services to use the library in cloud-based
 frameworks and in the Virtual Observatory. 
 
 In a nutshell, ACALib is integrating and testing several cube manipulation
 routines, stacking procedures, structure detection algorithms, spectral line
-association techniques and a synthetic data cube generation module.  The library
+association techniques and a synthetic data cube generation module. The library
 is developed in python, strongly rooted in astropy modules and using efficient
 numerical libraries such as numpy and scipy, and machine learning libraries like
 scikitlearn and astroML.
@@ -29,6 +29,6 @@ scikitlearn and astroML.
 In the near future, we plan to propose ACALib as an astropy affiliated package,
 and to create a CASA add-on to ease the usage of our methods. Also, we are
 exploring bleeding-edge computational methods to include to ACALib, such as deep
-learning networks, and developing new prototypes for other types of data, such
-as the time-domain. 
+learning networks, and developing new prototypes for other types of astronomical 
+data, such as light curves in the time-domain.
 

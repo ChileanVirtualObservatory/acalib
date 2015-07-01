@@ -3,7 +3,8 @@ from synthetic import db
 from synthetic.vu import Component
 import core.flux as flx
 import astropy.units as u
-
+import numpy as np
+from astropy import log
 import urllib
 import shutil
 import os.path
@@ -71,20 +72,16 @@ class IMC(Component):
         else:
             raise ValueError("Wrong File Type (Only .fits Currently supported)")
 
-
-
-
-
     def change_intensities(self, intens):
         '''User defined dictionary in the form {molecule: intensity}'''
         self.intens = intens
 
     def _draw_gauss(self,cube,flux,freq,cutoff):
-       pos=np.array([self.alpha,self.delta])
-       (mu,P)=flx.clump_to_gauss(pos,self.std,self.angle,freq,self.fwhm,self.gradient,equiv)
+       pos=np.array([self.alpha.value,self.delta.value])*u.deg
+       (mu,P)=flx.clump_to_gauss(pos,self.std,self.angle,freq,self.fwhm,self.gradient)
+       #print "mu",mu
        (mcub,lower,upper)=flx.create_gauss_flux(cube,mu,P,flux,cutoff)
        cube.add_flux(mcub,lower,upper)
-       return retval
 
     def _draw_image(self,cube,flux,freq,cutoff):
        # TODO      
@@ -92,11 +89,11 @@ class IMC(Component):
 
     def info(self):
        # TODO: implement
-       return "IMC"
-       #return "mol_list = " + str(self.intens.keys()) + " @ spa_form=" + str(self.spa_form) + ", spe_form=" + str(
-       #     self.spe_form) + ", z=" + str(self.z) + ", grad=" + str(self.z_grad)
+       return "species = " + str(self.intens.keys()) + " intensities = "+str(self.intens.values())+" temp = "+str(self.temp)+" std = "+str(self.std)+" angle ="+str(self.angle)+" fwhm ="+str(self.fwhm)+"  gradient ="+str(self.gradient)
+
 
     def project(self, cube, cutoff):
+        #TODO Make all this with astropy units from the call functions
         #arr_code = []
         #arr_mol = []
         #arr_chname = []
@@ -107,30 +104,30 @@ class IMC(Component):
         dba = db.lineDB(self.dbpath) # Maybe we can have an always open DB
         dba.connect()
         fwin= cube.get_wcs_limits(axis=2)
-        cor_fwin =  fwin / (1 + self.z)
+        #print "fwin",fwin
+        cor_fwin =  np.array(fwin/(1 + self.z))*u.Hz
+        cor_fwin = cor_fwin.to(u.MHz).value
+        #print "cor_fwin",cor_fwin
         counter = 0
         used = False
         for mol in self.intens:
             # For each molecule specified in the dictionary
             # load its spectral lines
-
-            linlist = dba.getSpeciesLines(mol, cor_fwin[0],
-                                          cor_fwin[1])  # Selected spectral lines for this molecule
+            linlist = dba.getSpeciesLines(mol, cor_fwin[0], cor_fwin[1])  # Selected spectral lines for this molecule
             rinte = INTEN_VALUES[0]
             for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
                 if mol in INTEN_GROUP[j]:
                     rinte = INTEN_VALUES[j]
             rinte = random.uniform(rinte[0], rinte[1])
-
+             
             for lin in linlist:
                 counter += 1
-                trans_temp = lin[5]
+                trans_temp = lin[5]*u.K
                 flux = np.exp(-abs(trans_temp - self.temp) / self.temp) * rinte
                 if flux < cutoff: # TODO: astropy units!
                     continue
-                freq = (1 + self.z) * lin[3]  # TODO: astropy unit... Catalog in Mhz
-                #self.log.write('      |- Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') around ' + str(
-                #    freq) + ' Mhz, at ' + str(temp) + ' K\n')
+                freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy unit... Catalog in Mhz
+                log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + ' intens='+ str(flux)+ ' '+cube.unit.to_string())
                 self._draw_func(cube,flux,freq,cutoff)
                 used = True
                 # TODO: generate a table: example:All the next commented lines were for generating a table: 
