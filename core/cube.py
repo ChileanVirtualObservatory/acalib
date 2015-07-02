@@ -211,7 +211,7 @@ class Cube(ndd.NDData):
     		ii[1]=xyz[1].ravel()
     		ii[0]=xyz[2].ravel()
     		f=self.wcs.wcs_pix2world(ii.T,0)
-    		return f
+    		return f.T
     
     def get_slice(self,lower=None,upper=None):
     		sli=self._slice(lower,upper)
