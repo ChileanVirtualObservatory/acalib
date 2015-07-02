@@ -42,11 +42,10 @@ def create_gauss_flux(cube,mu,P,peak,cutoff):
    C[0]=feat[0] - mu[0]
    C[1]=feat[1] - mu[1]
    C[2]=feat[2] - mu[2]
-   V=C*(P.dot(C))
-   quad=V.sum(axis=1)
+   V=(P.dot(C))*C
+   quad=V.sum(axis=0)
    res=np.exp(-quad/2.0)
    res=peak*(res/res.max())
-   print res.max()
    res=res.reshape(upper[0]-lower[0],upper[1]-lower[1],upper[2]-lower[2])
    return res,lower,upper
 
