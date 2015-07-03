@@ -1,6 +1,7 @@
 import astropy.units as u
 import numpy as np
 import core.parameter as par
+#import matplotlib.pyplot as plt
 
 def clump_to_gauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
    # Parameter sanitization
@@ -36,13 +37,21 @@ def create_gauss_flux(cube,mu,P,peak,cutoff):
    window=np.sqrt(2*np.log(peak/cutoff)*np.diag(Sigma))
    #print "win",window
    lower,upper=cube.index_from_window(mu,window)
-   print lower,upper
+   #print lower,upper
    feat=cube.get_features(lower,upper)
+   #plt.clf()
+   #plt.plot(feat[0])
+   #plt.show()
    C=np.empty_like(feat)
+   #print P
    C[0]=feat[0] - mu[0]
    C[1]=feat[1] - mu[1]
    C[2]=feat[2] - mu[2]
+   
+   #print "mu",mu
+   #print "C",C
    V=(P.dot(C))*C
+   #print V
    quad=V.sum(axis=0)
    res=np.exp(-quad/2.0)
    res=peak*(res/res.max())

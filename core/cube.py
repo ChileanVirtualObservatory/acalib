@@ -211,18 +211,19 @@ class Cube(ndd.NDData):
     		ii[1]=xyz[1].ravel()
     		ii[0]=xyz[2].ravel()
     		f=self.wcs.wcs_pix2world(ii.T,0)
-    		return f.T
+    		f=f.T
+    		return f
     
     def get_slice(self,lower=None,upper=None):
     		sli=self._slice(lower,upper)
     		return np.array([self.data[sli[0],sli[1],sli[2]]])
     
     def index_from_window(self,wcs_center,wcs_window):
-    		ld=np.rint(self.wcs.wcs_world2pix([wcs_center-wcs_window],0))
-    		lu=np.rint(self.wcs.wcs_world2pix([wcs_center+wcs_window],0))
-    		lower=np.array([ld,lu]).min(axis=0)
-    		upper=np.array([ld,lu]).max(axis=0)
-    		return (lower[0][::-1],upper[0][::-1])
+		   ld=np.rint(self.wcs.wcs_world2pix([wcs_center-wcs_window],0))
+		   lu=np.rint(self.wcs.wcs_world2pix([wcs_center+wcs_window],0))
+		   lower=np.array([ld,lu]).min(axis=0)
+		   upper=np.array([ld,lu]).max(axis=0)
+		   return (lower[0][::-1],upper[0][::-1])
     
     def _add_HDU(self, hdu):
     		self.hdulist.append(hdu)
