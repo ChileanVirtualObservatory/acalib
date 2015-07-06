@@ -10,10 +10,10 @@ import shutil
 import os.path
 from astropy.io import fits
 
-INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H')]
+INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H, HDO')]
 INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
-DEFAULT_ISO_ABUND = {'13C': 1.0 / 30, '18O': 1.0 / 60, '17O': 1.0 / 120, '34S': 1.0 / 30, '33S': 1.0 / 120,
-                         '13N': 1.0 / 30, 'D': 1.0 / 30}
+DEFAULT_ISO_ABUND = {'13C': 1. / 30., '18O': 1. / 60., '17O': 1. / 120., '34S': 1. / 30., '33S': 1. / 120.,
+                         '13N': 1. / 30., 'D': 1./40.}
 DEFAULT_ABUND_RANGE=[10**-5,10**-6]
 GAUSS_STRINGS = ["Gaussian", "gaussian", "Gauss", "gauss", "normal", "Normal"]
 DEFAULT_CO_ABUND=1.0
@@ -118,16 +118,18 @@ class IMC(Component):
             for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
                 if mol in INTEN_GROUP[j]:
                     rinte = INTEN_VALUES[j]
-            rinte = random.uniform(rinte[0], rinte[1])
+            rinte = random.uniform(rinte[0], rinte[1])*self.intens[mol]
              
             for lin in linlist:
                 counter += 1
                 trans_temp = lin[5]*u.K
-                flux = np.exp(-abs(trans_temp - self.temp) / self.temp) * rinte
+                flux = np.exp(-abs(trans_temp - self.temp) / trans_temp) * rinte
+                print trans_temp, self.temp, flux, rinte
+                freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy 
                 if flux < cutoff: # TODO: astropy units!
+                    log.info('Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because I='+str(flux)+' < '+str(cutoff))
                     continue
-                freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy unit... Catalog in Mhz
-                log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + ' intens='+ str(flux)+ ' '+cube.unit.to_string())
+                log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') intens='+ str(flux)+ ' '+cube.unit.to_string())
                 self._draw_func(cube,flux,freq,cutoff)
                 used = True
                 # TODO: generate a table: example:All the next commented lines were for generating a table: 

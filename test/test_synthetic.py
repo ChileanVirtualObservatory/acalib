@@ -15,7 +15,7 @@ model.set_velocity(150*u.km/u.s)
 model2.set_velocity(100*u.km/u.s)
 univ.add_component('example',model)
 univ.add_component('example2',model2)
-(cube,tab)=univ.gen_cube(np.array([1.0,1.0])*u.deg,np.array([1.0,1.0])*u.arcsec, np.array([200,200])*u.arcsec,300*u.GHz, 0.005*u.GHz, 2*u.GHz, 0.0000001)
+(cube,tab)=univ.gen_cube(np.array([1.0,1.0])*u.deg,np.array([1.0,1.0])*u.arcsec, np.array([200,200])*u.arcsec,300*u.GHz, 0.005*u.GHz, 2*u.GHz, 0.5)
 #univ.save_cube(cube,'p33SO2-obs1.fits')
 print tab
 plt.plot(cube.get_stacked(axis=(1,2)))

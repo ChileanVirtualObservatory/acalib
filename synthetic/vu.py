@@ -1,5 +1,5 @@
 from astropy.table import table
-from core.cube import *
+from core.data import *
 from astropy import log
 import numpy as np
 import astropy.constants as const
@@ -81,14 +81,14 @@ class Universe:
         - spe_res : spectral resolution
         - bw  : spectral bandwidth
         """
-        cube = Cube(pos, ang_res, fov, freq, spe_res, bw)
+        cube = AcaData(pos, ang_res, fov, freq, spe_res, bw)
 
         tables = dict()
         tables['sources'] = self._gen_sources_table()
 
         for source in self.sources:
             log.info('Projecting source ' + source)
-            dsource = self.sources[source].project(cube,2*noise)
+            dsource = self.sources[source].project(cube,noise/10.0)
             tables.update(dsource)
         cube.add_flux(2*noise*(np.random.random(cube.data.shape) - 0.5))
         return cube, tables
