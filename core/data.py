@@ -13,7 +13,6 @@ import parameter as par
 import time
 import scipy.ndimage
 
-
 class AcaData(ndd.NDData):
     """
     A generic represenation of astronomical data.
@@ -24,27 +23,36 @@ class AcaData(ndd.NDData):
     """
     def __init__(self,data,wcs,meta,unit):
         ndd.NDData.__init__(self,data, uncertainty=None, mask=np.isnan(data), wcs=wcs, meta=meta, unit=unit)
-     
-    def _init_from_params(self, pos, ang_res, fov, freq, spe_res, bw):
-        # Create a new WCS object.
-        pos=par.to_deg(pos)
-        ang_res=par.to_deg(ang_res)
-        fov=par.to_deg(fov)
-        #print pos,ang_res,fov
-        freq=par.to_hz(freq)
-        spe_res=par.to_hz(spe_res)
-        bw=par.to_hz(bw)
-        #print freq,spe_res,bw
-        wcs = astrowcs.WCS(naxis=3)
-        wcs.wcs.crval = np.array([pos[0].value, pos[1].value,freq.value])
-        wcs.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value,spe_res.value])
-        mm = np.array([int(abs(fov[0]/ang_res[0])),int(abs(fov[1]/ang_res[1])),int(abs(bw/spe_res))])
-        wcs.wcs.crpix = mm/2.0
-        wcs.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
-        data=np.zeros((mm[2],mm[1],mm[0]))
-        #wcs.wcs.print_contents()
-        ndd.NDData.__init__(self,data, uncertainty=None, mask=np.isnan(data), wcs=wcs, meta=None, unit=u.Jy/u.beam)
+        self.data = ma.masked_array(data, mask=np.isnan(data))
+ 
+    @property
+    def data(self):
+        return self._data
+        
 
+    @data.setter
+    def data(self, value):
+        self._data = value
+    
+#    def _init_from_params(self, pos, ang_res, fov, freq, spe_res, bw):
+#        # Create a new WCS object.
+#        pos=par.to_deg(pos)
+#        ang_res=par.to_deg(ang_res)
+#        fov=par.to_deg(fov)
+#        #print pos,ang_res,fov
+#        freq=par.to_hz(freq)
+#        spe_res=par.to_hz(spe_res)
+#        bw=par.to_hz(bw)
+#        #print freq,spe_res,bw
+#        wcs = astrowcs.WCS(naxis=3)
+#        wcs.wcs.crval = np.array([pos[0].value, pos[1].value,freq.value])
+#        wcs.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value,spe_res.value])
+#        mm = np.array([int(abs(fov[0]/ang_res[0])),int(abs(fov[1]/ang_res[1])),int(abs(bw/spe_res))])
+#        wcs.wcs.crpix = mm/2.0
+#        wcs.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
+#        data=np.zeros((mm[2],mm[1],mm[0]))
+#        #wcs.wcs.print_contents()
+#        ndd.NDData.__init__(self,data, uncertainty=None, mask=np.isnan(data), wcs=wcs, meta=None, unit=u.Jy/u.beam)
 
     def get_wcs_limits(self,axis):
        lower=self.wcs.wcs_pix2world([[0,0,0]], 0) - self.wcs.wcs.cdelt/2.0
@@ -57,6 +65,7 @@ class AcaData(ndd.NDData):
     def copy(self):
         return copy.deepcopy(self)
 
+    # TODO: get_flux should be for any slice, need more parameters
     def get_flux(self):
     	return np.sum(self.data)   
     

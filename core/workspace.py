@@ -76,23 +76,23 @@ def _fits_consumer(path,name,ws=_ws_df):
          ide=name+"-"+str(counter)
          ws[ide]=ndd
 
-         print ndd.get_flux()
+         #print ndd.get_flux()
          #### SCALE DATA TEST ###
-         scale = ndd.scale(0.5)
-         scale = _create_cube(np.array([scale]), hdu.header)
-         print scale.get_flux()  ## SAME FLUX
+         #scale = ndd.scale(0.5)
+         #scale = _create_cube(np.array([scale]), hdu.header)
+         #print scale.get_flux()  ## SAME FLUX
 
          counter+=1
-         ide = name+"-"+str(counter)
-         ws[ide] = scale 
+         #ide = name+"-"+str(counter)
+         #ws[ide] = scale 
 
 
          ### CUT DATA TEST ####
-         cut = ndd.get_slice((50,50,50))
-         cut = cb.Cube(cut, hdu.header)
-         counter+=1
-         ide=name+"-"+str(counter)
-         ws[ide]=cut
+         #cut = ndd.get_slice((50,50,50))
+         #cut = cb.Cube(cut, hdu.header)
+         #counter+=1
+         #ide=name+"-"+str(counter)
+         #ws[ide]=cut
 
          ### END CUT DATA TEST ####
 

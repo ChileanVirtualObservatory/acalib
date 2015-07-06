@@ -4,7 +4,8 @@ from astropy import log
 import numpy as np
 import astropy.constants as const
 import core.parameter as par
-
+import core.data as dt
+import astropy.wcs as wcs
 
 class Universe:
     """
@@ -14,11 +15,11 @@ class Universe:
     def __init__(self):
         self.sources = dict()
 
-    def create_source(self, name, alpha, delta):
+    def create_source(self, name, pos):
         """
         A source needs a name and a spatial position (alpha,delta).
         """
-        self.sources[name] = Source(name, alpha, delta)
+        self.sources[name] = Source(name, pos)
 
     def add_component(self, source_name, model):
         """
@@ -56,8 +57,8 @@ class Universe:
                 col_comp_id.append(component.comp_name)
                 col_source_name.append(self.sources[source].name)
                 col_model.append("Not yet.")
-                col_alpha.append(component.alpha.value)
-                col_delta.append(component.delta.value)
+                col_alpha.append(component.pos[0].value)
+                col_delta.append(component.pos[1].value)
                 col_redshift.append(component.get_redshift().value)
                 col_radial_velocity.append(component.get_velocity().value)
 
@@ -81,7 +82,24 @@ class Universe:
         - spe_res : spectral resolution
         - bw  : spectral bandwidth
         """
-        cube = AcaData(pos, ang_res, fov, freq, spe_res, bw)
+            # Create a new WCS object.
+        pos=par.to_deg(pos)
+        ang_res=par.to_deg(ang_res)
+        fov=par.to_deg(fov)
+        #print pos,ang_res,fov
+        freq=par.to_hz(freq)
+        spe_res=par.to_hz(spe_res)
+        bw=par.to_hz(bw)
+        #print freq,spe_res,bw
+        w = wcs.WCS(naxis=3)
+        w.wcs.crval = np.array([pos[0].value, pos[1].value,freq.value])
+        w.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value,spe_res.value])
+        mm = np.array([int(abs(fov[0]/ang_res[0])),int(abs(fov[1]/ang_res[1])),int(abs(bw/spe_res))])
+        w.wcs.crpix = mm/2.0
+        w.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
+        data=np.zeros((mm[2],mm[1],mm[0]))
+        #w.wcs.print_contents()
+        cube = dt.AcaData(data,w,None,u.Jy/u.beam)
 
         tables = dict()
         tables['sources'] = self._gen_sources_table()
@@ -104,15 +122,12 @@ class Source:
     A generic source of electromagnetic waves with several components.
     """
 
-    def __init__(self, name, alpha, delta):
+    def __init__(self, name, pos):
         """
         :param name:    a name of the source
-        :param alpha:   right ascension
-        :param delta:   declination
         """
 
-        self.alpha = alpha
-        self.delta = delta
+        self.pos=par.to_deg(pos)
         self.name = name
         self.comp = list()
 
@@ -127,7 +142,7 @@ class Source:
 
         # create a deep copy of the model.
         model_cpy = copy.deepcopy(model)
-        model_cpy.register(code, self.alpha, self.delta)
+        model_cpy.register(code, self.pos)
         self.comp.append(model_cpy)
 
         log.info('Added component ' + code + ' with model ' + model_cpy.info())
@@ -138,7 +153,7 @@ class Source:
         """
 
         component_tables = dict()
-        log.info('Projecting Source at '+str((self.alpha,self.delta)))
+        log.info('Projecting Source at '+str(self.pos))
         for component in self.comp:
             log.info('Projecting ' + component.comp_name)
             table = component.project(cube,limit)
@@ -194,14 +209,13 @@ class Component:
 
         return "(none)"
 
-    def register(self, comp_name, alpha, delta):
+    def register(self, comp_name, pos):
         """
         Register the component name and angular position (alpha, delta)
         """
 
         self.comp_name = comp_name
-        self.alpha = alpha
-        self.delta = delta
+        self.pos = pos
 
     def project(self, cube, limit):
         """

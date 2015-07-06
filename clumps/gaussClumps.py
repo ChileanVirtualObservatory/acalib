@@ -39,9 +39,8 @@ class GaussClumps:
       # But reject peaks only if at least NPEAKS were found 
       self.par['NPEAKS']=9
    
-   # retval: (allbad,imax,sumdata) 
    def findMax(sumdata):
-      
+        
 
    def fit(self,cube,rms=-1.0,verbose=False):
       # Set the RMS, or automatically find an estimate for it
@@ -91,7 +90,7 @@ class GaussClumps:
       # Sum of the values in all the used clumps so far 
       sumclumps = 0.0
       # Sum of the supplied data values 
-      sumdata = np.nan
+      sumdata = cube.get_flux()
       
       # peaks contains the last npeaks... 
       peaks=np.zeros(npeaks)
@@ -105,11 +104,11 @@ class GaussClumps:
             log.info("Iteration: "+str(niter))
          # Find the cube index of the element with the largest value in the residuals cube.
          # imax: Index of element with largest residual
-         (allbad,imax,sumdata) = self.findMax(sumdata)
+         imax = self.findMax()
  
          # Finish iterating if all the residuals are bad, or if too many iterations
          # have been performed since the last succesfully fitted clump. 
-         if allbad:
+         if np.isnan(imax):
             iterate = False;
             niter-=1
             if verbose:

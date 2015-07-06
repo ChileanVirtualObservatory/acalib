@@ -9,88 +9,37 @@ import urllib
 import shutil
 import os.path
 from astropy.io import fits
+import core.parameter as par
 
-INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H, HDO')]
-INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
-DEFAULT_ISO_ABUND = {'13C': 1. / 30., '18O': 1. / 60., '17O': 1. / 120., '34S': 1. / 30., '33S': 1. / 120.,
-                         '13N': 1. / 30., 'D': 1./40.}
-DEFAULT_ABUND_RANGE=[10**-5,10**-6]
-GAUSS_STRINGS = ["Gaussian", "gaussian", "Gauss", "gauss", "normal", "Normal"]
-DEFAULT_CO_ABUND=1.0
+#INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H, HDO')]
+#INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
+#DEFAULT_ISO_ABUND = {'13C': 1. / 30., '18O': 1. / 60., '17O': 1. / 120., '34S': 1. / 30., '33S': 1. / 120.,
+#                         '13N': 1. / 30., 'D': 1./40.}
+#DEFAULT_ABUND_RANGE=[10**-5,10**-6]
+#GAUSS_STRINGS = ["Gaussian", "gaussian", "Gauss", "gauss", "normal", "Normal"]
+#DEFAULT_CO_ABUND=1.0
 
 
 DEFAULT_DBPATH= 'ASYDO'
 
+
 class IMC(Component):
     """ Interstellar Molecular Core """
 
-    def __init__(self, template,std, angle, mol_list, temp, fwhm, gradient, 
-                 abun_range=DEFAULT_ABUND_RANGE, abun_CO=DEFAULT_CO_ABUND, iso_abun=DEFAULT_ISO_ABUND,dbpath=DEFAULT_DBPATH,equiv=u.doppler_radio, URI=""):
+    def __init__(self, mol_list, temp,dbpath=DEFAULT_DBPATH,equiv=u.doppler_radio):
         Component.__init__(self)
         self.equiv=equiv
         self.dbpath = dbpath
         self.temp = temp
-        self.std= std
-        self.angle = angle
-        self.fwhm = fwhm
-        self.gradient = gradient
-        self.intens = dict()
-        if template in GAUSS_STRINGS:
-           self._draw_func=self._draw_gauss
-        else:
-           # Assuming an image template URI (fits format)
-           # Download the URI
-           # Maybe rotate it? (not sure)
-           # Load the URI and put it in _image
-           self._image=self.loader(URI)
-           self._draw_func=self._draw_image
-        for mol in mol_list.split(','):
-            abun = random.uniform(abun_range[1], abun_range[0])
-            if mol in ('COv=0', '13COv=0', 'C18O', 'C17O', '13C18O'):
-                abun += abun_CO
-            for iso in iso_abun:
-                if iso in mol:
-                    abun *= iso_abun[iso]
-            self.intens[mol] = abun
+        self.mol_list = mol_list
 
 
-    def loader(self, uri, destination=""):
-        """
-        Gets the image/Fits to use as model
-        Supports Fits only.
-        """
-
-        fileName = uri.split("/")[-1]
-        self.fullDestination = os.path.join(destination, fileName)
-        s = urllib.urlretrieve(uri)
-
-        # Copy the file to the selected destination
-        shutil.copy2(s[0], self.fullDestination)
-        self.extension = os.path.splitext(self.fileName)[-1]
-        if (self.extension == "fits"):
-            return fits.open(self.fullDestination)[0].data
-        else:
-            raise ValueError("Wrong File Type (Only .fits Currently supported)")
-
-    def change_intensities(self, intens):
-        '''User defined dictionary in the form {molecule: intensity}'''
-        self.intens = intens
-
-    def _draw_gauss(self,cube,flux,freq,cutoff):
-       pos=np.array([self.alpha.value,self.delta.value])*u.deg
-       (mu,P)=flx.clump_to_gauss(pos,self.std,self.angle,freq,self.fwhm,self.gradient)
-       #print "mu",mu
-       (mcub,lower,upper)=flx.create_gauss_flux(cube,mu,P,flux,cutoff)
-       cube.add_flux(mcub,lower,upper)
-
-    def _draw_image(self,cube,flux,freq,cutoff):
+    def _draw(self,cube,flux,freq,cutoff):
        # TODO      
        pass
 
     def info(self):
-       # TODO: implement
-       return "species = " + str(self.intens.keys()) + " intensities = "+str(self.intens.values())+" temp = "+str(self.temp)+" std = "+str(self.std)+" angle ="+str(self.angle)+" fwhm ="+str(self.fwhm)+"  gradient ="+str(self.gradient)
-
+       return ""
 
     def project(self, cube, cutoff):
         #TODO Make all this with astropy units from the call functions
@@ -110,27 +59,27 @@ class IMC(Component):
         #print "cor_fwin",cor_fwin
         counter = 0
         used = False
-        for mol in self.intens:
+        for mol in self.mol_list:
             # For each molecule specified in the dictionary
             # load its spectral lines
             linlist = dba.getSpeciesLines(mol, cor_fwin[0], cor_fwin[1])  # Selected spectral lines for this molecule
-            rinte = INTEN_VALUES[0]
-            for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
-                if mol in INTEN_GROUP[j]:
-                    rinte = INTEN_VALUES[j]
-            rinte = random.uniform(rinte[0], rinte[1])*self.intens[mol]
+            #rinte = INTEN_VALUES[0]
+            #for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
+            #    if mol in INTEN_GROUP[j]:
+            #        rinte = INTEN_VALUES[j]
+            rinte = random.uniform(mol_list[mol][0], mol_list[mol][1])
              
             for lin in linlist:
                 counter += 1
                 trans_temp = lin[5]*u.K
                 flux = np.exp(-abs(trans_temp - self.temp) / trans_temp) * rinte
-                print trans_temp, self.temp, flux, rinte
+                #print trans_temp, self.temp, flux, rinte
                 freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy 
                 if flux < cutoff: # TODO: astropy units!
-                    log.info('Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because I='+str(flux)+' < '+str(cutoff))
+                    log.info('    - Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because I='+str(flux)+' < '+str(cutoff))
                     continue
                 log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') intens='+ str(flux)+ ' '+cube.unit.to_string())
-                self._draw_func(cube,flux,freq,cutoff)
+                self._draw(cube,flux,freq,cutoff)
                 used = True
                 # TODO: generate a table: example:All the next commented lines were for generating a table: 
                 #arr_code.append(self.comp_name + '-r' + str(self.alpha) + '-d' + str(self.delta) + "-l" + str(counter))
@@ -160,4 +109,71 @@ class IMC(Component):
         #cube._add_HDU(tbhdu)
 
 
+class GaussianIMC(IMC):
+    def __init__(self,mol_list, temp, offset,std, angle, fwhm, gradient, dbpath=DEFAULT_DBPATH,equiv=u.doppler_radio):
+        IMC.__init__(self,mol_list, temp,dbpath,equiv)
+        self.offset=par.to_deg(offset)
+        self.std= std
+        self.angle = angle
+        self.fwhm = fwhm
+        self.gradient = gradient
+   
+    def _draw_gauss(self,cube,flux,freq,cutoff):
+       new_pos=self.pos + self.offset
+       (mu,P)=flx.clump_to_gauss(new_pos,self.std,self.angle,freq,self.fwhm,self.gradient)
+       #print "mu",mu
+       (mcub,lower,upper)=flx.create_gauss_flux(cube,mu,P,flux,cutoff)
+       cube.add_flux(mcub,lower,upper)
 
+    def info(self):
+       return "species = " + str(self.mol_list) + " temp = "+str(self.temp)+" offset"+str(self.offset)+" std = "+str(self.std)+" angle ="+str(self.angle)+" fwhm ="+str(self.fwhm)+"  gradient ="+str(self.gradient)
+
+
+################ ATTIC #######################
+
+        #for mol in mol_list.split(','):
+        #    abun = random.uniform(abun_range[1], abun_range[0])
+        #    if mol in ('COv=0', '13COv=0', 'C18O', 'C17O', '13C18O'):
+        #        abun += abun_CO
+        #    for iso in iso_abun:
+        #        if iso in mol:
+        #            abun *= iso_abun[iso]
+        #    self.intens[mol] = abun
+#    def loader(self, uri, destination=""):
+#        """
+#        Gets the image/Fits to use as model
+#        Supports Fits only.
+#        """
+#
+#        fileName = uri.split("/")[-1]
+#        self.fullDestination = os.path.join(destination, fileName)
+#        s = urllib.urlretrieve(uri)
+#
+#        # Copy the file to the selected destination
+#        shutil.copy2(s[0], self.fullDestination)
+#        self.extension = os.path.splitext(self.fileName)[-1]
+#        if (self.extension == "fits"):
+#            return fits.open(self.fullDestination)[0].data
+#        else:
+#            raise ValueError("Wrong File Type (Only .fits Currently supported)")
+
+ #   def change_intensities(self, intens):
+ #       '''User defined dictionary in the form {molecule: intensity}'''
+ #       self.intens = intens
+
+        #   self._draw_func=self._draw_gauss
+        #else:
+           # Assuming an image template URI (fits format)
+           # Download the URI
+           # Maybe rotate it? (not sure)
+           # Load the URI and put it in _image
+        #   self._image=self.loader(URI)
+        #   self._draw_func=self._draw_image
+        #for mol in mol_list.split(','):
+        #    abun = random.uniform(abun_range[1], abun_range[0])
+        #    if mol in ('COv=0', '13COv=0', 'C18O', 'C17O', '13C18O'):
+        #        abun += abun_CO
+        #    for iso in iso_abun:
+        #        if iso in mol:
+        #            abun *= iso_abun[iso]
+        #    self.intens[mol] = abun
