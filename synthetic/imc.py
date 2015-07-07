@@ -67,7 +67,7 @@ class IMC(Component):
             #for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
             #    if mol in INTEN_GROUP[j]:
             #        rinte = INTEN_VALUES[j]
-            rinte = random.uniform(mol_list[mol][0], mol_list[mol][1])
+            rinte = random.uniform(self.mol_list[mol][0], self.mol_list[mol][1])*u.Jy/u.beam
              
             for lin in linlist:
                 counter += 1
@@ -75,6 +75,7 @@ class IMC(Component):
                 flux = np.exp(-abs(trans_temp - self.temp) / trans_temp) * rinte
                 #print trans_temp, self.temp, flux, rinte
                 freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy 
+                #print flux, cutoff
                 if flux < cutoff: # TODO: astropy units!
                     log.info('    - Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because I='+str(flux)+' < '+str(cutoff))
                     continue
@@ -118,7 +119,7 @@ class GaussianIMC(IMC):
         self.fwhm = fwhm
         self.gradient = gradient
    
-    def _draw_gauss(self,cube,flux,freq,cutoff):
+    def _draw(self,cube,flux,freq,cutoff):
        new_pos=self.pos + self.offset
        (mu,P)=flx.clump_to_gauss(new_pos,self.std,self.angle,freq,self.fwhm,self.gradient)
        #print "mu",mu

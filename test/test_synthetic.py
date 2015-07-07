@@ -31,8 +31,8 @@ univ.add_component('example',model)
 mol_list=dict()
 mol_list['33SO2']=[0.5,5.0]* u.Jy/u.beam
 temp=300*u.K
-offset=np.array([10,-10])*u.arcsec
-std = np.array([3,9])*u.arcsec
+offset=np.array([20,-20])*u.arcsec
+std = np.array([4,12])*u.arcsec
 angle=math.pi/4.*u.rad
 fwhm=10*u.km/u.s
 gradient=np.array([-3.0,3.0])*u.km/(u.s*u.arcsec)
@@ -46,8 +46,8 @@ univ.add_component('example',model)
 mol_list=dict()
 mol_list['33SO2']=[0.5,8.0]* u.Jy/u.beam
 temp=300*u.K
-offset=np.array([10,-10])*u.arcsec
-std = np.array([3,9])*u.arcsec
+offset=np.array([-20,20])*u.arcsec
+std = np.array([4,12])*u.arcsec
 angle=math.pi/6.*u.rad
 fwhm=10*u.km/u.s
 gradient=np.array([3.0,-3.0])*u.km/(u.s*u.arcsec)
@@ -64,7 +64,7 @@ fov=np.array([200,200])*u.arcsec
 freq=300*u.GHz
 spe_res=0.005*u.GHz
 bw=2*u.GHz
-noise=0.5*u.Jy/u.beam
+noise=1*u.Jy/u.beam
 
 (cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise)
 print tab

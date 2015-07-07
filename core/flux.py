@@ -36,7 +36,7 @@ def create_gauss_flux(cube,mu,P,peak,cutoff):
    window=np.sqrt(2*np.log(peak/cutoff)*np.diag(Sigma))
    #print "win",window
    lower,upper=cube.index_from_window(mu,window)
-   print lower,upper
+   #print lower,upper
    feat=cube.get_features(lower,upper)
    C=np.empty_like(feat)
    C[0]=feat[0] - mu[0]
