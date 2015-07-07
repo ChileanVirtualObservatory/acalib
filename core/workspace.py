@@ -8,7 +8,7 @@ import numpy as np
 import os
 from astropy import log
 from astropy import __version__
-#from astropy.vo.samp import SAMPIntegratedClient
+from astropy.vo.samp import SAMPIntegratedClient
 from urlparse import urlparse, urljoin
 import time
 import tempfile
@@ -19,7 +19,7 @@ def create(name):
    ws['workspace']=name
    return ws
 
-_ws_df=create("DEFAULT")  
+_ws_df=create("DEFAULT")
 
 #def send(name,ws=_ws_df,destination='all'):
 #   _send(ws[name],name,destination)
@@ -57,7 +57,7 @@ def _create_cube(data,meta):
        raise TypeError
 
    # Put data in physically-meaninful values, and remove stokes
-   # TODO: Stokes is removed by summing (is this correct? maybe is averaging?) 
+   # TODO: Stokes is removed by summing (is this correct? maybe is averaging?)
    data=data.sum(axis=0)*bscale+bzero
    mywcs=wcs.WCS(meta)
    w=mywcs.dropaxis(3)
@@ -84,7 +84,7 @@ def _fits_consumer(path,name,ws=_ws_df):
 
          counter+=1
          #ide = name+"-"+str(counter)
-         #ws[ide] = scale 
+         #ws[ide] = scale
 
 
          ### CUT DATA TEST ####
@@ -142,8 +142,37 @@ def real_dims(ndd):
       otype="Cube"
    else:
       log.warning("NDData of 0 dimension? ignoring...")
-      return 
+      return
    return (dim,shape,otype)
+
+
+def send_aladin(fit,name):
+
+    """
+    Sends data to aladin
+    fits only supported
+    """
+    #fitPath = os.path.splitext(fit)[0]
+    fitExtension = os.path.splitext(fit)[1]
+
+    if (fitExtension != ".fits"): # for now, next with exceptions
+        print "Please use a file with .fits extension"
+        return
+
+    client = SAMPIntegratedClient()
+    client.connect()
+
+    params = {}
+    params["url"] = 'file://' + fit
+    params["name"] = name
+
+    message = {}
+    message["samp.mtype"] = "image.load.fits"
+    message["samp.params"] = params
+
+    client.notify_all(message) # the easiest way is notify all
+
+    client.disconnect()
 
 
 #def declare_metadata(client):
@@ -192,7 +221,7 @@ def real_dims(ndd):
 #        message['samp.mtype'] = "table.load.votable"
 #
 #    elif isinstance(data, NDData):
-#        
+#
 #        fits.writeto(output_file, data.data)
 #        #data.write(output_file, format='fits')
 #        message['samp.mtype'] = "image.load.fits"
