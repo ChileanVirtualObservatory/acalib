@@ -67,19 +67,23 @@ class IMC(Component):
             #for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
             #    if mol in INTEN_GROUP[j]:
             #        rinte = INTEN_VALUES[j]
-            rinte = random.uniform(self.mol_list[mol][0], self.mol_list[mol][1])*u.Jy/u.beam
+            abun = random.uniform(self.mol_list[mol][0], self.mol_list[mol][1])*u.Jy/u.beam
              
             for lin in linlist:
                 counter += 1
                 trans_temp = lin[5]*u.K
-                flux = np.exp(-abs(trans_temp - self.temp) / trans_temp) * rinte
-                #print trans_temp, self.temp, flux, rinte
+                inten=lin[4]
+                if inten != 0:
+                   inten=10**inten
+                flux = np.exp(-abs(trans_temp - self.temp) / trans_temp) * inten * abun
+                flux = flux.value * u.Jy/u.beam
+                #print trans_temp, self.temp, flux
                 freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy 
                 #print flux, cutoff
                 if flux < cutoff: # TODO: astropy units!
                     log.info('    - Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because I='+str(flux)+' < '+str(cutoff))
                     continue
-                log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') intens='+ str(flux)+ ' '+cube.unit.to_string())
+                log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') intens='+ str(flux))
                 self._draw(cube,flux,freq,cutoff)
                 used = True
                 # TODO: generate a table: example:All the next commented lines were for generating a table: 

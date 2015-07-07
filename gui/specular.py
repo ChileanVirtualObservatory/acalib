@@ -16,9 +16,11 @@ from matplotlib import pyplot as plt
 
 def load_test():
    ws.import_file("../fits/calibrated.ms.image.spectrum.J113740.6-010454.spw0.image.fits")
-   #ws.import_file("../fits/calibrated.ms.line.spw0.source15.image.fits")
+   #ws.import_file("../fits/calibrated.ms.line.spw0.source15.image.fits" )
+   ws.import_file("../fits/M100line.image.fits" )
+   ws.import_file("../fits/Orion.methanol.cbc.contsub.image.fits" )
    #ws.import_file("../fits/NGC6240_continuum.fits")
-#   ws.import_file("../fits/logfile_alma_hatlas_cycle1_inc-z_beye.fits")
+   #ws.import_file("../fits/logfile_alma_hatlas_cycle1_inc-z_beye.fits")
 
 class AutoWidthListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
     def __init__(self, parent):
