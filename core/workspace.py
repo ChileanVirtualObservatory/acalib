@@ -60,7 +60,7 @@ def _create_cube(data,meta):
    # TODO: Stokes is removed by summing (is this correct? maybe is averaging?)
    data=data.sum(axis=0)*bscale+bzero
    mywcs=wcs.WCS(meta)
-   w=mywcs.dropaxis(3)
+   mywcs=mywcs.dropaxis(3)
    return dt.AcaData(data,mywcs,meta,bunit)
 
 def _fits_consumer(path,name,ws=_ws_df):

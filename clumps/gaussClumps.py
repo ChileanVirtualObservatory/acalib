@@ -38,16 +38,133 @@ class GaussClumps:
       self.par['NSIGMA']=3.0
       # But reject peaks only if at least NPEAKS were found 
       self.par['NPEAKS']=9
-   
-   def findMax(sumdata):
-        
-
-   def fit(self,cube,rms=-1.0,verbose=False):
-      # Set the RMS, or automatically find an estimate for it
-      if rms < 0.0:
-         rms=cube.estimate_rms()
-      self.par['RMS']=rms
+      # Parameters which control the modification of the weights done by
+      # the chi2 (this modification is meant to give low weights to pixels
+      # which do not influence the Gaussian model, status ). 
+      self.par['NWF']= 10
+      self.par['MINWF']=0.8
+      self.par['MAXWF']=1.1
+      # Maximum number of function evaluations to be used when fitting an
+      # individual clump.
+      self.par['MAXNF']=100
+      # Chi-square stiffness parameter "Sa" which encourages the peak
+      # amplitude of the fitted gaussian close to the maximum value in the
+      # observed data.
+      self.par['SA']=1.0
+      # Chi-square stiffness parameter "Sb" which encourages the
+      # background value to stay close to its initial value. This is an extra
+      # stiffness added by DSB which is not in the Stutzki & Gusten paper. It
+      # is used because the background value is usually determined by data
+      # points which have very low weight and is thus poorly constrained. It
+      # would thus be possibly to get completely erroneous background values
+      # without this extra stiffness.
+      self.par['SB']=0.1
+      # Chi-square stiffness parameter "S0" which encourages the peak
+      # amplitude of the fitted gaussian to be below the maximum value in the
+      # observed data.
+      self.par['S0']=1.0
+      # Chi-square stiffness parameter "Sc" which encourages the peak
+      # position of the fitted gaussian to be close to the peak position in the
+      # observed data. 
+      self.par['SC']=1.0
+      # The ratio of the weighting function FWHM to the observed FWHM. */
+      self.par['WWIDTH']=2.0
       
+# The factor which scales the FWHM on each axis to the half-width of the
+      #  section of the data array to be be fitted. */
+      self.par['WMIN']=0.05
+  
+   def self.optimize():
+      # Unpack used parameters
+      wwidth=self.par['WWIDTH']
+      wmin=self.par['WMIN']
+      rms=self.par['RMS']
+      
+      # Gaussian Window
+      beta=0.5*wwidth*npsqrt(-np.log( wmin )/ np.log( 2.0 ) );
+      lb,ub=self.res.index_from_window(self.cval,beta*self.fobs)
+      # Store the data normalised to the
+      # RMS noise level. Also calculate and store the Gaussian weight for the
+      # pixel.
+      y=self.res.get_slice(lb,ub).ravel()
+      y=y/rms
+      feat=self.res.get_features(lb,ub)
+      wpos=np.array([self.fpos])
+      # HERE
+      (wmu,wP)=flx.clump_to_gauss(wpos,wstd,0,wfreq,wfwhm,np.array[0,0])
+
+   def setInit(self,niter):
+      # Unpack used parameters
+      beamfwhm=self.par['FWHMBEAM']
+      velres=self.par['VELORES']
+      rms=self.par['RMS']
+
+      guess=np.zeros(11)      
+      # Get a guess at the observed clump fwhm by forming a radial profile and
+      # finding the distance to the first significant minimum. This also increments
+      # "off" by the minimum (i.e. base line) data value in the profile. Do
+      # this for both spatial axes, and then take the mean (i.e. we assume the
+      # clump is circular as an initial guess)
+      self.fobs=np.zeros(3)
+      off=np.zeros(3)
+      (self.fobs[0],off[0]) = self.profWidth(self.res,self.imax,0) 
+      (self.fobs[1],off[1]) = self.profWidth(self.res,self.imax,1) 
+      (self.fobs[2],off[2]) = self.profWidth(self.res,self.imax,2) 
+      fbeam=0.5*(self.fobs[0]  + self.fobs[1])/beamfwhm
+      if fbeam < 1.0: 
+         fbeam=1.2
+      self.fobs[0] = fbeam*beamfwhm
+      self.fobs[1] = fbeam*beamfwhm
+           
+      # Store the Guessed model 
+      self.cval=self.res.index_to_wcs(self.imax)
+      guess[2]=wcsval[0]
+      guess[4]=wcsval[1]
+      guess[7]=wcsval[2]
+      # Find the initial guess at the intrinsic FWHM (i.e. the FWHM of the
+      # clump before being blurred by the instrument beam). Do the same for 
+      # the second axis. Assume zero rotation of the elliptical clump shape.
+      guess[3]=np.sqrt(fbeam*fbeam- 1.0 )*beamfwhm
+      guess[5]=guess[4]
+      guess[6]=0.0
+      # Now do the same for the third (velocity) axis if necessary. Assume
+      # zero velocity gradient
+      fvel=self.fobs[2]/velres
+      guess[8]=np.sqrt(fvel*fvel- 1.0 )*velres
+      guess[9]=0.0
+      guess[10]=0.0
+      
+      # Store the mean of the background estimates, and the peak value. Noise
+      # will result in the peak data value being larger than the peak clump value
+      # by about the RMS noise. Therefore, reduce the peak value by the RMS.
+      guess[1] = off.sum()/3
+      guess[0] = self.ymax - guess[1] - rms
+
+      # Negative background levels are unphysical (since it is assumed that
+      # any background has already been removed from the data before running
+      # this algorithm (TODO: CHECK)). However, an apparent negative background can be formed by
+      # a previous ill-position fit resulting in negative residiauls. Therefore
+      # we have to guard against negative backgrounds. If the initial background
+      # estimate is significantly less than zero, then set it to zero, and
+      # indicate that the background value should be fixed (i.e. not included
+      # as a free parameter in the fitting process). Here, "significant" means
+     
+     # more than 5% of the total peak height. */
+      self.fixback=False
+      if guess[1] < -np.abs(guess[ 0 ]*0.05):
+         guess[0] += guess[1];
+         guess[1] = 0.0;
+         self.fixback = True;
+       self.guess=guess
+
+   def fit(self,cube,verbose=False,use_meta=True):
+      # Set the RMS, or automatically find an estimate for it
+      if not self.par.has_key('RMS'):
+         rms=cube.estimate_rms()
+         self.par['RMS']=rms
+      
+      # TODO: set parameters according to meta
+ 
       # Unpack used parameters
       npeaks=self.par['NPEAKS']
       mlim=self.par['MODELMIN']
@@ -90,7 +207,7 @@ class GaussClumps:
       # Sum of the values in all the used clumps so far 
       sumclumps = 0.0
       # Sum of the supplied data values 
-      sumdata = cube.get_flux()
+      sumdata = res.get_flux()
       
       # peaks contains the last npeaks... 
       peaks=np.zeros(npeaks)
@@ -104,7 +221,7 @@ class GaussClumps:
             log.info("Iteration: "+str(niter))
          # Find the cube index of the element with the largest value in the residuals cube.
          # imax: Index of element with largest residual
-         imax = self.findMax()
+         (fmax,imax) = res.max()
  
          # Finish iterating if all the residuals are bad, or if too many iterations
          # have been performed since the last succesfully fitted clump. 
@@ -121,10 +238,10 @@ class GaussClumps:
                log.info("The previous",maxskip,"fits were unusable.")
                continue
          # If not, make an initial guess at the Gaussian clump parameters centred on the current peak.
-         guess=self.setInit(imax,niter)
+         self.setInit()
          
          # Find the best fitting parameters, starting from the above initial guess.
-         (found,clump,chisq)=self.optimize(imax,guess)
+         (found,clump,chisq)=self.optimize()
          # If no fit could be performed, then found = False
          if found:
             # Skip this fit if we have an estimate of the standard deviation of the

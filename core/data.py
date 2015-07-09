@@ -135,8 +135,7 @@ class AcaData(ndd.NDData):
     			
     def get_stacked(self,lower=None,upper=None,axis=(0)):
                 sli=self._slice(lower,upper)
-                # TODO: nan values must be excluded using mask (data.sum), but they are not working!
-    		return np.nansum(self.data[sli],axis=axis)
+    		return np.sum(self.data[sli],axis=axis)
     
     def add_flux(self,flux,lower=None,upper=None):
     		sli=self._slice(lower,upper)
@@ -150,16 +149,16 @@ class AcaData(ndd.NDData):
     		self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
     
     def max(self):
-    		# TODO: here we should use only self.data.argmax(), but nanargmax is used
-    		# because the bloody masked arrays are not working in the NDData
-    		index=np.unravel_index(np.nanargmax(self.data),self.data.shape)
+                #try:
+    	        index=np.unravel_index(np.argmax(self.data),self.data.shape)
     		y=self.data[index]
+                #except ValueError:
+                #y=np.nan
+                #index=np.nan
     		return (y,index)
     
     def min(self):
-    		# TODO: here we should use only self.data.argmin(), but nanargmin is used
-    		# because the bloody masked arrays are not working in the NDData
-    		index=np.unravel_index(np.nanargmin(self.data),self.data.shape)
+    		index=np.unravel_index(np.argmin(self.data),self.data.shape)
     		y=self.data[index]
     		return (y,index)
     
@@ -187,7 +186,7 @@ class AcaData(ndd.NDData):
     
     def get_slice(self,lower=None,upper=None):
     		sli=self._slice(lower,upper)
-    		return np.array([self.data[sli[0],sli[1],sli[2]]])
+    		return self.data[sli[0],sli[1],sli[2]].copy()
     
     def index_from_window(self,wcs_center,wcs_window):
 		   ld=np.rint(self.wcs.wcs_world2pix([wcs_center-wcs_window],0))
