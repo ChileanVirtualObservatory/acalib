@@ -79,7 +79,12 @@ class GaussClumps:
       wwidth=self.par['WWIDTH']
       wmin=self.par['WMIN']
       rms=self.par['RMS']
-      
+      beam=self.par['BEAM']
+      velres=self.par['VELORES']
+      beamfwhm=self.par['FWHMBEAM']
+      bfsq=beamfwhm*beamfwhm
+      velsq=velres*velres
+
       # Gaussian Window
       beta=0.5*wwidth*npsqrt(-np.log( wmin )/ np.log( 2.0 ) );
       lb,ub=self.res.index_from_window(self.cval,beta*self.fobs)
@@ -87,11 +92,47 @@ class GaussClumps:
       # RMS noise level. Also calculate and store the Gaussian weight for the
       # pixel.
       y=self.res.get_slice(lb,ub).ravel()
-      y=y/rms
       feat=self.res.get_features(lb,ub)
-      wpos=np.array([self.fpos])
-      # HERE
+      wpos=np.array([self.cval[0],self.cval[1]])
+      wstd=np.array([self.fobs[0],self.fobs[1]])*wwidth
+      wfreq=self.cval[2]
+      wfwhm=self.fobs[2]*wwidth
       (wmu,wP)=flx.clump_to_gauss(wpos,wstd,0,wfreq,wfwhm,np.array[0,0])
+      # Normalise the weights to a maximum value of 1.0 and set to zero any weights
+      # which are lower than the user supplied lower limit.
+      we=flx.create_gauss(wmu,wP,feat,1.0)
+      we[we < wmin]=0.0
+      
+      # Normalise all other data values in the guess structure and in the 
+      # array to the RMS noise level.
+      y=y/rms
+      self.ymax /= rms;
+      guess[1] /= rms;
+      guess[0] /= rms;
+
+      # Number of invocations of the function
+      nf=0
+      
+      # TODO: Check and understand this
+      # Get the factor by which to correct the peak amplitude of the model to
+      # take account of the smoothing by the instrumental beam.
+      t = guess[3]*guess[3]
+      dx_sq = bfsq + t;
+      peakfactor = t/dx_sq;
+      t = guess[5]*guess[5];
+      dx_sq = bfsq + t;
+      peakfactor *= t/dx_sq;
+      t = guess[8]*guess[8];
+      dx_sq = velsq + t;
+      peakfactor *= t/dx_sq;
+
+      # Do the correction.
+      if  peakfactor > 0.0:
+         guess[0] /= sqrt(peakfactor);
+      
+      
+
+ 
 
    def setInit(self,niter):
       # Unpack used parameters
