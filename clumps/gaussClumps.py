@@ -16,67 +16,50 @@ def chi2(par,gc):
       back_term=par[1] - gc.guess[1]
       back_term *= gc.pars['SB']*back_term
    if not gc.reuse:
-   if  par[ 3 ] <= 0.0: return ret
-   if  par[ 5 ] <= 0.0: return ret
-   if  par[ 8 ] <= 0.0: return ret
+      if  par[ 3 ] <= 0.0: return ret
+      if  par[ 5 ] <= 0.0: return ret
+      if  par[ 8 ] <= 0.0: return ret
  
-# Get the factor by which to correct the peak amplitude of the model to
-# take account of the smoothing by the instrumental beam.
-   t = par[ 3 ]*par[ 3 ]
-   dx_sq = gc.bfsq + t
-   peakfactor = t/dx_sq
-   f3 = par[ 0 ]*gc.bfsq/( par[ 3 ]*dx_sq )
-   t = par[ 5 ]*par[ 5 ]
-   dx_sq = gc.bfsq + t
-   peakfactor *= t/dx_sq;
-   f5 = par[ 0 ]*gc.bfsq/( par[ 5 ]*dx_sq )
-   t = par[ 8 ]*par[ 8 ]
-   dx_sq = gc.velsq + t;
-   peakfactor *= t/dx_sq;
-   f8 = par[ 0 ]*gc.velsq/( par[ 8 ]*dx_sq );
+      # Get the factor by which to correct the peak amplitude of the model to
+      # take account of the smoothing by the instrumental beam.
+      t = par[ 3 ]*par[ 3 ]
+      dx_sq = gc.bfsq + t
+      peakfactor = t/dx_sq
+      f3 = par[ 0 ]*gc.bfsq/( par[ 3 ]*dx_sq )
+      t = par[ 5 ]*par[ 5 ]
+      dx_sq = gc.bfsq + t
+      peakfactor *= t/dx_sq;
+      f5 = par[ 0 ]*gc.bfsq/( par[ 5 ]*dx_sq )
+      t = par[ 8 ]*par[ 8 ]
+      dx_sq = gc.velsq + t;
+      peakfactor *= t/dx_sq;
+      f8 = par[ 0 ]*gc.velsq/( par[ 8 ]*dx_sq );
 
-   if peakfactor > 0.0:
-      peakfactor = np.sqrt( peakfactor )
-   else:
-      peakfactor = 0.0;
-   }
+      if peakfactor > 0.0:
+         peakfactor = np.sqrt( peakfactor )
+      else:
+         peakfactor = 0.0;
+      }
 
-   f3 *= peakfactor;
-   f5 *= peakfactor;
-   f8 *= peakfactor;
-258 
-259 /* The difference between the model peak value (after being reduced to
-260    take account of instrumental smoothing) and the data peak value. */
-261       pdiff = peakfactor*par[ 0 ] + par[ 1 ] - cupidGC.ymax;
-262 
-263 /* The offset from the model centre to the data peak */
-264       x0_off = par[ 2 ] - cupidGC.x_max[ 0 ];
-265       if( ndim > 1 ) x1_off = par[ 4 ] - cupidGC.x_max[ 1 ];
-266       if( ndim > 2 ) v_off = par[ 7 ] - cupidGC.x_max[ 2 ];
-267 
-268 /* Initialise the total chi squared value */
-269       chisq = 0.0;
-270 
-271 /* Initialise pointers to the next element to be used in the arrays
-272    defining the data to be fitted. Note, the elements in these arays have
-273    fortran ordering (i.e. axis 0 varies most rapidly). */
-274       py = cupidGC.data;
-275       pw = cupidGC.weight;
-276       pr = cupidGC.res;
-277       pu = cupidGC.resu;
-278       pm = cupidGC.model;
-279       prs = cupidGC.resids;
-281       wmod = 0;
-282       wsum = 0.0;
-283       for( iax = 0; iax < ndim; iax++ ) x[ iax ] = cupidGC.lbnd[ iax ];
-284 
-285 /* Loop round every element in the section of the data array which is
-286    currently being fitted. */
-287       for( iel = 0; iel < cupidGC.nel; iel++ ){
-288 
-289 /* Get the Gaussian model value at the centre of the current pixel. Store
-290    the residual between the Gaussian model at the centre of the current
-291    pixel and the current pixel's data value. */
+      f3 *= peakfactor;
+      f5 *= peakfactor;
+      f8 *= peakfactor;
+ 
+      # The difference between the model peak value (after being reduced to
+      # take account of instrumental smoothing) and the data peak value.
+      pdiff = peakfactor*par[ 0 ] + par[ 1 ] - gc.ymax;
+ 
+      # The offset from the model centre to the data peak 
+      x0_off = par[ 2 ] - gc.cval[ 0 ];
+      x1_off = par[ 4 ] - gc.cval[ 1 ];
+      v_off = par[ 7 ] - gc.cval[ 2 ];
+
+      # Initialise the total chi squared value */
+      chisq = 0.0;
+
+      # Get the Gaussian model. Store
+      # the residual between the Gaussian model and data
+      
 292          m = cupidGCModel( ndim, x, par, -1, 1, ( iel == 0 ), status );
 293          res = *py - m;
 294 
@@ -392,9 +375,9 @@ class GaussClumps:
            
       # Store the Guessed model 
       self.cval=self.res.index_to_wcs(self.imax)
-      guess[2]=wcsval[0]
-      guess[4]=wcsval[1]
-      guess[7]=wcsval[2]
+      guess[2]=self.cval[0]
+      guess[4]=self.cval[1]
+      guess[7]=self.cval[2]
       # Find the initial guess at the intrinsic FWHM (i.e. the FWHM of the
       # clump before being blurred by the instrument beam). Do the same for 
       # the second axis. Assume zero rotation of the elliptical clump shape.
