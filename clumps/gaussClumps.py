@@ -6,6 +6,231 @@ import matplotlib.pyplot as plt
 import sys
 from cube import *
 
+def chi2(par,gc):
+   ret=None
+   # If the background is fixed, include zero background value
+   if gc.fixback:
+      par=np.insert(par,1,0.0)
+      back_term=0
+   else
+      back_term=par[1] - gc.guess[1]
+      back_term *= gc.pars['SB']*back_term
+   if not gc.reuse:
+   if  par[ 3 ] <= 0.0: return ret
+   if  par[ 5 ] <= 0.0: return ret
+   if  par[ 8 ] <= 0.0: return ret
+ 
+# Get the factor by which to correct the peak amplitude of the model to
+# take account of the smoothing by the instrumental beam.
+   t = par[ 3 ]*par[ 3 ]
+   dx_sq = gc.bfsq + t
+   peakfactor = t/dx_sq
+   f3 = par[ 0 ]*gc.bfsq/( par[ 3 ]*dx_sq )
+   t = par[ 5 ]*par[ 5 ]
+   dx_sq = gc.bfsq + t
+   peakfactor *= t/dx_sq;
+   f5 = par[ 0 ]*gc.bfsq/( par[ 5 ]*dx_sq )
+   t = par[ 8 ]*par[ 8 ]
+   dx_sq = gc.velsq + t;
+   peakfactor *= t/dx_sq;
+   f8 = par[ 0 ]*gc.velsq/( par[ 8 ]*dx_sq );
+
+   if peakfactor > 0.0:
+      peakfactor = np.sqrt( peakfactor )
+   else:
+      peakfactor = 0.0;
+   }
+
+   f3 *= peakfactor;
+   f5 *= peakfactor;
+   f8 *= peakfactor;
+258 
+259 /* The difference between the model peak value (after being reduced to
+260    take account of instrumental smoothing) and the data peak value. */
+261       pdiff = peakfactor*par[ 0 ] + par[ 1 ] - cupidGC.ymax;
+262 
+263 /* The offset from the model centre to the data peak */
+264       x0_off = par[ 2 ] - cupidGC.x_max[ 0 ];
+265       if( ndim > 1 ) x1_off = par[ 4 ] - cupidGC.x_max[ 1 ];
+266       if( ndim > 2 ) v_off = par[ 7 ] - cupidGC.x_max[ 2 ];
+267 
+268 /* Initialise the total chi squared value */
+269       chisq = 0.0;
+270 
+271 /* Initialise pointers to the next element to be used in the arrays
+272    defining the data to be fitted. Note, the elements in these arays have
+273    fortran ordering (i.e. axis 0 varies most rapidly). */
+274       py = cupidGC.data;
+275       pw = cupidGC.weight;
+276       pr = cupidGC.res;
+277       pu = cupidGC.resu;
+278       pm = cupidGC.model;
+279       prs = cupidGC.resids;
+281       wmod = 0;
+282       wsum = 0.0;
+283       for( iax = 0; iax < ndim; iax++ ) x[ iax ] = cupidGC.lbnd[ iax ];
+284 
+285 /* Loop round every element in the section of the data array which is
+286    currently being fitted. */
+287       for( iel = 0; iel < cupidGC.nel; iel++ ){
+288 
+289 /* Get the Gaussian model value at the centre of the current pixel. Store
+290    the residual between the Gaussian model at the centre of the current
+291    pixel and the current pixel's data value. */
+292          m = cupidGCModel( ndim, x, par, -1, 1, ( iel == 0 ), status );
+293          res = *py - m;
+294 
+295 /* If the changing of the model parameters make little difference to the
+296    residuals at a given place in the data, then those residuals should be
+297    given less weight since they could dominate the chi-squared value. If
+298    the residual at the current pixel has not change by much since the
+299    previous call, reduce the weight associated with the pixel. However,
+300    if the parameter has not change by much then you would not expect the
+301    residuals to change by much. Therefore, do not reduce the weight by so
+302    much if the model value at this pixel has not changed by much since the
+303    last call. In order to avoid instability, we only do this modification
+304    for a few iterations near the start, and then allow the fitting
+305    process to complete with fixed weights. */
+306          if( !cupidGC.fixback && cupidGC.nf > 2 && nwm <= cupidGC.nwf ) {
+307             if( res != 0.0 && m != 0.0 && m != *pm ) {
+308 
+309 /* Only modify the weights if the background has changed. Without this,
+310    the outlying background regions would be given low weights if the
+311    background has not changed, resulting in the background being poorly
+312    determined. */
+313                if( bg != 0.0 ) {
+314                   dbg = ( fabs( ( par[ 1 ] - bg )/bg ) > 0.001 );
+315                } else {
+316                   dbg = ( par[ 1 ] != 0.0 );
+317                }
+318                if( dbg ) {
+319                   wf = ( res - *pu )/ res;
+320                   wf /= ( m - *pm )/ m;
+321                   wf = fabs( wf );
+322                   wf = ( wf < cupidGC.minwf ) ? cupidGC.minwf : ( wf > cupidGC.maxwf ) ? cupidGC.maxwf : wf ;
+323                   *pw *= wf;
+324                   if( *pw > 1.0 ) *pw = 1.0;
+325                   wmod = 1;
+326                }
+327             }
+328          }
+329 
+330 /* Save the residual and model value at this pixel */
+331          *pu = res;
+332          *pm = m;
+ /* Determine a scale factor which encourages the fitted intensity to stay
+335    below the observed intensity. This does the same job as the
+336    "s0.exp( Yi_fit - Yi )" term in the chi-squared expression given in
+337    the Stutski & Gusten paper. The form used here was inherited from the
+338    implementation of GaussClumps (obtained from
+339    ftp.astro.uni-bonn.de/pub/heith/gaussclumps on 27/9/05) upon which this
+340    implementation was based. */
+341          rr = ( res > 0.0 ) ? 1.0 : cupidGC.s0p1;
+342 
+343 /* Increment the running sum of chi-squared. We save the scaled residuals
+344    in a work array (pr) so that we do not need to calculate them again if
+345    this function is called subsequently to find the gradient for the same
+346    set of parameer values. */
+347          wsum += *pw;
+348          *pr = *pw*res*rr;
+349          chisq += *pr*res;
+350          *prs = *pr*res;
+351 
+352 /* Move the pointers on to the next pixel in the section of the data
+353    array being fitted. */
+354          py++;
+355          pw++;
+356          pr++;
+357          pu++;
+358          pm++;
+359          prs++;
+360 
+361 /* Get the grid coords (within the full size original data array) of the
+362    next pixel in the section currently being fitted. This assumes fortran
+363    ordering of the elements in the arrays.*/
+364          iax = 0;
+365          x[ iax ] += 1.0;
+366          while( x[ iax ] > cupidGC.ubnd[ iax ] ) {
+367             x[ iax ] = cupidGC.lbnd[ iax ];
+368             if( ++iax == ndim ) break;
+369             x[ iax ] += 1.0;
+370          }
+371       }
+372 
+373 /* Remember the background value for next time. */
+374       bg = par[ 1 ];
+375 
+376 /* Increment the number of iteration sthat have made modifications to the
+377    weights (if any such change has in fact been made). */
+378       if( wmod ) nwm++;
+379 
+380 /* Divide by the sum of the weights . */
+381       cupidGC.wsum = wsum;
+382       chisq /= wsum;
+384 /* Modify this basic chi-squared value as described in the Stutski &
+385    Gusten paper. */
+386       if( ndim == 1 ) {
+387          t = ( cupidGC.beam_sq > 0.0 ) ? x0_off*x0_off/cupidGC.beam_sq : 0.0;
+388       } else {
+389          t = ( cupidGC.beam_sq > 0.0 ) ?
+390                ( x0_off*x0_off + x1_off*x1_off )/cupidGC.beam_sq : 0.0;
+391          if( ndim == 3 && cupidGC.velres_sq > 0.0 ) t += v_off*v_off/cupidGC.velres_sq;
+392       }
+393       chisq += cupidGC.sa*pdiff*pdiff + cupidGC.sc4*t + back_term;
+394 
+395 /* Store more diagnostic info */
+396       if( cupidGC.nf == 1 ) {
+397          pim = cupidGC.initmodel;
+398          pm = cupidGC.model;
+399          for( iel = 0; iel < cupidGC.nel; iel++ ) *(pim++) = *(pm++);
+400       }
+401       cupidGC.chisq = chisq;
+402 
+403    }
+404 
+405 /* Select or calculate the required return value.  If the chi squared
+406    value itself is required, just return the value found above. */
+407    if( what < 0 ) {
+408       ret = chisq;
+409 
+410         cupidGCDumpF( MSG__DEBUG3, NULL, 0, NULL, NULL, status );
+411 
+412          msgSeti( "NF", cupidGC.nf );
+413          msgOutif( MSG__DEBUG3, "", "   Fit attempt ^NF:", status );
+414 
+415          msgSetd( "C", ret );
+416          msgOutif( MSG__DEBUG3, "", "      Chi-squared: ^C", status );
+417 
+418          msgSetd( "V", par[ 0 ] );
+419          msgOutif( MSG__DEBUG3, "", "      Peak intensity: ^V", status );
+420          msgSetd( "V", par[ 1 ] );
+421          msgOutif( MSG__DEBUG3, "", "      Constant background: ^V", status );
+422          msgSetd( "V", par[ 2 ] );
+423          msgOutif( MSG__DEBUG3, "", "      Centre on 1st axis: ^V", status );
+424          msgSetd( "V", par[ 3 ] );
+425          msgOutif( MSG__DEBUG3, "", "      FWHM on 1st axis: ^V", status );
+426 
+427          if( ndim > 1 ) {
+428             msgSetd( "V", par[ 4 ] );
+429             msgOutif( MSG__DEBUG3, "", "      Centre on 2nd axis: ^V", status );
+430             msgSetd( "V", par[ 5 ] );
+431             msgOutif( MSG__DEBUG3, "", "      FWHM on 2nd axis: ^V", status );
+432             msgSetd( "V", par[ 6 ] );
+433             msgOutif( MSG__DEBUG3, "", "      Position angle: ^V", status );
+434 
+435             if( ndim > 2 ) {
+436                msgSetd( "V", par[ 7 ] );
+437                msgOutif( MSG__DEBUG3, "", "      Centre on vel axis: ^V", status );
+438                msgSetd( "V", par[ 8 ] );
+439                msgOutif( MSG__DEBUG3, "", "      FWHM on vel axis: ^V", status );
+440                msgSetd( "V", par[ 9 ] );
+441                msgOutif( MSG__DEBUG3, "", "      Vel gradient on 1st axis: ^V", status );
+442                msgSetd( "V", par[ 10 ] );
+
+      
+   
+
+
 class GaussClumps:
 
    def __init__(self):
@@ -69,23 +294,25 @@ class GaussClumps:
       self.par['SC']=1.0
       # The ratio of the weighting function FWHM to the observed FWHM. */
       self.par['WWIDTH']=2.0
-      
-# The factor which scales the FWHM on each axis to the half-width of the
-      #  section of the data array to be be fitted. */
+      # The value for which the weight is considered already zero 
       self.par['WMIN']=0.05
   
    def self.optimize():
       # Unpack used parameters
+      maxnf=self.par['MAXNF']
       wwidth=self.par['WWIDTH']
       wmin=self.par['WMIN']
       rms=self.par['RMS']
       beam=self.par['BEAM']
       velres=self.par['VELORES']
       beamfwhm=self.par['FWHMBEAM']
-      bfsq=beamfwhm*beamfwhm
-      velsq=velres*velres
+      self.bfsq=beamfwhm*beamfwhm
+      self.velsq=velres*velres
 
       # Gaussian Window
+
+      # The factor which scales the FWHM on each axis to the half-width of the
+      # section of the data array to be be fitted. 
       beta=0.5*wwidth*npsqrt(-np.log( wmin )/ np.log( 2.0 ) );
       lb,ub=self.res.index_from_window(self.cval,beta*self.fobs)
       # Store the data normalised to the
@@ -111,27 +338,33 @@ class GaussClumps:
       guess[0] /= rms;
 
       # Number of invocations of the function
-      nf=0
+      self.nf=0
       
       # TODO: Check and understand this
       # Get the factor by which to correct the peak amplitude of the model to
       # take account of the smoothing by the instrumental beam.
       t = guess[3]*guess[3]
-      dx_sq = bfsq + t;
+      dx_sq = self.bfsq + t;
       peakfactor = t/dx_sq;
       t = guess[5]*guess[5];
-      dx_sq = bfsq + t;
+      dx_sq = self.bfsq + t;
       peakfactor *= t/dx_sq;
       t = guess[8]*guess[8];
-      dx_sq = velsq + t;
+      dx_sq = self.velsq + t;
       peakfactor *= t/dx_sq;
 
       # Do the correction.
       if  peakfactor > 0.0:
          guess[0] /= sqrt(peakfactor);
       
-      
+      if self.fixback:
+         np.delete(guess,[1])
 
+      self.reuse=False
+      # Optimize at last!
+      res=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self)
+      
+      # TODO: Repeat when failed!
  
 
    def setInit(self,niter):
@@ -213,6 +446,8 @@ class GaussClumps:
       area_thresh=self.par['MINPIX']
       maxclump=self.par['MAXCLUMPS']
       npad=self.par['NPAD']
+      maxskip=self.par['MAXSKIP']
+      nsig=self.par['NSIGMA']
 
       # Copy the supplied cube into a work cube which will hold the
       # residuals remaining after subtraction of the fitted Gaussians. 
