@@ -23,31 +23,25 @@ def chi2(par,gc):
       # Get the factor by which to correct the peak amplitude of the model to
       # take account of the smoothing by the instrumental beam.
       t = par[ 3 ]*par[ 3 ]
-      dx_sq = gc.bfsq + t
-      peakfactor = t/dx_sq
-      f3 = par[ 0 ]*gc.bfsq/( par[ 3 ]*dx_sq )
+      dx0_sq = gc.bfsq + t
+      peakfactor = t/dx0_sq
       t = par[ 5 ]*par[ 5 ]
-      dx_sq = gc.bfsq + t
-      peakfactor *= t/dx_sq;
-      f5 = par[ 0 ]*gc.bfsq/( par[ 5 ]*dx_sq )
+      dx1_sq = gc.bfsq + t
+      peakfactor *= t/dx1_sq;
       t = par[ 8 ]*par[ 8 ]
-      dx_sq = gc.velsq + t;
-      peakfactor *= t/dx_sq;
-      f8 = par[ 0 ]*gc.velsq/( par[ 8 ]*dx_sq );
+      dv_sq = gc.velsq + t;
+      peakfactor *= t/dv_sq;
 
       if peakfactor > 0.0:
          peakfactor = np.sqrt( peakfactor )
       else:
          peakfactor = 0.0;
       }
+      peak=par[0]*peakfactor
 
-      f3 *= peakfactor;
-      f5 *= peakfactor;
-      f8 *= peakfactor;
- 
       # The difference between the model peak value (after being reduced to
       # take account of instrumental smoothing) and the data peak value.
-      pdiff = peakfactor*par[ 0 ] + par[ 1 ] - gc.ymax;
+      pdiff = peak + par[ 1 ] - gc.ymax;
  
       # The offset from the model centre to the data peak 
       x0_off = par[ 2 ] - gc.cval[ 0 ];
@@ -57,10 +51,16 @@ def chi2(par,gc):
       # Initialise the total chi squared value */
       chisq = 0.0;
 
+      # TODO: Do not compute this if the parameters are the same:
       # Get the Gaussian model. Store
       # the residual between the Gaussian model and data
+      mpos=np.array([par[2],par[4]])
+      mstd=np.array([np.sqrt(dx0_sq),np.sqrt(dx1_sq)])
+      mgrad=np.array([par[9],par[10]]
+      (mu,P)=flx.clump_to_gauss(mpos,mstd,par[6],par[7],np.sqrt(dv_sq),mgrad)
       
-292          m = cupidGCModel( ndim, x, par, -1, 1, ( iel == 0 ), status );
+      # Peak window from weight
+      res= gc.data    
 293          res = *py - m;
 294 
 295 /* If the changing of the model parameters make little difference to the
@@ -297,12 +297,12 @@ class GaussClumps:
       # The factor which scales the FWHM on each axis to the half-width of the
       # section of the data array to be be fitted. 
       beta=0.5*wwidth*npsqrt(-np.log( wmin )/ np.log( 2.0 ) );
-      lb,ub=self.res.index_from_window(self.cval,beta*self.fobs)
+      lb,ub=self.data.index_from_window(self.cval,beta*self.fobs)
       # Store the data normalised to the
       # RMS noise level. Also calculate and store the Gaussian weight for the
       # pixel.
-      y=self.res.get_slice(lb,ub).ravel()
-      feat=self.res.get_features(lb,ub)
+      y=self.data.get_slice(lb,ub).ravel()
+      feat=self.data.get_features(lb,ub)
       wpos=np.array([self.cval[0],self.cval[1]])
       wstd=np.array([self.fobs[0],self.fobs[1]])*wwidth
       wfreq=self.cval[2]
@@ -323,19 +323,6 @@ class GaussClumps:
       # Number of invocations of the function
       self.nf=0
       
-      # TODO: Check and understand this
-      # Get the factor by which to correct the peak amplitude of the model to
-      # take account of the smoothing by the instrumental beam.
-      t = guess[3]*guess[3]
-      dx_sq = self.bfsq + t;
-      peakfactor = t/dx_sq;
-      t = guess[5]*guess[5];
-      dx_sq = self.bfsq + t;
-      peakfactor *= t/dx_sq;
-      t = guess[8]*guess[8];
-      dx_sq = self.velsq + t;
-      peakfactor *= t/dx_sq;
-
       # Do the correction.
       if  peakfactor > 0.0:
          guess[0] /= sqrt(peakfactor);
@@ -345,7 +332,7 @@ class GaussClumps:
 
       self.reuse=False
       # Optimize at last!
-      res=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self)
+      result=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self)
       
       # TODO: Repeat when failed!
  
@@ -364,9 +351,9 @@ class GaussClumps:
       # clump is circular as an initial guess)
       self.fobs=np.zeros(3)
       off=np.zeros(3)
-      (self.fobs[0],off[0]) = self.profWidth(self.res,self.imax,0) 
-      (self.fobs[1],off[1]) = self.profWidth(self.res,self.imax,1) 
-      (self.fobs[2],off[2]) = self.profWidth(self.res,self.imax,2) 
+      (self.fobs[0],off[0]) = self.profWidth(self.data,self.imax,0) 
+      (self.fobs[1],off[1]) = self.profWidth(self.data,self.imax,1) 
+      (self.fobs[2],off[2]) = self.profWidth(self.data,self.imax,2) 
       fbeam=0.5*(self.fobs[0]  + self.fobs[1])/beamfwhm
       if fbeam < 1.0: 
          fbeam=1.2
@@ -374,7 +361,7 @@ class GaussClumps:
       self.fobs[1] = fbeam*beamfwhm
            
       # Store the Guessed model 
-      self.cval=self.res.index_to_wcs(self.imax)
+      self.cval=self.data.index_to_wcs(self.imax)
       guess[2]=self.cval[0]
       guess[4]=self.cval[1]
       guess[7]=self.cval[2]
@@ -434,7 +421,7 @@ class GaussClumps:
 
       # Copy the supplied cube into a work cube which will hold the
       # residuals remaining after subtraction of the fitted Gaussians. 
-      self.res=cube.copy()
+      self.data=cube.copy()
 
       # Initialise the number of clumps found so far.
       iclump = 0
@@ -466,7 +453,7 @@ class GaussClumps:
       # Sum of the values in all the used clumps so far 
       sumclumps = 0.0
       # Sum of the supplied data values 
-      sumdata = res.get_flux()
+      sumdata = data.get_flux()
       
       # peaks contains the last npeaks... 
       peaks=np.zeros(npeaks)
@@ -480,7 +467,7 @@ class GaussClumps:
             log.info("Iteration: "+str(niter))
          # Find the cube index of the element with the largest value in the residuals cube.
          # imax: Index of element with largest residual
-         (fmax,imax) = res.max()
+         (fmax,imax) = data.max()
  
          # Finish iterating if all the residuals are bad, or if too many iterations
          # have been performed since the last succesfully fitted clump. 
@@ -591,7 +578,7 @@ class GaussClumps:
             # value, set the residuals array element bad in order to prevent the
             # algorithm from trying to fit a peak to the same pixel again. 
             else:
-               res[imax]=np.nan;
+               self.data[imax]=np.nan;
                new_peak = 0.5*(new_peak + clump[0]);
                nskip++;
                if verbose:
@@ -606,7 +593,7 @@ class GaussClumps:
             # Set the specified element of the residuals array bad if no fit was
             # performed. This prevents the any subsequent attempt to fit a Gaussian
             # to the same peak value.
-            res[imax]=np.nan;
+            self.data[imax]=np.nan;
       if verbose:
          log.info("GaussClump finished normally")
          # TODO: Usable Clumps
