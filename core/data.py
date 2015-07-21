@@ -149,17 +149,22 @@ class AcaData(ndd.NDData):
     
     def get_axis_names(self):
     		return self.wcs.axis_type_names
-    
+     
+    def get_index_features(self,lower=None,upper=None):
+                sli=self._slice(lower,upper)
+                x=np.arange(sli[0].start,sli[0].stop)
+                y=np.arange(sli[1].start,sli[1].stop)
+                z=np.arange(sli[2].start,sli[2].stop)
+                xyz=np.meshgrid(x,y,z,indexing='ij')
+                ii=np.empty((3,len(x)*len(y)*len(z)))
+                ii[2]=xyz[0].ravel()
+                ii[1]=xyz[1].ravel()
+                ii[0]=xyz[2].ravel()
+                return ii
+
+
     def get_features(self,lower=None,upper=None):
-    		sli=self._slice(lower,upper)
-    		x=np.arange(sli[0].start,sli[0].stop)
-    		y=np.arange(sli[1].start,sli[1].stop)
-    		z=np.arange(sli[2].start,sli[2].stop)
-    		xyz=np.meshgrid(x,y,z,indexing='ij')
-    		ii=np.empty((3,len(x)*len(y)*len(z)))
-    		ii[2]=xyz[0].ravel()
-    		ii[1]=xyz[1].ravel()
-    		ii[0]=xyz[2].ravel()
+                ii=self.get_index_features(lower,upper)
     		f=self.wcs.wcs_pix2world(ii.T,0)
     		f=f.T
     		return f

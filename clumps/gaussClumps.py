@@ -6,213 +6,30 @@ import matplotlib.pyplot as plt
 import sys
 from cube import *
 
+
+def jac_chi(par,gc):
+   ret=None
+   # If the background is fixed, include zero background value
+   if gc.fixback:
+      par=np.insert(par,1,0.0)
+   if  par[ 3 ] <= 0.0: return ret
+   if  par[ 5 ] <= 0.0: return ret
+   if  par[ 8 ] <= 0.0: return ret
+   # update computations if necesary
+   gc.update_comp(par)
+   return gc.jaco
+
 def chi2(par,gc):
    ret=None
    # If the background is fixed, include zero background value
    if gc.fixback:
       par=np.insert(par,1,0.0)
-      back_term=0
-   else
-      back_term=par[1] - gc.guess[1]
-      back_term *= gc.pars['SB']*back_term
-   if not gc.reuse:
-      if  par[ 3 ] <= 0.0: return ret
-      if  par[ 5 ] <= 0.0: return ret
-      if  par[ 8 ] <= 0.0: return ret
- 
-      # Get the factor by which to correct the peak amplitude of the model to
-      # take account of the smoothing by the instrumental beam.
-      t = par[ 3 ]*par[ 3 ]
-      dx0_sq = gc.bfsq + t
-      peakfactor = t/dx0_sq
-      t = par[ 5 ]*par[ 5 ]
-      dx1_sq = gc.bfsq + t
-      peakfactor *= t/dx1_sq;
-      t = par[ 8 ]*par[ 8 ]
-      dv_sq = gc.velsq + t;
-      peakfactor *= t/dv_sq;
-
-      if peakfactor > 0.0:
-         peakfactor = np.sqrt( peakfactor )
-      else:
-         peakfactor = 0.0;
-      }
-      peak=par[0]*peakfactor
-
-      # The difference between the model peak value (after being reduced to
-      # take account of instrumental smoothing) and the data peak value.
-      pdiff = peak + par[ 1 ] - gc.ymax;
- 
-      # The offset from the model centre to the data peak 
-      x0_off = par[ 2 ] - gc.cval[ 0 ];
-      x1_off = par[ 4 ] - gc.cval[ 1 ];
-      v_off = par[ 7 ] - gc.cval[ 2 ];
-
-      # Initialise the total chi squared value */
-      chisq = 0.0;
-
-      # TODO: Do not compute this if the parameters are the same:
-      # Get the Gaussian model. Store
-      # the residual between the Gaussian model and data
-      mpos=np.array([par[2],par[4]])
-      mstd=np.array([np.sqrt(dx0_sq),np.sqrt(dx1_sq)])
-      mgrad=np.array([par[9],par[10]]
-      (mu,P)=flx.clump_to_gauss(mpos,mstd,par[6],par[7],np.sqrt(dv_sq),mgrad)
-      
-      # Peak window from weight
-      res= gc.data    
-293          res = *py - m;
-294 
-295 /* If the changing of the model parameters make little difference to the
-296    residuals at a given place in the data, then those residuals should be
-297    given less weight since they could dominate the chi-squared value. If
-298    the residual at the current pixel has not change by much since the
-299    previous call, reduce the weight associated with the pixel. However,
-300    if the parameter has not change by much then you would not expect the
-301    residuals to change by much. Therefore, do not reduce the weight by so
-302    much if the model value at this pixel has not changed by much since the
-303    last call. In order to avoid instability, we only do this modification
-304    for a few iterations near the start, and then allow the fitting
-305    process to complete with fixed weights. */
-306          if( !cupidGC.fixback && cupidGC.nf > 2 && nwm <= cupidGC.nwf ) {
-307             if( res != 0.0 && m != 0.0 && m != *pm ) {
-308 
-309 /* Only modify the weights if the background has changed. Without this,
-310    the outlying background regions would be given low weights if the
-311    background has not changed, resulting in the background being poorly
-312    determined. */
-313                if( bg != 0.0 ) {
-314                   dbg = ( fabs( ( par[ 1 ] - bg )/bg ) > 0.001 );
-315                } else {
-316                   dbg = ( par[ 1 ] != 0.0 );
-317                }
-318                if( dbg ) {
-319                   wf = ( res - *pu )/ res;
-320                   wf /= ( m - *pm )/ m;
-321                   wf = fabs( wf );
-322                   wf = ( wf < cupidGC.minwf ) ? cupidGC.minwf : ( wf > cupidGC.maxwf ) ? cupidGC.maxwf : wf ;
-323                   *pw *= wf;
-324                   if( *pw > 1.0 ) *pw = 1.0;
-325                   wmod = 1;
-326                }
-327             }
-328          }
-329 
-330 /* Save the residual and model value at this pixel */
-331          *pu = res;
-332          *pm = m;
- /* Determine a scale factor which encourages the fitted intensity to stay
-335    below the observed intensity. This does the same job as the
-336    "s0.exp( Yi_fit - Yi )" term in the chi-squared expression given in
-337    the Stutski & Gusten paper. The form used here was inherited from the
-338    implementation of GaussClumps (obtained from
-339    ftp.astro.uni-bonn.de/pub/heith/gaussclumps on 27/9/05) upon which this
-340    implementation was based. */
-341          rr = ( res > 0.0 ) ? 1.0 : cupidGC.s0p1;
-342 
-343 /* Increment the running sum of chi-squared. We save the scaled residuals
-344    in a work array (pr) so that we do not need to calculate them again if
-345    this function is called subsequently to find the gradient for the same
-346    set of parameer values. */
-347          wsum += *pw;
-348          *pr = *pw*res*rr;
-349          chisq += *pr*res;
-350          *prs = *pr*res;
-351 
-352 /* Move the pointers on to the next pixel in the section of the data
-353    array being fitted. */
-354          py++;
-355          pw++;
-356          pr++;
-357          pu++;
-358          pm++;
-359          prs++;
-360 
-361 /* Get the grid coords (within the full size original data array) of the
-362    next pixel in the section currently being fitted. This assumes fortran
-363    ordering of the elements in the arrays.*/
-364          iax = 0;
-365          x[ iax ] += 1.0;
-366          while( x[ iax ] > cupidGC.ubnd[ iax ] ) {
-367             x[ iax ] = cupidGC.lbnd[ iax ];
-368             if( ++iax == ndim ) break;
-369             x[ iax ] += 1.0;
-370          }
-371       }
-372 
-373 /* Remember the background value for next time. */
-374       bg = par[ 1 ];
-375 
-376 /* Increment the number of iteration sthat have made modifications to the
-377    weights (if any such change has in fact been made). */
-378       if( wmod ) nwm++;
-379 
-380 /* Divide by the sum of the weights . */
-381       cupidGC.wsum = wsum;
-382       chisq /= wsum;
-384 /* Modify this basic chi-squared value as described in the Stutski &
-385    Gusten paper. */
-386       if( ndim == 1 ) {
-387          t = ( cupidGC.beam_sq > 0.0 ) ? x0_off*x0_off/cupidGC.beam_sq : 0.0;
-388       } else {
-389          t = ( cupidGC.beam_sq > 0.0 ) ?
-390                ( x0_off*x0_off + x1_off*x1_off )/cupidGC.beam_sq : 0.0;
-391          if( ndim == 3 && cupidGC.velres_sq > 0.0 ) t += v_off*v_off/cupidGC.velres_sq;
-392       }
-393       chisq += cupidGC.sa*pdiff*pdiff + cupidGC.sc4*t + back_term;
-394 
-395 /* Store more diagnostic info */
-396       if( cupidGC.nf == 1 ) {
-397          pim = cupidGC.initmodel;
-398          pm = cupidGC.model;
-399          for( iel = 0; iel < cupidGC.nel; iel++ ) *(pim++) = *(pm++);
-400       }
-401       cupidGC.chisq = chisq;
-402 
-403    }
-404 
-405 /* Select or calculate the required return value.  If the chi squared
-406    value itself is required, just return the value found above. */
-407    if( what < 0 ) {
-408       ret = chisq;
-409 
-410         cupidGCDumpF( MSG__DEBUG3, NULL, 0, NULL, NULL, status );
-411 
-412          msgSeti( "NF", cupidGC.nf );
-413          msgOutif( MSG__DEBUG3, "", "   Fit attempt ^NF:", status );
-414 
-415          msgSetd( "C", ret );
-416          msgOutif( MSG__DEBUG3, "", "      Chi-squared: ^C", status );
-417 
-418          msgSetd( "V", par[ 0 ] );
-419          msgOutif( MSG__DEBUG3, "", "      Peak intensity: ^V", status );
-420          msgSetd( "V", par[ 1 ] );
-421          msgOutif( MSG__DEBUG3, "", "      Constant background: ^V", status );
-422          msgSetd( "V", par[ 2 ] );
-423          msgOutif( MSG__DEBUG3, "", "      Centre on 1st axis: ^V", status );
-424          msgSetd( "V", par[ 3 ] );
-425          msgOutif( MSG__DEBUG3, "", "      FWHM on 1st axis: ^V", status );
-426 
-427          if( ndim > 1 ) {
-428             msgSetd( "V", par[ 4 ] );
-429             msgOutif( MSG__DEBUG3, "", "      Centre on 2nd axis: ^V", status );
-430             msgSetd( "V", par[ 5 ] );
-431             msgOutif( MSG__DEBUG3, "", "      FWHM on 2nd axis: ^V", status );
-432             msgSetd( "V", par[ 6 ] );
-433             msgOutif( MSG__DEBUG3, "", "      Position angle: ^V", status );
-434 
-435             if( ndim > 2 ) {
-436                msgSetd( "V", par[ 7 ] );
-437                msgOutif( MSG__DEBUG3, "", "      Centre on vel axis: ^V", status );
-438                msgSetd( "V", par[ 8 ] );
-439                msgOutif( MSG__DEBUG3, "", "      FWHM on vel axis: ^V", status );
-440                msgSetd( "V", par[ 9 ] );
-441                msgOutif( MSG__DEBUG3, "", "      Vel gradient on 1st axis: ^V", status );
-442                msgSetd( "V", par[ 10 ] );
-
-      
-   
-
+   if  par[ 3 ] <= 0.0: return ret
+   if  par[ 5 ] <= 0.0: return ret
+   if  par[ 8 ] <= 0.0: return ret
+   # update computations if necesary
+   gc.update_comp(par)
+   return gc.chisq
 
 class GaussClumps:
 
@@ -248,7 +65,7 @@ class GaussClumps:
       self.par['NPEAKS']=9
       # Parameters which control the modification of the weights done by
       # the chi2 (this modification is meant to give low weights to pixels
-      # which do not influence the Gaussian model, status ). 
+      # which do not influence the Gaussian model
       self.par['NWF']= 10
       self.par['MINWF']=0.8
       self.par['MAXWF']=1.1
@@ -280,7 +97,197 @@ class GaussClumps:
       # The value for which the weight is considered already zero 
       self.par['WMIN']=0.05
   
-   def self.optimize():
+   def update_comp(self,par):
+     if np.array_equal(par,self.old_par):
+         return
+     self.old_par=par
+     back_term=par[1] - self.guess[1]
+     # Unpack parameters
+     nwf=self.par['NWF']
+     minwf=self.par['MINWF']
+     maxwf=self.par['MAXWF']
+     s0=self.par['S0']
+     sa=self.par['SA']
+     sb=self.par['SB']
+     sv=self.par['SC']
+
+     # Get the factor by which to correct the peak amplitude of the model to
+     # take account of the smoothing by the instrumental beam.
+     t = par[3]*par[3]
+     sx2 = self.bfsq + t
+     peakfactor = t/sx2
+     t = par[5]*par[5]
+     sy2 = self.bfsq + t
+     peakfactor *= t/sy2;
+     t = par[8]*par[8]
+     sv2 = self.velsq + t;
+     peakfactor *= t/dv_sq;
+     
+     if peakfactor > 0.0:
+        peakfactor = np.sqrt(peakfactor)
+     else:
+        peakfactor = 0.0;
+     peak=par[0]*peakfactor
+
+     # The difference between the model peak value (after being reduced to
+     # take account of instrumental smoothing) and the data peak value.
+     self.pdiff = peak + par[1] - self.ymax;
+
+     # The offset from the model centre to the data peak 
+     x0_off = par[2] - self.cval[0];
+     x1_off = par[4] - self.cval[1];
+     v_off = par[7] - self.cval[2];
+
+     # Get the Gaussian model. Store the residual between the Gaussian model and data
+     sx=np.sqrt(sx2)
+     sy=np.sqrt(sy2)
+     sv=np.sqrt(sv2)
+     mstd=np.array([sx,sy])
+     # Construct the precision Matrix!
+     sphi=np.sin(par[6])
+     cphi=np.cos(par[6])
+     R=np.array([[cphi,-sphi,-par[9]],[sphi,cphi,-par[10]],[0,0,1]])
+     D=np.diag([1./sx,1./sy,1./sv])
+     RD=R.dot(D)
+     P=RD.dot(RD.T)
+     mu=np.array([par[2],par[4],par[7]])
+
+     C=np.empty_like(feat)
+     C[0]=feat[0] - mu[0]
+     C[1]=feat[1] - mu[1]
+     C[2]=feat[2] - mu[2]
+     G=P.dot(C)
+     V=G*C
+     quad=V.sum(axis=0)
+     fit=np.exp(-quad/2.0)
+     fit=peak*fit
+     model=fit+ par[1]
+     res= self.y - model
+
+     # If the changing of the model parameters make little difference to the
+     # residuals at a given place in the data, then those residuals should be
+     # given less weight since they could dominate the chi-squared value. If
+     # the residual at the current pixel has not change by much since the
+     # previous call, reduce the weight associated with the pixel. However,
+     # if the parameter has not change by much then you would not expect the
+     # residuals to change by much. Therefore, do not reduce the weight by so
+     # much if the model value at this pixel has not changed by much since the
+     # last call. In order to avoid instability, we only do this modification
+     # for a few iterations near the start, and then allow the fitting
+     # process to complete with fixed weights.
+     if (not self.fixback) and (self.nf > 2) and (self.nwm <= nwf):
+        # Only modify the weights if the background has changed. Without this,
+        # the outlying background regions would be given low weights if the
+        # background has not changed, resulting in the background being poorly
+        # determined.
+        if self.bg != 0.0:
+           dbg=(par[1] - self.bg)/self.bg > 0.001
+        else:
+           dbg=(par[1] != 0.0)
+        if dbg:
+           wf=(res-self.old_res)/res
+           wf/=(model - self.old_model)/model
+           wf=np.abs(wf)
+           wf[wf<minwf]=minwf
+           wf[wf>maxwf]=maxwf
+           wf[np.isnan(wf)]=1.0
+           self.we*=wf
+           self.we[self.we > 1.0]=1.0
+           self.nwm+=1
+     self.old_model=model 
+     self.old_res=res
+     # Determine a scale factor which encourages the fitted intensity to stay
+     # below the observed intensity. This does the same job as the
+     # "s0.exp( Yi_fit - Yi )" term in the chi-squared expression given in
+     # the Stutski & Gusten paper. The form used here was inherited from the
+     # implementation of GaussClumps (obtained from
+     # ftp.astro.uni-bonn.de/pub/heith/gaussclumps on 27/9/05) upon which this
+     # implementation was based.
+     rr = (s0+1)*np.ones_like(res)
+     rr[res > 0.0]= 1.0
+
+     # Compute the sum of chi-squared. We save the scaled residuals
+     # in a work array (pr) so that we do not need to calculate them again if
+     # this function is called subsequently to find the gradient for the same
+     # set of parameer values.
+     wsum = self.we.sum()
+     wres = we*res*rr
+     chisq = wres*res
+     # Remember the background value for next time.
+     self.bg = par[1]
+     # Divide by the sum of the weights
+     self.chisq /= wsum;
+     chisq=gc.chisq.sum()
+     off = (x0_off*x0_off + x1_off*x1_off )/self.bfsq
+     off += v_off*v_off/self.velsq;
+     chisq += sa*pdiff*pdiff + sc*off +  sb*back_term*back_term
+     self.chisq=chisq
+     # Update nf
+     self.nf+=1
+     
+     # Compute total chi2 gradient 
+
+#   fit=gauss_eval(features,(a,b,mu,L))
+#   su=values - fit
+#   nf=len(su) - 11;
+#   # Compute basic term
+#   basic_term = (-2*su*w + s_vect[0]*np.exp(-su))/nf
+#   exp_term = (fit - b)/a
+#   jaco=np.empty(11)
+#   # partial derivate w.r.t. a
+#   extra_sa = 2*s_vect[2]*(a + b - value_max)
+#   jaco[0]=(basic_term*exp_term).sum()  + extra_sa
+#   # partial derivate w.r.t. b
+#   jaco[1]=basic_term.sum() + extra_sa
+#   # partial derivate w.r.t. x0,y0 and v0
+#   C=np.empty_like(features)
+#   C[0]=features[0] - mu[0]
+#   C[1]=features[1] - mu[1]
+#   C[2]=features[2] - mu[2]
+#   V=-L.dot(C) # Derivate of the quadratic form
+#   extra_sc = 2*s_vect[1]*(mu - feature_max)/(res_vect*res_vect)
+#   # compose x0
+#   jaco[2]=(a*basic_term*exp_term*V[0]).sum() + extra_sc[0]
+#   # compose y0
+#   jaco[3]=(a*basic_term*exp_term*V[1]).sum() + extra_sc[1]
+#   # compose v0
+#   jaco[4]=(a*basic_term*exp_term*V[2]).sum() + extra_sc[2]
+#   ## partial derivate w.r.t. phi,sx,sy,sv,dvx,dvy
+#   sphi=np.sin(phi)
+#   s2phi=np.sin(2*phi)
+#   sphi2=np.square(sphi)
+#   cphi=np.cos(phi)
+#   c2phi=np.cos(2*phi)
+#   cphi2=np.square(cphi)
+#   sx2=np.square(sx)
+#   sy2=np.square(sy)
+#   sv2=np.square(sv)
+#   sx3=np.power(sx,3)
+#   sy3=np.power(sy,3)
+#   sv3=np.power(sv,3)
+#   dvx2=np.square(dvx)
+#   dvy2=np.square(dvy)
+#   D_phi=(1.0/sy2 - 1.0/sx2)*np.array([[2*sphi*cphi,c2phi,0],[c2phi,-2*sphi*cphi,0],[0,0,0]])
+#   V=-(C*(D_phi.dot(C))).sum(axis=0)/2.0
+#   jaco[5]=(a*basic_term*exp_term*V).sum()
+#   D_sx=(1.0/sx3)*np.array([[-2*cphi2,s2phi,0],[s2phi,-2*sphi2,0],[0,0,0]])
+#   V=-(C*(D_sx.dot(C))).sum(axis=0)/2.0
+#   jaco[6]=(a*basic_term*exp_term*V).sum()
+#   D_sy=(1.0/sy3)*np.array([[-2*sphi2,-s2phi,0],[-s2phi,-2*cphi2,0],[0,0,0]])
+#   V=-(C*(D_sy.dot(C))).sum(axis=0)/2.0
+#   jaco[7]=(a*basic_term*exp_term*V).sum()
+#   D_sv=(2.0/sv3)*np.array([[-dvx2,-dvx*dvy,dvx],[-dvx*dvy,-dvy2,dvy],[dvx,dvy,-1]])
+#   V=-(C*(D_sv.dot(C))).sum(axis=0)/2.0
+#   jaco[8]=(a*basic_term*exp_term*V).sum()
+#   D_dvx=(1.0/sv2)*np.array([[2*dvx,dvy,-1],[dvy,0,0],[-1,0,0]])
+#   V=-(C*(D_dvx.dot(C))).sum(axis=0)/2.0
+#   jaco[9]=(a*basic_term*exp_term*V).sum()
+#   D_dvy=(1.0/sv2)*np.array([[0,dvx,0],[dvx,2*dvy,-1],[0,-1,0]])
+#   V=-(C*(D_dvy.dot(C))).sum(axis=0)/2.0
+#   jaco[10]=(a*basic_term*exp_term*V).sum()
+#   return jaco
+     
+   def optimize(self):
       # Unpack used parameters
       maxnf=self.par['MAXNF']
       wwidth=self.par['WWIDTH']
@@ -297,12 +304,12 @@ class GaussClumps:
       # The factor which scales the FWHM on each axis to the half-width of the
       # section of the data array to be be fitted. 
       beta=0.5*wwidth*npsqrt(-np.log( wmin )/ np.log( 2.0 ) );
-      lb,ub=self.data.index_from_window(self.cval,beta*self.fobs)
+      (lb,ub)=(np.rint(self.cval-beta*self.fobs),np.rint(self.cval+beta*self.fobs))
       # Store the data normalised to the
       # RMS noise level. Also calculate and store the Gaussian weight for the
       # pixel.
-      y=self.data.get_slice(lb,ub).ravel()
-      feat=self.data.get_features(lb,ub)
+      self.y=self.data.get_slice(lb,ub).ravel()
+      self.feat=self.data.get_index_features(lb,ub)
       wpos=np.array([self.cval[0],self.cval[1]])
       wstd=np.array([self.fobs[0],self.fobs[1]])*wwidth
       wfreq=self.cval[2]
@@ -310,19 +317,32 @@ class GaussClumps:
       (wmu,wP)=flx.clump_to_gauss(wpos,wstd,0,wfreq,wfwhm,np.array[0,0])
       # Normalise the weights to a maximum value of 1.0 and set to zero any weights
       # which are lower than the user supplied lower limit.
-      we=flx.create_gauss(wmu,wP,feat,1.0)
-      we[we < wmin]=0.0
+      self.we=flx.create_gauss(wmu,wP,self.feat,1.0)
+      self.we[self.we < wmin]=0.0
       
       # Normalise all other data values in the guess structure and in the 
       # array to the RMS noise level.
-      y=y/rms
+      self.y=self.y/rms
       self.ymax /= rms;
       guess[1] /= rms;
       guess[0] /= rms;
 
       # Number of invocations of the function
       self.nf=0
+      self.nwm=0
       
+      # Get the factor by which to correct the peak amplitude of the model to
+      # take account of the smoothing by the instrumental beam.
+      t = guess[3]*guess[3]
+      dx0_sq = self.bfsq + t
+      peakfactor = t/dx0_sq
+      t = guess[5]*guess[5]
+      dx1_sq = self.bfsq + t
+      peakfactor *= t/dx1_sq;
+      t = guess[8]*guess[8]
+      dv_sq = self.velsq + t;
+      peakfactor *= t/dv_sq;
+
       # Do the correction.
       if  peakfactor > 0.0:
          guess[0] /= sqrt(peakfactor);
@@ -330,7 +350,6 @@ class GaussClumps:
       if self.fixback:
          np.delete(guess,[1])
 
-      self.reuse=False
       # Optimize at last!
       result=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self)
       
@@ -360,8 +379,8 @@ class GaussClumps:
       self.fobs[0] = fbeam*beamfwhm
       self.fobs[1] = fbeam*beamfwhm
            
-      # Store the Guessed model 
-      self.cval=self.data.index_to_wcs(self.imax)
+      # Store the Guessed model
+      self.cval=np.array([self.imax[2],self.imax[1],self.imax[0]])
       guess[2]=self.cval[0]
       guess[4]=self.cval[1]
       guess[7]=self.cval[2]
@@ -392,8 +411,7 @@ class GaussClumps:
       # estimate is significantly less than zero, then set it to zero, and
       # indicate that the background value should be fixed (i.e. not included
       # as a free parameter in the fitting process). Here, "significant" means
-     
-     # more than 5% of the total peak height. */
+      # more than 5% of the total peak height. */
       self.fixback=False
       if guess[1] < -np.abs(guess[ 0 ]*0.05):
          guess[0] += guess[1];
@@ -467,11 +485,11 @@ class GaussClumps:
             log.info("Iteration: "+str(niter))
          # Find the cube index of the element with the largest value in the residuals cube.
          # imax: Index of element with largest residual
-         (fmax,imax) = data.max()
+         (self.ymax,self.imax) = data.max()
  
          # Finish iterating if all the residuals are bad, or if too many iterations
          # have been performed since the last succesfully fitted clump. 
-         if np.isnan(imax):
+         if np.isnan(self.imax):
             iterate = False;
             niter-=1
             if verbose:
@@ -578,7 +596,7 @@ class GaussClumps:
             # value, set the residuals array element bad in order to prevent the
             # algorithm from trying to fit a peak to the same pixel again. 
             else:
-               self.data[imax]=np.nan;
+               self.data[self.imax]=np.nan;
                new_peak = 0.5*(new_peak + clump[0]);
                nskip++;
                if verbose:
@@ -593,7 +611,7 @@ class GaussClumps:
             # Set the specified element of the residuals array bad if no fit was
             # performed. This prevents the any subsequent attempt to fit a Gaussian
             # to the same peak value.
-            self.data[imax]=np.nan;
+            self.data[self.imax]=np.nan;
       if verbose:
          log.info("GaussClump finished normally")
          # TODO: Usable Clumps
@@ -628,65 +646,6 @@ class GaussClumps:
 #   # Unpack values
 #   (a, b, x0, y0, v0, phi, sx, sy, sv, dvx, dvy) = model
 #   (a,b,mu,L)=to_gauss(model)
-#   fit=gauss_eval(features,(a,b,mu,L))
-#   su=values - fit
-#   nf=len(su) - 11;
-#   # Compute basic term
-#   basic_term = (-2*su*w + s_vect[0]*np.exp(-su))/nf
-#   exp_term = (fit - b)/a
-#   jaco=np.empty(11)
-#   # partial derivate w.r.t. a
-#   extra_sa = 2*s_vect[2]*(a + b - value_max)
-#   jaco[0]=(basic_term*exp_term).sum()  + extra_sa
-#   # partial derivate w.r.t. b
-#   jaco[1]=basic_term.sum() + extra_sa
-#   # partial derivate w.r.t. x0,y0 and v0
-#   C=np.empty_like(features)
-#   C[0]=features[0] - mu[0]
-#   C[1]=features[1] - mu[1]
-#   C[2]=features[2] - mu[2]
-#   V=-L.dot(C) # Derivate of the quadratic form
-#   extra_sc = 2*s_vect[1]*(mu - feature_max)/(res_vect*res_vect)
-#   # compose x0
-#   jaco[2]=(a*basic_term*exp_term*V[0]).sum() + extra_sc[0]
-#   # compose y0
-#   jaco[3]=(a*basic_term*exp_term*V[1]).sum() + extra_sc[1]
-#   # compose v0
-#   jaco[4]=(a*basic_term*exp_term*V[2]).sum() + extra_sc[2]
-#   ## partial derivate w.r.t. phi,sx,sy,sv,dvx,dvy
-#   sphi=np.sin(phi)
-#   s2phi=np.sin(2*phi)
-#   sphi2=np.square(sphi)
-#   cphi=np.cos(phi)
-#   c2phi=np.cos(2*phi)
-#   cphi2=np.square(cphi)
-#   sx2=np.square(sx)
-#   sy2=np.square(sy)
-#   sv2=np.square(sv)
-#   sx3=np.power(sx,3)
-#   sy3=np.power(sy,3)
-#   sv3=np.power(sv,3)
-#   dvx2=np.square(dvx)
-#   dvy2=np.square(dvy)
-#   D_phi=(1.0/sy2 - 1.0/sx2)*np.array([[2*sphi*cphi,c2phi,0],[c2phi,-2*sphi*cphi,0],[0,0,0]])
-#   V=-(C*(D_phi.dot(C))).sum(axis=0)/2.0
-#   jaco[5]=(a*basic_term*exp_term*V).sum()
-#   D_sx=(1.0/sx3)*np.array([[-2*cphi2,s2phi,0],[s2phi,-2*sphi2,0],[0,0,0]])
-#   V=-(C*(D_sx.dot(C))).sum(axis=0)/2.0
-#   jaco[6]=(a*basic_term*exp_term*V).sum()
-#   D_sy=(1.0/sy3)*np.array([[-2*sphi2,-s2phi,0],[-s2phi,-2*cphi2,0],[0,0,0]])
-#   V=-(C*(D_sy.dot(C))).sum(axis=0)/2.0
-#   jaco[7]=(a*basic_term*exp_term*V).sum()
-#   D_sv=(2.0/sv3)*np.array([[-dvx2,-dvx*dvy,dvx],[-dvx*dvy,-dvy2,dvy],[dvx,dvy,-1]])
-#   V=-(C*(D_sv.dot(C))).sum(axis=0)/2.0
-#   jaco[8]=(a*basic_term*exp_term*V).sum()
-#   D_dvx=(1.0/sv2)*np.array([[2*dvx,dvy,-1],[dvy,0,0],[-1,0,0]])
-#   V=-(C*(D_dvx.dot(C))).sum(axis=0)/2.0
-#   jaco[9]=(a*basic_term*exp_term*V).sum()
-#   D_dvy=(1.0/sv2)*np.array([[0,dvx,0],[dvx,2*dvy,-1],[0,-1,0]])
-#   V=-(C*(D_dvy.dot(C))).sum(axis=0)/2.0
-#   jaco[10]=(a*basic_term*exp_term*V).sum()
-#   return jaco
 #
 #def next_clump(cube,syn,params):
 #   # Non-blocking plot 
