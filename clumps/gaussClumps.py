@@ -17,7 +17,7 @@ def jac_chi(par,gc):
    if  par[ 8 ] <= 0.0: return ret
    # update computations if necesary
    gc.update_comp(par)
-   return gc.jaco
+   return gc.get_jaco()
 
 def chi2(par,gc):
    ret=None
@@ -29,7 +29,7 @@ def chi2(par,gc):
    if  par[ 8 ] <= 0.0: return ret
    # update computations if necesary
    gc.update_comp(par)
-   return gc.chisq
+   return gc.get_chi2()
 
 class GaussClumps:
 
