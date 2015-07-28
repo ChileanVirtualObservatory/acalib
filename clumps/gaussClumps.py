@@ -360,7 +360,7 @@ class GaussClumps:
          np.insert(xopt,1,self.bg)
       return xopt
 
-
+   # TODO: Document this stuff (using cupid code...)
    def profWidth(dim):
       rms=self.par['RMS']
       if dim==0:
@@ -433,8 +433,29 @@ class GaussClumps:
          prev=val
       vup+=rms
       off=np.min(vlow,vup) + rms
-
-
+      if vlow < vup:
+         hgt=self.valmax - vlow
+         cand=self.data[plow[0]:self.imax[0]+1,plow[1]:self.imax[1]+1,plow[2]:self.imax[2]+1]
+         cand-=self.vlow
+         cand=cand[::-1]
+         default=(self.imax-plow).sum()/2.0
+      else:
+         hgt=self.valmax - vup
+         cand=self.data[self.imax[0]:pup[0]+1,self.imax[1]:pup[1]+1,self.imax[2]:pup[2]+1]
+         np.delete(cand,0)
+         cand-=self.vup
+         default=(self.imax-pup).sum()/2.0
+      cand=cand/hgt
+      idx=np.arange(1,cand.size+1)
+      idx=idx[cand>0.25]
+      cand=cand[cand>0.25]
+      idx=idx[cand<0.75]
+      cand=cand[cand<0.75]
+      if cand.size==0:
+         return default
+      return 1.665*(idx/np.log(cand)).sum()/cand.size
+      
+    
 
    def setInit(self,niter):
       # Unpack used parameters
