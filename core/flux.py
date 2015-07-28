@@ -39,6 +39,7 @@ def create_gauss(mu,P,feat,peak):
    quad=V.sum(axis=0)
    res=np.exp(-quad/2.0)
    res=peak*(res/res.max())
+   
    return res
 
 # Create a gassian flux for a cube with compact support 

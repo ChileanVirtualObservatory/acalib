@@ -17,7 +17,7 @@ def jac_chi(par,gc):
    if  par[ 8 ] <= 0.0: return ret
    # update computations if necesary
    gc.update_comp(par)
-   return gc.get_jaco()
+   return gc.get_jaco(par)
 
 def chi2(par,gc):
    ret=None
@@ -29,7 +29,7 @@ def chi2(par,gc):
    if  par[ 8 ] <= 0.0: return ret
    # update computations if necesary
    gc.update_comp(par)
-   return gc.get_chi2()
+   return gc.get_chi2(par)
 
 class GaussClumps:
 
@@ -146,6 +146,8 @@ class GaussClumps:
      jaco[5]+=2*sa*self.pdiff*self.f5
      jaco[7]+=2*4*sc*self.vm_off/self.velsq
      jaco[8]+=2*sa*self.pdiff*self.f8
+     if self.fixback:
+        np.delete(jaco,[1])
      return jaco
    
    def get_chi2(self,par):
@@ -345,10 +347,94 @@ class GaussClumps:
          np.delete(guess,[1])
 
       # Optimize at last!
-      result=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self)
-      
-      # TODO: Repeat when failed!
- 
+      result=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self,maxiter=maxnf,disp=true)
+      # Unpack results
+      print result
+      xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag=results
+      if warnflag!=0 and self.fixback:
+         self.fixback=False
+         result=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self,maxiter=maxnf,disp=true)
+         print result
+      xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag=results
+      if self.fixback:
+         np.insert(xopt,1,self.bg)
+      return xopt
+
+
+   def profWidth(dim):
+      rms=self.par['RMS']
+      if dim==0:
+         vn=[0,0,-1]
+         vp=[0,0,1]
+         fwhm=self.par['FWHMBEAM']
+      else if dim==1:
+         vn=[0,-1,0]
+         vp=[0,1,0]
+         fwhm=self.par['FWHMBEAM']
+      else:
+         vn=[-1,0,0]
+         vp=[1,0,0]
+         fwhm=self.par['VELORES']
+
+      # left search for significant minima
+      left=self.imax.copy()
+      prev=np.nan
+      vlow=self.data[self.imax]
+      plow=self.imax
+      csum=0.0
+      nsum=0
+      while True:
+         left+=vn
+         try:
+            val=self.data[left]
+         except IndexError:
+            break
+         if np.ma.is_masked(val):
+            prev=np.nan
+            continue
+         if val < vlow and prev != np.nan and prev - val < 1.5*rms:
+            vlow=val
+            plow=left
+            csum=0.0
+            nsum=0
+         else:
+           csum+=val
+           nsum+=1
+           if csum/nsum - vlow >= 3*rms/np.sqrt(nsum) and nsum >= fwhm:
+              break
+         prev=val
+      vlow+=rms
+      # Do the same working upwards from the peak to upper axis values.
+      prev=np.nan
+      vup=self.data[self.imax]
+      pup=self.imax
+      csum=0.0
+      nsum=0
+      right=self.imax.copy()
+      while True:
+         right+=vp
+         try:
+            val=self.data[right]
+         except IndexError:
+            break
+         if np.ma.is_masked(val):
+            prev=np.nan
+            continue
+         if val < vup and prev != np.nan and prev - val < 1.5*rms:
+            vup=val
+            pup=right
+            csum=0.0
+            nsum=0
+         else:
+           csum+=val
+           nsum+=1
+           if csum/nsum - vup >= 3*rms/np.sqrt(nsum) and nsum >= fwhm:
+              break
+         prev=val
+      vup+=rms
+      off=np.min(vlow,vup) + rms
+
+
 
    def setInit(self,niter):
       # Unpack used parameters
@@ -364,9 +450,9 @@ class GaussClumps:
       # clump is circular as an initial guess)
       self.fobs=np.zeros(3)
       off=np.zeros(3)
-      (self.fobs[0],off[0]) = self.profWidth(self.data,self.imax,0) 
-      (self.fobs[1],off[1]) = self.profWidth(self.data,self.imax,1) 
-      (self.fobs[2],off[2]) = self.profWidth(self.data,self.imax,2) 
+      (self.fobs[0],off[0]) = self.profWidth(0) 
+      (self.fobs[1],off[1]) = self.profWidth(1) 
+      (self.fobs[2],off[2]) = self.profWidth(2) 
       fbeam=0.5*(self.fobs[0]  + self.fobs[1])/beamfwhm
       if fbeam < 1.0: 
          fbeam=1.2
@@ -533,6 +619,7 @@ class GaussClumps:
                # Remove the model fit (excluding the background) from the residuals.
                # This also creates data values asociated with the clumps
                # The standard deviation of the new residuals is returned. */
+               # TODO:
                (result,area,sumclumps)=self.updateResults(clump,imax,mean_peak,sumclumps) # check check check
                #cupidGCUpdateArrays( type, res, ipd, el, ndim, dims,
                #                    x, rms, mlim, imax, peak_thresh, slbnd,
