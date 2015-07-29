@@ -354,8 +354,10 @@ class GaussClumps:
       if warnflag!=0 and self.fixback:
          self.fixback=False
          result=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self,maxiter=maxnf,disp=true)
+         xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag=results
          print result
-      xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag=results
+      if warnflag!=0:
+         return None
       if self.fixback:
          np.insert(xopt,1,self.bg)
       return xopt
@@ -606,9 +608,9 @@ class GaussClumps:
          self.setInit()
          
          # Find the best fitting parameters, starting from the above initial guess.
-         (found,clump,chisq)=self.optimize()
+         clump=self.optimize()
          # If no fit could be performed, then found = False
-         if found:
+         if clump!=None:
             # Skip this fit if we have an estimate of the standard deviation of the
             # "npeaks" most recent clump peak values, and the peak value of the clump
             # just fitted is a long way (more than NSIGMA standard deviations) from the
@@ -640,7 +642,12 @@ class GaussClumps:
                # Remove the model fit (excluding the background) from the residuals.
                # This also creates data values asociated with the clumps
                # The standard deviation of the new residuals is returned. */
-               # TODO:
+               pixmu=np.array([par[7],par[4],par[2])
+               mu=self.data.index_to_wcs(pixmu)
+               pos=mu[0:2]
+               freq=mu[2]
+               std=np.array([par[3],par[5]])*self.data.wcs.cdelt[0]*FWHM2STD
+               # TODO here
                (result,area,sumclumps)=self.updateResults(clump,imax,mean_peak,sumclumps) # check check check
                #cupidGCUpdateArrays( type, res, ipd, el, ndim, dims,
                #                    x, rms, mlim, imax, peak_thresh, slbnd,
