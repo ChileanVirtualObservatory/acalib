@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import parameter as par
 import time
 import scipy.ndimage
+import traceback
 
 class AcaData(ndd.NDData):
     """
@@ -34,6 +35,9 @@ class AcaData(ndd.NDData):
     def data(self, value):
         self._data = value
     
+    def estimate_rms(self):
+       return self.data.std()
+
     def get_wcs_limits(self,axis):
        lower=self.wcs.wcs_pix2world([[0,0,0]], 0) - self.wcs.wcs.cdelt/2.0
        shape=self.data.shape
@@ -86,7 +90,8 @@ class AcaData(ndd.NDData):
     		return new_data     
     							 
     	 
-    def _slice(self,lower,upper):
+    def m_slice(self,lower,upper):
+                #traceback.print_stack()
     		if lower==None:
     				lower=(0,0,0)
     		if upper==None:
@@ -104,7 +109,7 @@ class AcaData(ndd.NDData):
     				lower[llc]=0
     		if ulc.any():
     				log.warning("Lower index out of bounds "+str(lower)+" > "+str(self.data.shape)+". Correcting to max.")
-    				upper[ulc]=self.data.shape[ulc]
+    				upper[ulc]=np.array(self.data.shape)[ulc]
     		if luc.any():
     				log.warning("Negative upper index "+str(upper)+". Correcting to zero.")
     				lower[luc]=0
@@ -114,11 +119,11 @@ class AcaData(ndd.NDData):
     		return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2])]
     			
     def get_stacked(self,lower=None,upper=None,axis=(0)):
-                sli=self._slice(lower,upper)
+                sli=self.m_slice(lower,upper)
     		return np.sum(self.data[sli],axis=axis)
     
     def add_flux(self,flux,lower=None,upper=None):
-    		sli=self._slice(lower,upper)
+    		sli=self.m_slice(lower,upper)
     		fl=np.array([0,0,0])
     		fu=np.array(flux.shape)
     		for i in range(0,3):
@@ -151,7 +156,7 @@ class AcaData(ndd.NDData):
     		return self.wcs.axis_type_names
      
     def get_index_features(self,lower=None,upper=None):
-                sli=self._slice(lower,upper)
+                sli=self.m_slice(lower,upper)
                 x=np.arange(sli[0].start,sli[0].stop)
                 y=np.arange(sli[1].start,sli[1].stop)
                 z=np.arange(sli[2].start,sli[2].stop)
@@ -170,7 +175,7 @@ class AcaData(ndd.NDData):
     		return f
     
     def get_slice(self,lower=None,upper=None):
-    		sli=self._slice(lower,upper)
+    		sli=self.m_slice(lower,upper)
     		return self.data[sli[0],sli[1],sli[2]].copy()
     
     def index_from_window(self,wcs_center,wcs_window):

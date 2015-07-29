@@ -38,6 +38,10 @@ def vel_to_freq(vel,freq,equiv):
 def fwhm_to_sigma(fwhm):
    return FWHM_TO_SIGMA*fwhm
 
+def sigma_to_fwhm(fwhm):
+   return fwhm/FWHM_TO_SIGMA
+
+
 def to_hz_deg(grad,freq,equiv):
    grad=_check(grad,u.Hz/u.deg)
    vel=vel_to_freq(grad*u.deg,freq,equiv)

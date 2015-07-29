@@ -1,35 +1,39 @@
 import numpy as np
 from collections import deque
-from scipy.optimize import fmin_bfgs,check_grad
+from scipy.optimize import fmin_bfgs,check_grad,approx_fprime
 import copy
 import matplotlib.pyplot as plt
 import sys
-from cube import *
+from astropy import log
+#import core.flux as flx
 
+K=4*np.log(2.0)
 
-def jac_chi(par,gc):
-   ret=None
+def jac_chi2(par,gc):
    # If the background is fixed, include zero background value
-   if gc.fixback:
-      par=np.insert(par,1,0.0)
-   if  par[ 3 ] <= 0.0: return ret
-   if  par[ 5 ] <= 0.0: return ret
-   if  par[ 8 ] <= 0.0: return ret
-   # update computations if necesary
-   gc.update_comp(par)
-   return gc.get_jaco(par)
+   val=np.nan*np.ones_like(par)
+   if  par[ 3 ] > 0.0 and par[ 5 ] > 0.0 and par[ 8 ] > 0.0: 
+      if gc.fixback:
+         par=np.insert(par,1,0.0)
+      # update computations if necesary
+      gc.update_comp(par)
+      val=gc.get_jaco(par)
+   print "parsJ",par
+   print "jaco", val
+   return val 
 
 def chi2(par,gc):
-   ret=None
+   val=np.nan
    # If the background is fixed, include zero background value
-   if gc.fixback:
-      par=np.insert(par,1,0.0)
-   if  par[ 3 ] <= 0.0: return ret
-   if  par[ 5 ] <= 0.0: return ret
-   if  par[ 8 ] <= 0.0: return ret
-   # update computations if necesary
-   gc.update_comp(par)
-   return gc.get_chi2(par)
+   if  par[ 3 ] > 0.0 and par[ 5 ] > 0.0 and par[ 8 ] > 0.0: 
+      if gc.fixback:
+         par=np.insert(par,1,0.0)
+      # update computations if necesary
+      gc.update_comp(par)
+      val=gc.get_chi2(par)
+   print "parsC",par
+   print "chi2", val
+   return val
 
 class GaussClumps:
 
@@ -110,19 +114,19 @@ class GaussClumps:
      ddy=self.Y/self.sy2
      ddv=self.vt_off/self.sv2
      mterm=self.peak*self.expv
-     t = -K*(-2*(ddx*cosv - ddy*sinv) + 2*par[9]*ddv)
+     t = -K*(-2*(ddx*self.cosv - ddy*self.sinv) + 2*par[9]*ddv)
      t *= mterm
      jaco[2]=-2*t.dot(self.wres)/self.wsum
      t = -K*(-2*ddx*ddx*par[3]) + self.f3
      t *= mterm
      jaco[3]=-2*t.dot(self.wres)/self.wsum
-     t = -K*(-2*(ddx*sinv + ddy*cosv) + 2*par[10]*ddv)
+     t = -K*(-2*(ddx*self.sinv + ddy*self.cosv) + 2*par[10]*ddv)
      t *= mterm
      jaco[4]=-2*t.dot(self.wres)/self.wsum
      t = -K*(-2*ddy*ddy*par[5]) + self.f5
      t *= mterm
      jaco[5]=-2*t.dot(self.wres)/self.wsum
-     t = -K*(-2*(ddx*(self.x_off*sinv - self.y_off*cosv) + ddy*(self.x_off*cosv + self.y_off*sinv)))
+     t = -K*(-2*(ddx*(self.x_off*self.sinv - self.y_off*self.cosv) + ddy*(self.x_off*self.cosv + self.ym_off*self.sinv)))
      t *= mterm
      jaco[6]=-2*t.dot(self.wres)/self.wsum
      t = -K*(-2*ddv) 
@@ -139,13 +143,13 @@ class GaussClumps:
      jaco[10]=-2*t.dot(self.wres)/self.wsum
      # second pass
      jaco[0]+=2*sa*self.pdiff*self.peakfactor
-     jaco[1]+=2*sa*pdiff + 2*sb*back_term
+     jaco[1]+=2*sa*self.pdiff + 2*sb*self.back_term
      jaco[2]+=2*4*sc*self.xm_off/self.bfsq
-     jaco[3]+=2*sa*self.pdiff*self.f3
+     jaco[3]+=2*sa*self.pdiff*self.f3*par[0]*self.peakfactor
      jaco[4]+=2*4*sc*self.ym_off/self.bfsq
-     jaco[5]+=2*sa*self.pdiff*self.f5
+     jaco[5]+=2*sa*self.pdiff*self.f5*par[0]*self.peakfactor
      jaco[7]+=2*4*sc*self.vm_off/self.velsq
-     jaco[8]+=2*sa*self.pdiff*self.f8
+     jaco[8]+=2*sa*self.pdiff*self.f8*par[0]*self.peakfactor
      if self.fixback:
         np.delete(jaco,[1])
      return jaco
@@ -157,13 +161,23 @@ class GaussClumps:
      chi2=self.wres.dot(self.res)
      chi2/=self.wsum
      off = (self.xm_off*self.xm_off + self.ym_off*self.ym_off )/self.bfsq
-     off += self.vm_off*self.vm_off/self.velsq;
-     chisq += sa*self.pdiff*self.pdiff + 4*sc*off +  sb*self.back_term*self.back_term
-
+     off += self.vm_off*self.vm_off/self.velsq
+     chi2 += sa*self.pdiff*self.pdiff + 4*sc*off +  sb*self.back_term*self.back_term
+     return chi2
+   
+   def updateResults(self,clump,lb,ub):
+     update_comp(clump)
+     ff=self.model - clump[1]
+     ff=ff.reshape(ub[0]-lb[0],ub[1]-lb[1],ub[2]-lb[2])
+     self.data.add_flux(ff,lb,ub)
+     #TODO: improve area computation, right now using weigth ub, lb
+     area=(ub-lb).sum()
+     csum=ff.sum()
+     return (csum,area)
+   
    def update_comp(self,par):
      if np.array_equal(par,self.old_par):
          return
-     K=4*np.log(2.0)
      self.old_par=par
      self.back_term=par[1] - self.guess[1]
      # Unpack parameters
@@ -176,15 +190,15 @@ class GaussClumps:
      # take account of the smoothing by the instrumental beam.
      t = par[3]*par[3]
      sx2 = self.bfsq + t
-     f3 = par[0]*self.bfsq/(par[3]*sx2)
+     f3 = self.bfsq/(par[3]*sx2)
      peakfactor = t/sx2
      t = par[5]*par[5]
      sy2 = self.bfsq + t
-     f5 = par[0]*self.bfsq/(par[5]*sy2)
+     f5 = self.bfsq/(par[5]*sy2)
      peakfactor *= t/sy2
      t = par[8]*par[8]
      sv2 = self.velsq + t
-     f8 = par[0]*self.velsq/(par[8]*sv2)
+     f8 = self.velsq/(par[8]*sv2)
      peakfactor *= t/sv2 
     
      if peakfactor > 0.0:
@@ -195,14 +209,14 @@ class GaussClumps:
      self.sx2=sx2
      self.sy2=sy2
      self.sv2=sv2
-     self.f3 *= f3*peakfactor
-     self.f5 *= f5*peakfactor
-     self.f8 *= f8*peakfactor
+     self.f3 = f3
+     self.f5 = f5
+     self.f8 = f8
      self.peakfactor=peakfactor
 
      # The difference between the model peak value (after being reduced to
      # take account of instrumental smoothing) and the data peak value.
-     pdiff = self.peak + par[1] - self.valmax
+     self.pdiff = self.peak + par[1] - self.valmax
 
      # The offset from the model centre to the data peak 
      xm_off = par[2] - self.cval[0]
@@ -210,13 +224,13 @@ class GaussClumps:
      vm_off = par[7] - self.cval[2]
 
      # Get the Gaussian model. Store the residual between the Gaussian model and data
-     cosv = np.cos(par[6])
-     sinv = np.sin(par[6])
-     x_off=feat[0] - par[2]
-     y_off=feat[1] - par[4]
-     v_off=feat[2] - par[7]
-     X = x_off*cosv + y_off*sinv
-     Y = -x_off*sinv + y_off*cosv
+     self.cosv = np.cos(par[6])
+     self.sinv = np.sin(par[6])
+     x_off=self.feat[0] - par[2]
+     y_off=self.feat[1] - par[4]
+     v_off=self.feat[2] - par[7]
+     X = x_off*self.cosv + y_off*self.sinv
+     Y = -x_off*self.sinv + y_off*self.cosv
      em = ( X*X/sx2 ) + ( Y*Y/sy2 )
      self.vt_off=v_off - par[9]*x_off - par[10]*y_off
      em += self.vt_off*self.vt_off/sv2
@@ -226,6 +240,9 @@ class GaussClumps:
      res= self.val - model
      self.X=X
      self.Y=Y
+     self.x_off=x_off
+     self.y_off=y_off
+     self.v_off=v_off
      # If the changing of the model parameters make little difference to the
      # residuals at a given place in the data, then those residuals should be
      # given less weight since they could dominate the chi-squared value. If
@@ -247,8 +264,8 @@ class GaussClumps:
         else:
            dbg=(par[1] != 0.0)
         if dbg:
-           wf=(res-self.old_res)/res
-           wf/=(model - self.old_model)/model
+           wf=(res-self.res)/res
+           wf/=(model - self.model)/model
            wf=np.abs(wf)
            wf[wf<minwf]=minwf
            wf[wf>maxwf]=maxwf
@@ -289,7 +306,6 @@ class GaussClumps:
       wwidth=self.par['WWIDTH']
       wmin=self.par['WMIN']
       rms=self.par['RMS']
-      beam=self.par['BEAM']
       velres=self.par['VELORES']
       beamfwhm=self.par['FWHMBEAM']
       self.bfsq=beamfwhm*beamfwhm
@@ -299,29 +315,32 @@ class GaussClumps:
 
       # The factor which scales the FWHM on each axis to the half-width of the
       # section of the data array to be be fitted. 
-      beta=0.5*wwidth*npsqrt(-np.log( wmin )/ np.log( 2.0 ) );
-      (lb,ub)=(np.rint(self.cval-beta*self.fobs),np.rint(self.cval+beta*self.fobs))
+      beta=0.5*wwidth*np.sqrt(-np.log( wmin )/ np.log( 2.0 ) )
+      (ld,lu)=(np.rint(self.cval-beta*self.fobs),np.rint(self.cval+beta*self.fobs))
+      lb=np.array([ld,lu]).min(axis=0)
+      ub=np.array([ld,lu]).max(axis=0)
+      lb=lb[::-1]
+      ub=ub[::-1]
+
       # Store the data normalised to the
       # RMS noise level. Also calculate and store the Gaussian weight for the
       # pixel.
       self.val=self.data.get_slice(lb,ub).ravel()
       self.feat=self.data.get_index_features(lb,ub)
-      wpos=np.array([self.cval[0],self.cval[1]])
-      wstd=np.array([self.fobs[0],self.fobs[1]])*wwidth
-      wfreq=self.cval[2]
-      wfwhm=self.fobs[2]*wwidth
-      (wmu,wP)=flx.clump_to_gauss(wpos,wstd,0,wfreq,wfwhm,np.array[0,0])
-      # Normalise the weights to a maximum value of 1.0 and set to zero any weights
-      # which are lower than the user supplied lower limit.
-      self.we=flx.create_gauss(wmu,wP,self.feat,1.0)
+      
+      xw_off=(self.feat[0] - self.cval[0])/(self.fobs[0]*wwidth)
+      yw_off=(self.feat[1] - self.cval[1])/(self.fobs[1]*wwidth)
+      vw_off=(self.feat[2] - self.cval[2])/(self.fobs[2]*wwidth)
+      self.we=np.exp(-K*(xw_off*xw_off + yw_off*xw_off + vw_off*xw_off))
       self.we[self.we < wmin]=0.0
       
       # Normalise all other data values in the guess structure and in the 
       # array to the RMS noise level.
       self.val=self.val/rms
-      self.valmax /= rms;
-      guess[1] /= rms;
-      guess[0] /= rms;
+      self.valmax /= rms
+      guess=self.guess
+      guess[1] /= rms
+      guess[0] /= rms
 
       # Number of invocations of the function
       self.nf=0
@@ -334,42 +353,51 @@ class GaussClumps:
       peakfactor = t/dx0_sq
       t = guess[5]*guess[5]
       dx1_sq = self.bfsq + t
-      peakfactor *= t/dx1_sq;
+      peakfactor *= t/dx1_sq
       t = guess[8]*guess[8]
-      dv_sq = self.velsq + t;
-      peakfactor *= t/dv_sq;
+      dv_sq = self.velsq + t
+      peakfactor *= t/dv_sq
 
       # Do the correction.
       if  peakfactor > 0.0:
-         guess[0] /= sqrt(peakfactor);
+         guess[0] /= np.sqrt(peakfactor)
       
       if self.fixback:
          np.delete(guess,[1])
 
       # Optimize at last!
-      result=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self,maxiter=maxnf,disp=true)
+      marg=(self,)
+      err=check_grad(chi2,jac_chi2,guess,self)
+      print "grad error",err
+      eps=np.sqrt(np.finfo(float).eps)
+      approx=approx_fprime(guess,chi2,eps,self)
+      print approx-jac_chi2(guess,self)
+      sys.exit()
+      #print "guess",guess
+      retval=fmin_bfgs(chi2, guess,args=marg,fprime=jac_chi2,maxiter=maxnf,disp=True,full_output=True)
+      print "RETVAL"
+      print retval
       # Unpack results
-      print result
-      xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag=results
+      #print xpot,fopt,gopt,Bopt,func_calls,grad_calls,warnflag
+      #(xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag)=result
       if warnflag!=0 and self.fixback:
          self.fixback=False
-         result=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=self,maxiter=maxnf,disp=true)
-         xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag=results
-         print result
+         (xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag)=fmin_bfgs(chi2, guess,args=marg,fprime=jac_chi2,maxiter=maxnf,disp=True)
       if warnflag!=0:
          return None
       if self.fixback:
          np.insert(xopt,1,self.bg)
-      return xopt
+      # TODO: come back to normality!
+      return xopt,lb,ub
 
    # TODO: Document this stuff (using cupid code...)
-   def profWidth(dim):
+   def profWidth(self,dim):
       rms=self.par['RMS']
       if dim==0:
          vn=[0,0,-1]
          vp=[0,0,1]
          fwhm=self.par['FWHMBEAM']
-      else if dim==1:
+      elif dim==1:
          vn=[0,-1,0]
          vp=[0,1,0]
          fwhm=self.par['FWHMBEAM']
@@ -379,22 +407,23 @@ class GaussClumps:
          fwhm=self.par['VELORES']
 
       # left search for significant minima
-      left=self.imax.copy()
+      left=np.array(self.imax)
       prev=np.nan
-      vlow=self.data[self.imax]
+      vlow=self.data.data[self.imax]
       plow=self.imax
       csum=0.0
       nsum=0
       while True:
          left+=vn
          try:
-            val=self.data[left]
+            val=self.data.data[tuple(left)]
          except IndexError:
             break
          if np.ma.is_masked(val):
             prev=np.nan
             continue
          if val < vlow and prev != np.nan and prev - val < 1.5*rms:
+            
             vlow=val
             plow=left
             csum=0.0
@@ -408,15 +437,15 @@ class GaussClumps:
       vlow+=rms
       # Do the same working upwards from the peak to upper axis values.
       prev=np.nan
-      vup=self.data[self.imax]
+      vup=self.data.data[self.imax]
       pup=self.imax
       csum=0.0
       nsum=0
-      right=self.imax.copy()
+      right=np.array(self.imax)
       while True:
          right+=vp
          try:
-            val=self.data[right]
+            val=self.data.data[tuple(right)]
          except IndexError:
             break
          if np.ma.is_masked(val):
@@ -437,16 +466,18 @@ class GaussClumps:
       off=np.min(vlow,vup) + rms
       if vlow < vup:
          hgt=self.valmax - vlow
-         cand=self.data[plow[0]:self.imax[0]+1,plow[1]:self.imax[1]+1,plow[2]:self.imax[2]+1]
+         cand=self.data.data[plow[0]:self.imax[0]+1,plow[1]:self.imax[1]+1,plow[2]:self.imax[2]+1]
+         cand=cand[0][0]
          cand-=self.vlow
          cand=cand[::-1]
          default=(self.imax-plow).sum()/2.0
       else:
          hgt=self.valmax - vup
-         cand=self.data[self.imax[0]:pup[0]+1,self.imax[1]:pup[1]+1,self.imax[2]:pup[2]+1]
+         cand=self.data.data[self.imax[0]:pup[0]+1,self.imax[1]:pup[1]+1,self.imax[2]:pup[2]+1]
+         cand=cand[0][0]
          np.delete(cand,0)
-         cand-=self.vup
-         default=(self.imax-pup).sum()/2.0
+         cand-=vup
+         default=(np.array(self.imax)-np.array(pup)).sum()/2.0
       cand=cand/hgt
       idx=np.arange(1,cand.size+1)
       idx=idx[cand>0.25]
@@ -454,12 +485,10 @@ class GaussClumps:
       idx=idx[cand<0.75]
       cand=cand[cand<0.75]
       if cand.size==0:
-         return default
-      return 1.665*(idx/np.log(cand)).sum()/cand.size
+         return default,off
+      return (1.665*(idx/np.log(cand)).sum()/cand.size,off)
       
-    
-
-   def setInit(self,niter):
+   def setInit(self):
       # Unpack used parameters
       beamfwhm=self.par['FWHMBEAM']
       velres=self.par['VELORES']
@@ -473,9 +502,9 @@ class GaussClumps:
       # clump is circular as an initial guess)
       self.fobs=np.zeros(3)
       off=np.zeros(3)
-      (self.fobs[0],off[0]) = self.profWidth(0) 
-      (self.fobs[1],off[1]) = self.profWidth(1) 
-      (self.fobs[2],off[2]) = self.profWidth(2) 
+      self.fobs[0],off[0] = self.profWidth(0) 
+      self.fobs[1],off[1] = self.profWidth(1) 
+      self.fobs[2],off[2] = self.profWidth(2) 
       fbeam=0.5*(self.fobs[0]  + self.fobs[1])/beamfwhm
       if fbeam < 1.0: 
          fbeam=1.2
@@ -491,7 +520,7 @@ class GaussClumps:
       # clump before being blurred by the instrument beam). Do the same for 
       # the second axis. Assume zero rotation of the elliptical clump shape.
       guess[3]=np.sqrt(fbeam*fbeam- 1.0 )*beamfwhm
-      guess[5]=guess[4]
+      guess[5]=guess[3]
       guess[6]=0.0
       # Now do the same for the third (velocity) axis if necessary. Assume
       # zero velocity gradient
@@ -517,12 +546,15 @@ class GaussClumps:
       # more than 5% of the total peak height. */
       self.fixback=False
       if guess[1] < -np.abs(guess[ 0 ]*0.05):
-         guess[0] += guess[1];
-         guess[1] = 0.0;
-         self.fixback = True;
-       self.guess=guess
+         guess[0] += guess[1]
+         guess[1] = 0.0
+         self.fixback = True
+      self.guess=guess
+      self.old_par=None
 
    def fit(self,cube,verbose=False,use_meta=True):
+
+      FWHM_TO_SIGMA = 1. / (8 * np.log(2))**0.5
       # Set the RMS, or automatically find an estimate for it
       if not self.par.has_key('RMS'):
          rms=cube.estimate_rms()
@@ -554,10 +586,10 @@ class GaussClumps:
  
       # Initialise the variables used to keep track of the mean and standard
       # deviation of the most recent "npeak" fitted peak values. 
-      mean_peak = 0.0;
-      sigma_peak = 0.0; 
+      mean_peak = 0.0
+      sigma_peak = 0.0 
       # The value most recently added to "peaks"
-      new_peak = 0.0;
+      new_peak = 0.0
       # Sum of the values in "peaks"
       sum_peak = 0.0
       # Sum of the squares of the values in "peaks" 
@@ -574,7 +606,7 @@ class GaussClumps:
       # Sum of the values in all the used clumps so far 
       sumclumps = 0.0
       # Sum of the supplied data values 
-      sumdata = data.get_flux()
+      sumdata = self.data.get_flux()
       
       # peaks contains the last npeaks... 
       peaks=np.zeros(npeaks)
@@ -588,18 +620,18 @@ class GaussClumps:
             log.info("Iteration: "+str(niter))
          # Find the cube index of the element with the largest value in the residuals cube.
          # imax: Index of element with largest residual
-         (self.valmax,self.imax) = data.max()
+         (self.valmax,self.imax) = self.data.max()
  
          # Finish iterating if all the residuals are bad, or if too many iterations
          # have been performed since the last succesfully fitted clump. 
-         if np.isnan(self.imax):
-            iterate = False;
+         if np.isnan(self.imax).any():
+            iterate = False
             niter-=1
             if verbose:
                log.info("There are no good pixels left to be fitted.")
                continue
          elif  nskip > maxskip:
-            iterate = False;
+            iterate = False
             niter-=1
             if verbose:
                log.info("The previous",maxskip,"fits were unusable.")
@@ -608,7 +640,7 @@ class GaussClumps:
          self.setInit()
          
          # Find the best fitting parameters, starting from the above initial guess.
-         clump=self.optimize()
+         (clump,lb,ub)=self.optimize()
          # If no fit could be performed, then found = False
          if clump!=None:
             # Skip this fit if we have an estimate of the standard deviation of the
@@ -616,7 +648,7 @@ class GaussClumps:
             # just fitted is a long way (more than NSIGMA standard deviations) from the
             # peak value of the previously fitted clump. Also skip it if the peak
             # value is less than the "mlim" value.
-            if (peaks.size == 0 or iclump < npeak or np.abs(clump[0] - new_peak) < nsig*sigma_peak ) and clump[0] > mlim]:
+            if (peaks.size == 0 or iclump < npeak or np.abs(clump[0] - new_peak) < nsig*sigma_peak ) and clump[0] > mlim:
 
                # Record the new peak value for use with the next peak, and update the
                # standard deviation of the "npeak" most recent peaks. These values are
@@ -637,26 +669,17 @@ class GaussClumps:
                iclump+=1
 
                # Reset the number of failed fits since the last good fit. */
-               nskip = 0;
+               nskip = 0
 
                # Remove the model fit (excluding the background) from the residuals.
                # This also creates data values asociated with the clumps
                # The standard deviation of the new residuals is returned. */
-               pixmu=np.array([par[7],par[4],par[2])
-               mu=self.data.index_to_wcs(pixmu)
-               pos=mu[0:2]
-               freq=mu[2]
-               std=np.array([par[3],par[5]])*self.data.wcs.cdelt[0]*FWHM2STD
-               # TODO here
-               (result,area,sumclumps)=self.updateResults(clump,imax,mean_peak,sumclumps) # check check check
-               #cupidGCUpdateArrays( type, res, ipd, el, ndim, dims,
-               #                    x, rms, mlim, imax, peak_thresh, slbnd,
-               #                    &ret, iclump, excols, mean_peak,
-               #                    maxbad, &area, &sumclumps, status );
-
-               # TODO: implement this!
-               # Display the clump parameters on the screen if required. */
-               #cupidGCListClump( iclump, ndim, x, chisq, slbnd, rms, status );
+               if clump[0] >= peak_thresh:
+                  (csum,area)=self.updateResults(clump,lb,ub)
+                  sumclump+=csum
+                  # TODO: implement this!
+                  # Display the clump parameters on the screen if required. */
+                  #cupidGCListClump( iclump, ndim, x, chisq, slbnd, rms, status )
 
                # If this clump has a peak value which is below the threshold, increment
                # the count of consecutive clumps with peak value below the threshold.
@@ -705,22 +728,22 @@ class GaussClumps:
             # value, set the residuals array element bad in order to prevent the
             # algorithm from trying to fit a peak to the same pixel again. 
             else:
-               self.data[self.imax]=np.nan;
-               new_peak = 0.5*(new_peak + clump[0]);
-               nskip++;
+               self.data[self.imax]=np.nan
+               new_peak = 0.5*(new_peak + clump[0])
+               nskip+=1
                if verbose:
                   log.info("Clump rejected due to aberrant peak value. Ignoring Pixel...")
 
          # Tell the user if no clump could be fitted around the current peak
          # pixel value 
          else:
-            nskip++;
+            nskip+=1
             if verbose:
                log.info("No clump fitted (optimization falied). Ignoring Pixel...")
             # Set the specified element of the residuals array bad if no fit was
             # performed. This prevents the any subsequent attempt to fit a Gaussian
             # to the same peak value.
-            self.data[self.imax]=np.nan;
+            self.data[self.imax]=np.nan
       if verbose:
          log.info("GaussClump finished normally")
          # TODO: Usable Clumps
@@ -741,7 +764,7 @@ class GaussClumps:
 #   sys.stdout.write('.')
 #   sys.stdout.flush()
 #   su=values - gauss_eval(features,to_gauss(model))
-#   nf=len(su) - 11;
+#   nf=len(su) - 11
 #   t1 = (np.square(su)*w).sum()/nf
 #   t2 = (np.exp(-su)).sum()/nf
 #   t3 = np.square((model[2]-feature_max[0])/res_vect[0]) + np.square((model[3]-feature_max[1])/res_vect[1]) + np.square((model[4]-feature_max[2])/res_vect[2])
