@@ -56,7 +56,7 @@ class AcaData(ndd.NDData):
     
     def empty_like(self):
     	dat=np.zeros_like(self.data)
-    	cb=AcaData(dat,self.meta)
+    	cb=AcaData(dat,self.wcs,self.meta,self.unit)
     	return cb
     
     def scale(self, scale):
@@ -105,16 +105,16 @@ class AcaData(ndd.NDData):
     		luc=upper < 0
     		uuc=upper > self.data.shape
     		if llc.any():
-    				log.warning("Negative lower index "+str(lower)+". Correcting to zero.")
+    				#log.warning("Negative lower index "+str(lower)+". Correcting to zero.")
     				lower[llc]=0
     		if ulc.any():
-    				log.warning("Lower index out of bounds "+str(lower)+" > "+str(self.data.shape)+". Correcting to max.")
+    				#log.warning("Lower index out of bounds "+str(lower)+" > "+str(self.data.shape)+". Correcting to max.")
     				upper[ulc]=np.array(self.data.shape)[ulc]
     		if luc.any():
-    				log.warning("Negative upper index "+str(upper)+". Correcting to zero.")
+    				#log.warning("Negative upper index "+str(upper)+". Correcting to zero.")
     				lower[luc]=0
     		if uuc.any():
-    				log.warning("Upper index out of bounds "+str(upper)+" > "+str(self.data.shape)+". Correcting to max.")
+    				#log.warning("Upper index out of bounds "+str(upper)+" > "+str(self.data.shape)+". Correcting to max.")
     				upper[uuc]=np.array(self.data.shape)[uuc]
     		return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2])]
     			
