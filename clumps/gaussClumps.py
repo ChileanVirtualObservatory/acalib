@@ -1,38 +1,42 @@
 import numpy as np
 from collections import deque
 from scipy.optimize import fmin_bfgs,check_grad,approx_fprime
+#from scipy.optimize.linesearch import (line_search_BFGS, line_search_wolfe1, line_search_wolfe2, line_search_wolfe2 as line_search)
+#from optimize import fmin_bfgs
+
 import copy
 import matplotlib.pyplot as plt
 import sys
 from astropy import log
-#import core.flux as flx
 
 K=4*np.log(2.0)
+
 
 def jac_chi2(par,gc):
    # If the background is fixed, include zero background value
    val=np.nan*np.ones_like(par)
    if  par[ 3 ] > 0.0 and par[ 5 ] > 0.0 and par[ 8 ] > 0.0: 
       if gc.fixback:
+#         print "FIXBACK"
          par=np.insert(par,1,0.0)
       # update computations if necesary
       gc.update_comp(par)
       val=gc.get_jaco(par)
-   print "parsJ",par
-   print "jaco", val
-   return val 
+#   print "jaco", val
+   return val
 
 def chi2(par,gc):
-   val=np.nan
+   val=1e1000
    # If the background is fixed, include zero background value
    if  par[ 3 ] > 0.0 and par[ 5 ] > 0.0 and par[ 8 ] > 0.0: 
       if gc.fixback:
+ #        print "FIXBACK"
          par=np.insert(par,1,0.0)
       # update computations if necesary
       gc.update_comp(par)
       val=gc.get_chi2(par)
-   print "parsC",par
-   print "chi2", val
+#   print "par",par
+#   print "chi2", val
    return val
 
 class GaussClumps:
@@ -166,7 +170,7 @@ class GaussClumps:
      return chi2
    
    def updateResults(self,clump,lb,ub):
-     update_comp(clump)
+     self.update_comp(clump)
      ff=self.model - clump[1]
      ff=ff.reshape(ub[0]-lb[0],ub[1]-lb[1],ub[2]-lb[2])
      self.data.add_flux(ff,lb,ub)
@@ -177,7 +181,11 @@ class GaussClumps:
    
    def update_comp(self,par):
      if np.array_equal(par,self.old_par):
+     #    print "same par"
          return
+     #if self.old_par!=None:
+     #   print "pardiff", self.old_par-par
+     #print "guessdiff", self.guess-par
      self.old_par=par
      self.back_term=par[1] - self.guess[1]
      # Unpack parameters
@@ -299,7 +307,7 @@ class GaussClumps:
      self.bg = par[1]
      # Update nf
      self.nf+=1
-     
+   
    def optimize(self):
       # Unpack used parameters
       maxnf=self.par['MAXNF']
@@ -366,27 +374,38 @@ class GaussClumps:
          np.delete(guess,[1])
 
       # Optimize at last!
-      marg=(self,)
-      err=check_grad(chi2,jac_chi2,guess,self)
-      print "grad error",err
-      eps=np.sqrt(np.finfo(float).eps)
-      approx=approx_fprime(guess,chi2,eps,self)
-      print approx-jac_chi2(guess,self)
-      sys.exit()
+      #eps=1.0
+      #approx=approx_fprime(guess,chi2,eps,self)
+      #vec=approx-jac_chi2(guess,self)
+      #print vec
+      #print "err=",np.sqrt((vec*vec).sum())
+      #sys.exit()
       #print "guess",guess
-      retval=fmin_bfgs(chi2, guess,args=marg,fprime=jac_chi2,maxiter=maxnf,disp=True,full_output=True)
-      print "RETVAL"
-      print retval
+      #opt=dict()
+      #opt['maxiter']=self.nf
+      #opt['disp']=True
+      #opt['norm']=2
+      #opt['gtol']=1e-10
+      
+      #retval=minimize(chi2, guess, args=marg, method='BFGS', jac=jac_chi2, hess=None, hessp=None, bounds=None, tol=None, callback=None, options=opt)
+      marg=(self,)
+      retval=fmin_bfgs(chi2, guess,args=marg,disp=True,full_output=True,fprime=jac_chi2)
+      #print retval
       # Unpack results
-      #print xpot,fopt,gopt,Bopt,func_calls,grad_calls,warnflag
-      #(xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag)=result
+      # #print xpot,fopt,gopt,Bopt,func_calls,grad_calls,warnflag
+      (xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag)=retval
+      print "warnflag",warnflag
       if warnflag!=0 and self.fixback:
          self.fixback=False
          (xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag)=fmin_bfgs(chi2, guess,args=marg,fprime=jac_chi2,maxiter=maxnf,disp=True)
-      if warnflag!=0:
-         return None
+      #if warnflag!=0:
+      #   return None
       if self.fixback:
          np.insert(xopt,1,self.bg)
+      print "solution",xopt
+      #print retval
+      if (xopt == self.guess).all():
+         xopt=None
       # TODO: come back to normality!
       return xopt,lb,ub
 
@@ -468,7 +487,7 @@ class GaussClumps:
          hgt=self.valmax - vlow
          cand=self.data.data[plow[0]:self.imax[0]+1,plow[1]:self.imax[1]+1,plow[2]:self.imax[2]+1]
          cand=cand[0][0]
-         cand-=self.vlow
+         cand-=vlow
          cand=cand[::-1]
          default=(self.imax-plow).sum()/2.0
       else:
@@ -648,10 +667,10 @@ class GaussClumps:
             # just fitted is a long way (more than NSIGMA standard deviations) from the
             # peak value of the previously fitted clump. Also skip it if the peak
             # value is less than the "mlim" value.
-            if (peaks.size == 0 or iclump < npeak or np.abs(clump[0] - new_peak) < nsig*sigma_peak ) and clump[0] > mlim:
+            if (peaks.size == 0 or iclump < npeaks or np.abs(clump[0] - new_peak) < nsig*sigma_peak ) and clump[0] > mlim:
 
                # Record the new peak value for use with the next peak, and update the
-               # standard deviation of the "npeak" most recent peaks. These values are
+               # standard deviation of the "npeaks" most recent peaks. These values are
                # stored cyclically in the "peaks" array. */
                if peaks.size > 0:
                   np.roll(peaks,1)
@@ -676,7 +695,7 @@ class GaussClumps:
                # The standard deviation of the new residuals is returned. */
                if clump[0] >= peak_thresh:
                   (csum,area)=self.updateResults(clump,lb,ub)
-                  sumclump+=csum
+                  sumclumps+=csum
                   # TODO: implement this!
                   # Display the clump parameters on the screen if required. */
                   #cupidGCListClump( iclump, ndim, x, chisq, slbnd, rms, status )
@@ -728,7 +747,7 @@ class GaussClumps:
             # value, set the residuals array element bad in order to prevent the
             # algorithm from trying to fit a peak to the same pixel again. 
             else:
-               self.data[self.imax]=np.nan
+               self.data.data.mask[self.imax]=True
                new_peak = 0.5*(new_peak + clump[0])
                nskip+=1
                if verbose:
@@ -743,7 +762,7 @@ class GaussClumps:
             # Set the specified element of the residuals array bad if no fit was
             # performed. This prevents the any subsequent attempt to fit a Gaussian
             # to the same peak value.
-            self.data[self.imax]=np.nan
+            self.data.data.mask[self.imax]=True
       if verbose:
          log.info("GaussClump finished normally")
          # TODO: Usable Clumps
@@ -758,7 +777,7 @@ class GaussClumps:
          #   print "No fit attempted."
          #else:
          #   print "Fits attempted for ",iclump," candidate clumps (",niter-iclump," failed)."
-      return result
+      return 
 
 #def chi2(model,features,values,w,value_max,feature_max,res_vect,s_vect):
 #   sys.stdout.write('.')

@@ -184,7 +184,18 @@ class AcaData(ndd.NDData):
 		   lower=np.array([ld,lu]).min(axis=0)
 		   upper=np.array([ld,lu]).max(axis=0)
 		   return (lower[0][::-1],upper[0][::-1])
-    
+
+    def standarize(self):
+       y_min=self.data.min()
+       self.data=self.data - y_min
+       y_fact=self.data.sum()
+       self.data=self.data/y_fact
+       return (y_min,y_fact)
+
+    def unstandarize(self,(y_min,y_fact)):
+        self.data=self.data*y_fact + y_min
+
+
 #    def _add_HDU(self, hdu):
 #    		self.hdulist.append(hdu)
     
