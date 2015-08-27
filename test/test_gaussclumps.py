@@ -6,10 +6,12 @@ import cProfile
 import clumps.gaussClumps as gclumps
 import matplotlib.pyplot as plt
 
-ws.import_file("fits/M100line.image.fits")
+#ws.import_file("fits/M100line.image.fits")
+ws.import_file("fits/Orion.methanol.cbc.contsub.image.fits")
 
 elm=ws.elements()
-cube=elm['M100line.image-0']
+#cube=elm['M100line.image-0']
+cube=elm['Orion.methanol.cbc.contsub.image-0']
 spar=cube.standarize()
 gc=gclumps.GaussClumps()
 # use_meta not implemented yet, so compute parameters to use

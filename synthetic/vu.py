@@ -106,7 +106,7 @@ class Universe:
 
         for source in self.sources:
             log.info('Projecting source ' + source)
-            dsource = self.sources[source].project(cube,noise/10.0)
+            dsource = self.sources[source].project(cube,noise/50.0)
             tables.update(dsource)
         cube.add_flux(2*noise*(np.random.random(cube.data.shape) - 0.5))
         return cube, tables

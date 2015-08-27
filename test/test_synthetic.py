@@ -64,7 +64,7 @@ fov=np.array([200,200])*u.arcsec
 freq=300*u.GHz
 spe_res=0.005*u.GHz
 bw=2*u.GHz
-noise=1*u.Jy/u.beam
+noise=0.001*u.Jy/u.beam
 
 (cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise)
 print tab
