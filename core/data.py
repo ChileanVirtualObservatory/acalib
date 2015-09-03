@@ -105,7 +105,7 @@ class AcaData(ndd.NDData):
     		luc=upper < 0
     		uuc=upper > self.data.shape
     		if llc.any():
-    				#log.warning("Negative lower index "+str(lower)+". Correcting to zero.")
+    		                #log.warning("Negative lower index "+str(lower)+". Correcting to zero.")
     				lower[llc]=0
     		if ulc.any():
     				#log.warning("Lower index out of bounds "+str(lower)+" > "+str(self.data.shape)+". Correcting to max.")
