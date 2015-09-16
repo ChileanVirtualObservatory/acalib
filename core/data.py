@@ -132,7 +132,10 @@ class AcaData(ndd.NDData):
     			 if sli[i].stop == self.data.shape[i]:
     					fu[i]=sli[i].stop - sli[i].start
     		self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
-    
+
+    def shape(self):
+        return self.data.shape
+   
     def max(self):
                 #try:
     	        index=np.unravel_index(np.argmax(self.data),self.data.shape)
