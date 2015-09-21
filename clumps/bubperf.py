@@ -26,7 +26,7 @@ class PerfBubbleClumps:
       # How many RMS is considered noise
       self.par['NRMS']=3.0
       # How meny FHWMs to consider
-      self.par['BSIZE']=2.0
+      self.par['BSIZE']=1.3
 
    def create_bubble(self):
       ds=self.ds
