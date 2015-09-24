@@ -14,7 +14,7 @@ class FellWalker:
       """ Generic parameters  """
       # Spectral resoluion in pixels
       self.par['VELORES']=2.0
-      # Beam resoluion in pixels 
+      # Beam resolution in pixels 
       self.par['FWHMBEAM']=2.0
       # Maximum Clumps
       self.par['MAXCLUMPS']=sys.maxint
@@ -455,7 +455,7 @@ class FellWalker:
 
 
 
-   def fellWalker(self, orig_cube):
+   def fit(self, orig_cube):
       cube=copy.deepcopy(orig_cube)
       syn=copy.copy(orig_cube)
       syn.data=np.empty_like(cube.data)
