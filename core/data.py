@@ -36,7 +36,9 @@ class AcaData(ndd.NDData):
         self._data = value
     
     def estimate_rms(self):
-       return self.data.std()
+       sigma=self.data.std()
+       mu=self.data.mean()
+       return np.sqrt(sigma*sigma + mu*mu)
 
     def get_wcs_limits(self,axis):
        lower=self.wcs.wcs_pix2world([[0,0,0]], 0) - self.wcs.wcs.cdelt/2.0
@@ -198,6 +200,9 @@ class AcaData(ndd.NDData):
     def unstandarize(self,(y_min,y_fact)):
         self.data=self.data*y_fact + y_min
 
+
+    def variance(self):
+        return self.data.std()
 
 #    def _add_HDU(self, hdu):
 #    		self.hdulist.append(hdu)

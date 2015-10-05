@@ -24,7 +24,7 @@ class PerfBubbleClumps:
       # Beam resoluion in pixels (smoothing function)
       self.par['FWHMBEAM']=2.0
       # How many RMS is considered noise
-      self.par['NRMS']=3.0
+      self.par['NRMS']=2.0
       # How meny FHWMs to consider
       self.par['BSIZE']=1.3
 
@@ -145,8 +145,10 @@ class PerfBubbleClumps:
       self.sb=bsize*fwhmbeam*self.FWHM_TO_SIGMA
       self.ss=bsize*velres*self.FWHM_TO_SIGMA
       # Deltas
-      self.db=int(np.sqrt(-2*self.sb*self.sb*np.log(nrms*rms/datamax)))
-      self.ds=int(np.sqrt(-2*self.ss*self.ss*np.log(nrms*rms/datamax)))
+      #self.db=int(np.sqrt(-2*self.sb*self.sb*np.log(nrms*rms/datamax)))
+      #self.ds=int(np.sqrt(-2*self.ss*self.ss*np.log(nrms*rms/datamax)))
+      self.db=int(np.sqrt(-2*self.sb*self.sb*np.log(rms/datamax)))
+      self.ds=int(np.sqrt(-2*self.ss*self.ss*np.log(rms/datamax)))
       log.info("Datamax =="+str(datamax))
       log.info("RMS ="+str(rms))
       log.info("Computed Deltas ="+str((self.db,self.ds)))
@@ -165,6 +167,10 @@ class PerfBubbleClumps:
       delta=np.array([self.ds,self.db,self.db])
       iterate = True
       niter=0
+      amplitudes=[]
+      rvalue=[]
+      mvalue=[]
+      svalue=[]
       while iterate:
          # Report the iteration number to the user if required.
          niter+=1
@@ -173,27 +179,48 @@ class PerfBubbleClumps:
          y,xmax=self.energy.max()
          xmax=np.array(xmax)
          log.info("Maximum energy E = "+str(y)+" at "+str(xmax))
-         rem=y - nrms*rms
-         if rem <= nrms*rms:
-            iterate=False
-            break
-         log.info("Remove E - "+str(nrms)+"*rms = "+str(rem)+" > "+str(nrms*rms))
+         #rem=y - nrms*rms
+         #if rem <= nrms*rms:
+         rem=y - rms
+         #if y <= rms:
+         #   iterate=False
+         #   break
+         amplitudes.append(rem)
+         #log.info("Remove E - "+str(nrms)+"*rms = "+str(rem)+" > "+str(nrms*rms))
+         log.info("Remove E - "+str(rem)+" > "+str(rms))
          ub=xmax + delta + 1
          lb=xmax - delta
-         #print ub - lb
-         #print cb.shape
-
          self.data.add_flux(-rem*cb,lb,ub)
+         mm=self.data.data.mean()
+         ss=self.data.data.std()
+         #rms=np.sqrt(ss*ss + mm*mm)
+         mvalue.append(1.5*mm)
+         rvalue.append(y)
+         svalue.append(ss)
          self.syn.add_flux(rem*cb,lb,ub)
          log.info("Updating Energies")
          self.update_energies(lb,ub)
          plt.clf()
-         plt.subplot(1,3,1)
+         #plt.subplot(2,3,1)
+         plt.subplot(1,4,1)
          plt.imshow(self.data.get_stacked())
-         plt.subplot(1,3,2)
+         #plt.subplot(2,3,2)
+         plt.subplot(1,4,2)
          plt.imshow(self.energy.get_stacked())
-         plt.subplot(1,3,3)
+         #plt.subplot(2,3,3)
+         plt.subplot(1,4,3)
          plt.imshow(self.syn.get_stacked())
+         plt.subplot(1,4,4)
+         plt.plot(amplitudes,'k')
+         plt.plot(mvalue,'b')
+         plt.plot(svalue,'r')
+         plt.plot(rvalue,'g')
+         #plt.plot(nrms*rms*np.ones(len(amplitudes)),'r')
+         #plt.plot(rms*np.ones(len(amplitudes)),'r')
+         #plt.subplot(2,3,5)
+         #plt.plot(lrms)
+         #plt.subplot(2,3,6)
+         #plt.plot(srms)
          plt.pause(0.00001)
  
       if verbose:
