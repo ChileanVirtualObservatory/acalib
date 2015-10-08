@@ -56,14 +56,15 @@ class Universe:
             for component in self.sources[source].comp:
                 col_comp_id.append(component.comp_name)
                 col_source_name.append(self.sources[source].name)
-                col_model.append("Not yet.")
+                col_model.append("[[NOT]]")
                 col_alpha.append(component.pos[0].value)
                 col_delta.append(component.pos[1].value)
                 col_redshift.append(component.get_redshift().value)
                 col_radial_velocity.append(component.get_velocity().value)
 
         # create two lists for the table, this is to not pollute the table construction line.
-        col_values = [col_comp_id, col_source_name, col_model, col_alpha, col_delta, col_redshift, col_radial_velocity]
+        col_values = [col_comp_id, col_source_name, col_model, col_alpha,
+                      col_delta, col_redshift, col_radial_velocity]
         col_names = ["Comp ID", "Source name", "Model", "Alpha", "Delta", "Redshift", "Radial Vel"]
         return table.Table(col_values, names=col_names)
     
@@ -71,7 +72,7 @@ class Universe:
         """
         Returns a Cube object where all the sources within the FOV and BW are projected, and
         a dictionary with a sources astropy Table and all the parameters of the components
-        in the succesive Tables
+        in the successive Tables
 
         This function needs the following parameters:
         - name    : name of the cube
@@ -103,6 +104,9 @@ class Universe:
 
         tables = dict()
         tables['sources'] = self._gen_sources_table()
+
+        print "[DEBUG] ASTROPY TABLE FROM SOURCES:"
+        print tables['sources']
 
         for source in self.sources:
             log.info('Projecting source ' + source)
