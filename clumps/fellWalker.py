@@ -49,24 +49,23 @@ class FellWalker:
 
 
    def create_caa(self, data):
-      caa = np.zeros_like(data).astype(int)
+      caa = np.zeros_like(data.data).astype(np.int)
       #Check invalid pixels (below threshold)
       shape = caa.shape
-      rms = compute_rms(data)
-      threshold = self.par['THRESH']*rms # here for now
-
-      for i in range(shape[0]):
-         for j in range(shape[1]):
-            for k in range(shape[2]):
-               if data[i,j,k]<threshold:
-                  caa[i,j,k]=-1
+      rms = self.compute_rms(data)
+      threshold = self.par['THRESH']*rms
+      #Aditionally, NaN valued pixels are set as unusable -> filled(1)
+      mask = np.array((data<threshold).filled(1))
+      print type(mask)
+      caa[mask] = -1
       print "CAA initialized successfully"
       return caa
 
 
    def compute_rms(self, data):
-      res=data[data < 0]
-      fin=(res*res).sum()/len(res)
+      mask = np.array((data<0).filled(0))
+      res = data[mask]
+      fin = (res*res).sum()/len(res)
       return np.sqrt(fin)
 
 
@@ -249,7 +248,7 @@ class FellWalker:
 
 
    def walkup(self, pos, path, pathv, data, caa):
-      next_pos=max_gradient(pos,data,caa)
+      next_pos=self.max_gradient(pos,data,caa)
 
       if caa[next_pos]>=1:
          """ 
@@ -456,31 +455,35 @@ class FellWalker:
 
 
    def fit(self, orig_cube):
-      cube=copy.deepcopy(orig_cube)
-      syn=copy.copy(orig_cube)
-      syn.data=np.empty_like(cube.data)
-      data=cube.data
+      cube = orig_cube.copy()
+      syn = orig_cube.empty_like()
+      #cube.data is masked array
+      data = cube.data
+
 
       """
       Fill the supplied caa array with -1 for all pixels which are below the
       threshold, or are bad. Fill all other pixels with zero to indicate that
       the pixel is "usable but not yet checked".
       """
-      caa=create_caa(data)
+      print "Creating CAA"
+      print type(data)
+      caa=self.create_caa(data)
 
       """
       Use a cellular automata to remove small isolated groups of usable
       pixels from the above "ipa" array. This allocates new memory for the
       cleaned up array.
       """
+      print "Removing isolate clumps"
       frac = self.par['FRAC']
       on = self.par['ON']
       off = self.par['OFF']
       centre = self.par['CENTRE']
-      caa = remove_isolate(caa, frac, on, off, centre)
+      caa = self.remove_isolate(caa, frac, on, off, centre)
 
       #Some constants
-      rms = compute_rms(data)
+      rms = self.compute_rms(data)
       noise = self.par['THRESH']*rms
       flatSlope = self.par['FLATSLOPE']
       seaLevel = self.par['SEALEVEL']
@@ -516,8 +519,8 @@ class FellWalker:
                However, this initial flat section is only ignored if the walk starts from 
                "sea level". Walks which start at a higher altitude are used in their entirety.
                """
-               path,pathv=walkup(pos,path,pathv,data,caa)
-               path,pathv,flat,flatv=verify_flat(path,pathv,caa,flatSlope,seaLevel)
+               path,pathv=self.walkup(pos,path,pathv,data,caa)
+               path,pathv,flat,flatv=self.verify_flat(path,pathv,caa,flatSlope,seaLevel)
 
                """
                We now assign the clump index found above to all the pixels visited on
@@ -601,8 +604,8 @@ class FellWalker:
       Create a dictionary structure describing all the clumps boundaries in the
       supplied caa array. Then merge stage is applyed.
       """
-      peaks,cols=clump_structs(clump,data,caa)
-      clump,peaks,cols,caa=merge(clump,peaks,cols,caa,minDip)
+      peaks,cols=self.clump_structs(clump,data,caa)
+      clump,peaks,cols,caa=self.merge(clump,peaks,cols,caa,minDip)
 
       #ordering clumpId's (sequential id's)
       seqId=1
@@ -622,7 +625,7 @@ class FellWalker:
       """
       cleanIter = self.par['CLEANITER']
       for i in range(cleanIter): 
-         caa = smooth_boundary(caa,clump)
+         caa = self.smooth_boundary(caa,clump)
 
       ####some statistics
       nclump=len(clump)
