@@ -56,7 +56,7 @@ class Universe:
             for component in self.sources[source].comp:
                 col_comp_id.append(component.comp_name)
                 col_source_name.append(self.sources[source].name)
-                col_model.append("[[NOT]]")
+                col_model.append(component.get_model_name())
                 col_alpha.append(component.pos[0].value)
                 col_delta.append(component.pos[1].value)
                 col_redshift.append(component.get_redshift().value)
@@ -102,6 +102,21 @@ class Universe:
         #w.wcs.print_contents()
         cube = dt.AcaData(data,w,None,u.Jy/u.beam)
 
+        # this will generate a dictionary of AstroPy tables, in the following manner:
+        # first, generate a full resume of all sources in this universe, with that, and put it in the
+        # key "sources". Next, run through all sources projecting the source, the project method needs to
+        # return a dictionary which contains all it's components in tables. For the IMC model, every row will
+        # be a different row. So the structure will be like this:
+        # sources -> (astropy table)
+        #
+        # source1 ->
+        #   - component::1 -> (astropy table)
+        #   - component::2 (astropy table)
+        #
+        # source2 ->
+        #   - component::1 -> (astropy table)
+        #   - component::2 -> (astropy table)
+
         tables = dict()
         tables['sources'] = self._gen_sources_table()
 
@@ -110,9 +125,16 @@ class Universe:
 
         for source in self.sources:
             log.info('Projecting source ' + source)
-            dsource = self.sources[source].project(cube,noise/50.0)
-            tables.update(dsource)
-        cube.add_flux(2*noise*(np.random.random(cube.data.shape) - 0.5))
+            source_tables = self.sources[source].project(cube, noise / 50.0)
+            tables[source] = source_tables
+
+        print "[DEBUG] ASTROPY COMPONENT TABLES"
+        for source_tables in tables:
+            if source_tables != "sources":
+                for comp_table in tables[source_tables]:
+                    print comp_table
+
+        cube.add_flux(2 * noise * (np.random.random(cube.data.shape) - 0.5))
         return cube, tables
 
     def save_cube(self, cube, filename):
@@ -120,6 +142,7 @@ class Universe:
         Wrapper function that saves a cube into a FITS (filename).
         """
         cube.save_fits(self.sources, filename)
+
 
 class Source:
     """
@@ -157,13 +180,14 @@ class Source:
         """
 
         component_tables = dict()
-        log.info('Projecting Source at '+str(self.pos))
+        log.info('Projecting Source at ' + str(self.pos))
+
         for component in self.comp:
             log.info('Projecting ' + component.comp_name)
-            table = component.project(cube,limit)
+            comp_table = component.project(cube, limit)
 
-            if table is not None:
-                component_tables[component.comp_name] = table
+            if comp_table is not None:
+                component_tables[component.comp_name] = comp_table
 
         return component_tables
 
@@ -226,3 +250,6 @@ class Component:
         Project the component in the cube and return the component astropy Table
         """
         pass
+
+    def get_model_name(self):
+        raise NotImplementedError("Extending class did not override the get_model_name method.")

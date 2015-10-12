@@ -1,3 +1,4 @@
+from astropy.table import table
 from numpy import random
 from synthetic import db
 from synthetic.vu import Component
@@ -33,23 +34,32 @@ class IMC(Component):
         self.temp = temp
         self.mol_list = mol_list
 
-
     def _draw(self,cube,flux,freq,cutoff):
-       # TODO      
+       # TODO
        pass
 
     def info(self):
-       return ""
+        return ""
 
     def project(self, cube, cutoff):
         #TODO Make all this with astropy units from the call functions
-        #arr_code = []
-        #arr_mol = []
-        #arr_chname = []
-        #arr_rest_freq = []
-        #arr_rad_vel = []
-        #arr_fwhm = []
-        #arr_temp = []
+
+        lin_code = []
+        mol = []
+        chname = []
+        rest_freq = []
+        obs_freq = []
+        fwhm = []
+        temp = []
+        intens = []
+        pos_alpha = []
+        pos_delta = []
+        sigma_alpha = []
+        sigma_delta = []
+        angle = []
+        gradient_alpha = []
+        gradient_delta = []
+
         dba = db.lineDB(self.dbpath) # Maybe we can have an always open DB
         dba.connect()
         fwin= cube.get_wcs_limits(axis=2)
@@ -68,17 +78,19 @@ class IMC(Component):
             #    if mol in INTEN_GROUP[j]:
             #        rinte = INTEN_VALUES[j]
             abun = random.uniform(self.mol_list[mol][0], self.mol_list[mol][1])*u.Jy/u.beam
-             
+
             for lin in linlist:
                 counter += 1
                 trans_temp = lin[5]*u.K
-                inten=lin[4]
+                inten = lin[4]
+
                 if inten != 0:
-                   inten=10**inten
+                    inten = 10 ** inten
+
                 flux = np.exp(-abs(trans_temp - self.temp) / trans_temp) * inten * abun
                 flux = flux.value * u.Jy/u.beam
                 #print trans_temp, self.temp, flux
-                freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy 
+                freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy
                 #print flux, cutoff
                 if flux < cutoff: # TODO: astropy units!
                     log.info('    - Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because I='+str(flux)+' < '+str(cutoff))
@@ -86,35 +98,43 @@ class IMC(Component):
                 log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') intens='+ str(flux))
                 self._draw(cube,flux,freq,cutoff)
                 used = True
-                # TODO: generate a table: example:All the next commented lines were for generating a table in FITS, now we want it in Astropy Table format: 
-                #arr_code.append(self.comp_name + '-r' + str(self.alpha) + '-d' + str(self.delta) + "-l" + str(counter))
-                #arr_mol.append(mol)
-                #arr_temp.append(temp)
-                #arr_chname.append(str(lin[2]))
-                #arr_rest_freq.append(str(lin[3]))
-                #arr_rad_vel.append(self.rv)
-                #arr_fwhm.append(self.spe_form[1])
+
+                # add line to the table.
+                lin_code.append(self.comp_name + '-r' + str("ALPHA") + '-d' + str("DELTA") + "-l" + str(counter))
+                mol.append(mol)
+                chname.append(str(lin[2]))
+                rest_freq.append(str(lin[3]))
+                obs_freq.append("*")
+                fwhm.append("*")
+                temp.append("*")
+                intens.append("*")
+                pos_alpha.append("*")
+                pos_delta.append("*")
+                sigma_alpha.append("*")
+                sigma_delta.append("*")
+                angle.append("*")
+                gradient_alpha.append("*")
+                gradient_delta.append("*")
+
         dba.disconnect()
         if not used:
-            return
-        #hduT = fits.PrimaryHDU()
-        #hduT.data = T;
-        #hduG = fits.PrimaryHDU()
-        #hduG.data = G;
-        #tbhdu = fits.new_table(fits.ColDefs([
-        #    fits.Column(name='line_code', format='60A', array=arr_code),
-        #    fits.Column(name='mol', format='20A', array=arr_mol), \
-        #    fits.Column(name='chname', format='40A', array=arr_chname), \
-        #    fits.Column(name='rest_freq', format='D', array=arr_rest_freq), \
-        #    fits.Column(name='rad_vel', format='D', array=arr_rad_vel), \
-        #    fits.Column(name='fwhm', format='D', array=arr_fwhm), \
-        #    fits.Column(name='temp', format='D', array=arr_temp)]))
-        #cube._add_HDU(hduT)
-        #cube._add_HDU(hduG)
-        #cube._add_HDU(tbhdu)
+            return None
+
+        col_values = [lin_code, mol, chname, rest_freq, obs_freq, fwhm, temp, intens, pos_alpha, pos_delta, sigma_alpha,
+                      sigma_delta, angle, gradient_alpha, gradient_delta]
+        col_names = ["lin_code", "mol", "chname", "rest_freq", "obs_freq", "fwhm", "temp", "intens",
+                     "pos_alpha", "pos_delta", "sigma_alpha", "sigma_delta", "angle", "gradient_alpha",
+                     "gradient_delta"]
+        return table.Table(col_values, names=col_names)
+
+    def get_model_name(self):
+        return "IMC"
 
 
 class GaussianIMC(IMC):
+    def get_model_name(self):
+        return "Gaussian IMC"
+
     def __init__(self,mol_list, temp, offset,std, angle, fwhm, gradient, dbpath=DEFAULT_DBPATH,equiv=u.doppler_radio):
         IMC.__init__(self,mol_list, temp,dbpath,equiv)
         self.offset=par.to_deg(offset)
@@ -122,7 +142,7 @@ class GaussianIMC(IMC):
         self.angle = angle
         self.fwhm = fwhm
         self.gradient = gradient
-   
+
     def _draw(self,cube,flux,freq,cutoff):
        new_pos=self.pos + self.offset
        (mu,P)=flx.clump_to_gauss(new_pos,self.std,self.angle,freq,self.fwhm,self.gradient)
