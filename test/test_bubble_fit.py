@@ -7,16 +7,16 @@ import cProfile
 import clumps.bubbleClumps as cl
 import matplotlib.pyplot as plt
 
-ws.import_file("fits/M100line.image.fits")
+#ws.import_file("fits/M100line.image.fits")
 #ws.import_file("fits/Orion.methanol.cbc.contsub.image.fits")
-#ws.import_file("fits/Antennae_North.CO3_2Line.Clean.pcal1.image.fits")
+ws.import_file("fits/Antennae_North.CO3_2Line.Clean.pcal1.image.fits")
 #ws.import_file("fits/Antennae_South.CO3_2Line.Clean.pcal1.image.fits")
 #ws.import_file("fits/CenA.CO2_1Line.Clean.image.fits")
 
 elm=ws.elements()
-cube=elm['M100line.image-0']
+#cube=elm['M100line.image-0']
 #cube=elm['Orion.methanol.cbc.contsub.image-0']
-#cube=elm['Antennae_North.CO3_2Line.Clean.pcal1.image-0']
+cube=elm['Antennae_North.CO3_2Line.Clean.pcal1.image-0']
 #cube=elm['Antennae_South.CO3_2Line.Clean.pcal1.image-0']
 #cube=elm['CenA.CO2_1Line.Clean.image-0']
 spar=cube.standarize()
@@ -34,9 +34,14 @@ tim=[]
 
 total=cube.sum()
 telem=float(cube.count())
-n=6
+n=9
+maxporc=0.001
+samples=maxporc*telem
+print "Maximum Bubbles",int(samples),"= ",maxporc*100,"%" 
+gc.par['MAXBUB']=int(samples)
 for i in range(n):
-   snrlimit=2.0 - 0.35*i
+   snrlimit=2.0 - 0.25*i
+   print "SNR = ",snrlimit
    snr.append(snrlimit)
    gc.par['SNRLIMIT']=snrlimit
    start = time.clock()
@@ -49,6 +54,7 @@ for i in range(n):
    plt.imshow(gc.syn.get_stacked())
    plt.subplot(2, n,1*n + i + 1)
    plt.imshow(gc.data.get_stacked())
+   print "data =",elem[-1]*100,"%"
    #plt.subplot(3, n,2*n + i + 1)
    #pos=np.array(gc.positions)
    #plt.scatter(pos[:,2], pos[:,1],marker='x')

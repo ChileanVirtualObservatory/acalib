@@ -1,0 +1,8 @@
+Instructions for compiling:
+
+FOR AUTHORS:
+
+1.  From the command line type:  latex aspauthor
+2.  Again from the command line type:  latex aspauthor
+3.  From the command line type:  dvips -Ppdf aspauthor.dvi
+4.  From the command line type:  ps2pdf14 aspauthor.ps
