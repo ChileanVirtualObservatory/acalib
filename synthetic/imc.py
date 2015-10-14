@@ -86,7 +86,7 @@ class IMC(Component):
                 log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') intens='+ str(flux))
                 self._draw(cube,flux,freq,cutoff)
                 used = True
-                # TODO: generate a table: example:All the next commented lines were for generating a table: 
+                # TODO: generate a table: example:All the next commented lines were for generating a table in FITS, now we want it in Astropy Table format: 
                 #arr_code.append(self.comp_name + '-r' + str(self.alpha) + '-d' + str(self.delta) + "-l" + str(counter))
                 #arr_mol.append(mol)
                 #arr_temp.append(temp)

@@ -55,6 +55,8 @@ class AcaData(ndd.NDData):
     def get_flux(self):
     	return np.sum(self.data)   
     
+    def count(self):
+        return self.data.count()
     
     def empty_like(self):
     	dat=np.zeros_like(self.data)
@@ -200,7 +202,9 @@ class AcaData(ndd.NDData):
     def unstandarize(self,(y_min,y_fact)):
         self.data=self.data*y_fact + y_min
 
-
+    def sum(self):
+        return self.data.sum()
+   
     def variance(self):
         return self.data.std()
 
