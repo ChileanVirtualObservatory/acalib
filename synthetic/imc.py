@@ -105,22 +105,22 @@ class GaussianIMC(IMC):
     def get_model_name(self):
         return "Gaussian IMC"
 
-    def __init__(self,mol_list, temp, offset,std, angle, fwhm, gradient, dbpath=DEFAULT_DBPATH, equiv=u.doppler_radio):
+    def __init__(self, mol_list, temp, offset, std, angle, fwhm, gradient, dbpath=DEFAULT_DBPATH, equiv=u.doppler_radio):
         IMC.__init__(self,mol_list, temp, dbpath, equiv)
-        self.offset = par.to_deg(offset) # vector numpy.
-        self.std = std   # es un vector numpy.
+        self.offset = par.to_deg(offset)
+        self.std = std
         self.angle = angle
         self.fwhm = fwhm
-        self.gradient = gradient  # vector numpy.
+        self.gradient = gradient
 
-    def _draw(self,cube,flux,freq,cutoff):
+    def _draw(self, cube, flux, freq, cutoff):
         new_pos = self.pos + self.offset
         mu, p = flx.clump_to_gauss(new_pos, self.std, self.angle, freq, self.fwhm, self.gradient)
         mcub, lower, upper = flx.create_gauss_flux(cube, mu, p, flux, cutoff)
         cube.add_flux(mcub, lower, upper)
 
     def info(self):
-        return "species = " + str(self.mol_list) + " temp = "+str(self.temp)+" offset"+str(self.offset)+" std = "+str(self.std)+" angle ="+str(self.angle)+" fwhm ="+str(self.fwhm)+"  gradient ="+str(self.gradient)
+        return "species = " + str(self.mol_list) + " temp = "+str(self.temp)+" offset = "+str(self.offset)+" std = "+str(self.std)+" angle = "+str(self.angle)+" fwhm = "+str(self.fwhm)+"  gradient = "+str(self.gradient)
 
     def get_meta_data(self):
         return {
@@ -134,7 +134,6 @@ class GaussianIMC(IMC):
             '__FWHM': self.fwhm,
             '__TEMP': self.temp,
             '__ANGL': self.angle,
-
         }
 
 ################ ATTIC #######################
