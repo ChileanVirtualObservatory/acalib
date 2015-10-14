@@ -13,7 +13,7 @@ import parameter as par
 import time
 import traceback
 
-from scipy.misc import imresize
+from scipy.interpolate import griddata
 
 
 class AcaData(ndd.NDData):
@@ -71,21 +71,23 @@ class AcaData(ndd.NDData):
         if (scale == 1):
             return self.data
         elif (scale < 1):
-            new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))
-            #new_data = self.data.resize((self.data.shape[0]*scale, self.data.shape[1]*scale), Image.ANTIALIAS)
-            print new_data.shape
-            for z in self.data:
-                if (dim%2==0):
-                    new_data[dim] = imresize(np.array(z), float(scale))
-                    dim+=1
+            new_data = self.data[::1/scale, ::1/scale, ::1/scale]
             print("--- %s seconds ---" % (time.time() - start_time))
             return (new_data/np.sum(new_data))*np.sum(self.data)
         else:
             new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
-            for z in self.data:
-                new_data[dim] = imresize(np.array(z), float(scale))
+            new_data[::scale, ::scale, ::scale] = self.data
+            
+            #Interpolation
+            arange = np.array([np.arange(new_data.shape[1])[::scale], np.arange(new_data.shape[2])[::scale]])
+            for layer in new_data:
+                values = new_data[dim,arange[0,:], arange[1,:]]
+                grid_x, grid_y = np.mgrid[0:new_data.shape[1]-1:complex(new_data.shape[1]),0:new_data.shape[2]-1:complex(new_data.shape[1])]
+                new_data[dim] = griddata(np.transpose(arange), values, (grid_x,grid_y), method='nearest')
                 dim+=1
+
             print("--- %s seconds ---" % (time.time() - start_time))
+            print new_data
             return new_data
 
     def rotate(self, angle):

@@ -66,7 +66,8 @@ spe_res=0.005*u.GHz
 bw=2*u.GHz
 noise=0.001*u.Jy/u.beam
 
-(cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise)
+cube, tab = univ.gen_cube(center, ang_res, fov, freq, spe_res, bw, noise)
+
 print tab
 plt.plot(cube.get_stacked(axis=(1,2)))
 plt.show()
