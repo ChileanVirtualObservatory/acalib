@@ -11,8 +11,10 @@ import astropy.wcs as astrowcs
 import matplotlib.pyplot as plt
 import parameter as par
 import time
-import scipy.ndimage
 import traceback
+
+from scipy.misc import imresize
+
 
 class AcaData(ndd.NDData):
     """
@@ -64,34 +66,34 @@ class AcaData(ndd.NDData):
     	return cb
     
     def scale(self, scale):
-    	zflag = 0
-    	start_time = time.time()
-    	if (scale == 1):
-    		return self.data
-    	elif (scale < 1):
-    		new_data = np.zeros((round(len(self.data)*scale+1),round(len(self.data[0])*scale+1), round(len(self.data[0][0])*scale+1)))          
-    		for z in self.data:
-    			yflag = 0
-    			for y in z:
-    				xflag = 0
-    				for x in y:
-    					new_data[round(zflag*scale)][round(yflag*scale)][round(xflag*scale)] = x
-    					xflag+=1
-    				yflag+=1
-    			zflag+=1				
-    		#for z in range(len(self.data)):
-    		#	for y in range(len(self.data[0])):
-    		#			for x in range(len(self.data[0][0])):
-    		#					new_data[round(z*scale)][round(y*scale)][round(x*scale)] = self.data[z][y][x]
-    		print("--- %s seconds ---" % (time.time() - start_time))
-    		return (new_data/np.sum(new_data))*np.sum(self.data)
-    	else:
-    		new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
-    		for z in self.data:
-    			new_data[zflag] = scipy.ndimage.zoom(z,round(scale),order=3)
-    			zflag+=1
-    		print("--- %s seconds ---" % (time.time() - start_time))
-    		return new_data     
+        dim = 0
+        start_time = time.time()
+        if (scale == 1):
+            return self.data
+        elif (scale < 1):
+            new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))
+            #new_data = self.data.resize((self.data.shape[0]*scale, self.data.shape[1]*scale), Image.ANTIALIAS)
+            print new_data.shape
+            for z in self.data:
+                if (dim%2==0):
+                    new_data[dim] = imresize(np.array(z), float(scale))
+                    dim+=1
+            print("--- %s seconds ---" % (time.time() - start_time))
+            return (new_data/np.sum(new_data))*np.sum(self.data)
+        else:
+            new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
+            for z in self.data:
+                new_data[dim] = imresize(np.array(z), float(scale))
+                dim+=1
+            print("--- %s seconds ---" % (time.time() - start_time))
+            return new_data
+
+    def rotate(self, angle):
+        if (angle != 0):
+            new_data = self.data.rotate(angle, Image.BICUBIC,1)
+            return new_data
+        else:
+            return self.data
     							 
     	 
     def m_slice(self,lower,upper):
