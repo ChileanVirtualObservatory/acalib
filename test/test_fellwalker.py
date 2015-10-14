@@ -12,7 +12,6 @@ ws.import_file("fits/M100line.image.fits")
 elm=ws.elements()
 cube=elm['M100line.image-0']
 #cube=elm['Orion.methanol.cbc.contsub.image-0']
-spar=cube.standarize()
 fw=fwalker.FellWalker()
 # use_meta not implemented yet, so compute parameters to use
 #pixbsize=cube.meta['BMIN']/abs(cube.meta['CDELT1'])

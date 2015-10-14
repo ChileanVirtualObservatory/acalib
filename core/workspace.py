@@ -77,14 +77,15 @@ def _fits_consumer(path,name,ws=_ws_df):
          ws[ide]=ndd
 
          #print ndd.get_flux()
-         #### SCALE DATA TEST ###
-         #scale = ndd.scale(0.5)
-         #scale = _create_cube(np.array([scale]), hdu.header)
+         ### SCALE DATA TEST ###
+         
+         scale = ndd.scale(2)
+         
+         scale = _create_cube(np.array([scale]), hdu.header)
          #print scale.get_flux()  ## SAME FLUX
-
          counter+=1
-         #ide = name+"-"+str(counter)
-         #ws[ide] = scale
+         ide = name+"-"+str(counter)
+         ws[ide] = scale
 
 
          ### CUT DATA TEST ####
@@ -96,6 +97,11 @@ def _fits_consumer(path,name,ws=_ws_df):
 
          ### END CUT DATA TEST ####
 
+         ### ROTATE DATA TEST ###
+         #rot = ndd.rotate(45)
+         #counter+=1
+         #ide=name+"-"+str(counter)
+         #ws[ide]=rot         
 
       elif isinstance(hdu,fits.BinTableHDU) or isinstance(hdu,fits.TableHDU):
          log.info("Processing HDU "+str(counter)+" (Table)")
