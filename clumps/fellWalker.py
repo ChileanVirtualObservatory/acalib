@@ -13,25 +13,25 @@ class FellWalker:
 
       """ Generic parameters  """
       # Spectral resoluion in pixels
-      self.par['VELORES']=2.0
+      self.par['VELORES'] = 2.0
       # Beam resolution in pixels 
-      self.par['FWHMBEAM']=2.0
+      self.par['FWHMBEAM'] = 2.0
       # Maximum Clumps
-      self.par['MAXCLUMPS']=sys.maxint
+      self.par['MAXCLUMPS'] = sys.maxint
       # The lower threshold for clump values to a user-specified multiple of the RMS noise.
-      self.par['THRESH']=1.0
+      self.par['THRESH'] = 1.0
 
       """ Specific FellWalker parameters """
       #Longest jump to a higher neighbouring pixel
-      self.par['MAXJUMP'] = 4
+      self.par['MAXJUMP'] = 5
       #Minimum dip between distinct peaks
       self.par['MINDIP'] = 3
       #Minimum size (in pixels) of clumps
-      self.par['MINSIZE'] = 10
+      self.par['MINSIZE'] = 20
       #Lowest gradient which marks the start of the walk
-      self.par['FLATSLOPE'] = 0.2
+      self.par['FLATSLOPE'] = 0.001
       #Data values less than this are at "sea level"
-      self.par['SEALEVEL'] = 1.
+      self.par['SEALEVEL'] = 0.
 
       """ cellulars automaton parameters """
       #Min fraction of neighbouring good pixels
@@ -51,19 +51,17 @@ class FellWalker:
    def create_caa(self, data):
       caa = np.zeros_like(data.data).astype(np.int)
       #Check invalid pixels (below threshold)
-      shape = caa.shape
-      rms = self.compute_rms(data)
+      rms = self.par["RMS"]
       threshold = self.par['THRESH']*rms
       #Aditionally, NaN valued pixels are set as unusable -> filled(1)
       mask = np.array((data<threshold).filled(1))
-      print type(mask)
       caa[mask] = -1
       print "CAA initialized successfully"
       return caa
 
 
    def compute_rms(self, data):
-      mask = np.array((data<0).filled(0))
+      mask = (data<0).filled(0)
       res = data[mask]
       fin = (res*res).sum()/len(res)
       return np.sqrt(fin)
@@ -266,7 +264,7 @@ class FellWalker:
          """
          path.append(next_pos)
          pathv.append(data[next_pos])
-         return walkup(next_pos,path,pathv,data,caa)
+         return self.walkup(next_pos,path,pathv,data,caa)
 
       else:
          """
@@ -276,7 +274,7 @@ class FellWalker:
          noise spike. 
          """   
          local_max=next_pos
-         new_max=verify_peak(local_max,data,caa)
+         new_max=self.verify_peak(local_max,data,caa)
          if local_max==new_max:
             """
             If the central pixel is the highest pixel in the more extended
@@ -285,7 +283,7 @@ class FellWalker:
             return path,pathv
          else:
             #Just a noise peak, keep walking up   
-            return walkup(new_max,path,pathv,data,caa)
+            return self.walkup(new_max,path,pathv,data,caa)
 
          """ 
          The walk has now finished because we have either reached a peak which
@@ -457,9 +455,14 @@ class FellWalker:
    def fit(self, orig_cube):
       cube = orig_cube.copy()
       syn = orig_cube.empty_like()
+
+      # Set the RMS, or automatically find an estimate for it
+      if not self.par.has_key('RMS'):
+         rms = cube.estimate_rms()
+         self.par['RMS'] = rms
+
       #cube.data is masked array
       data = cube.data
-
 
       """
       Fill the supplied caa array with -1 for all pixels which are below the
@@ -467,7 +470,6 @@ class FellWalker:
       the pixel is "usable but not yet checked".
       """
       print "Creating CAA"
-      print type(data)
       caa=self.create_caa(data)
 
       """
@@ -483,7 +485,7 @@ class FellWalker:
       caa = self.remove_isolate(caa, frac, on, off, centre)
 
       #Some constants
-      rms = self.compute_rms(data)
+      rms = self.par['RMS']
       noise = self.par['THRESH']*rms
       flatSlope = self.par['FLATSLOPE']
       seaLevel = self.par['SEALEVEL']
@@ -497,6 +499,7 @@ class FellWalker:
       Scan through the caa array, looking for usable pixels which have not
       yet been assigned to a clump (i.e. have a value of zero in caa).
       """
+      print "Scaning pixel!"
       for i in range(shape[0]):
          for j in range(shape[1]):
             for k in range(shape[2]):
