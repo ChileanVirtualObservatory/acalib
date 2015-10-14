@@ -244,6 +244,7 @@ class FellWalker:
 
 
    def walkup(self, pos, path, pathv, data, caa):
+            print neighId
       next_pos=self.max_gradient(pos,data,caa)
 
       if caa[next_pos]>=1:
