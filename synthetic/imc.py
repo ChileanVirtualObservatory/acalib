@@ -1,4 +1,3 @@
-from astropy.table import table
 from numpy import random
 from synthetic import db
 from synthetic.vu import Component
@@ -11,6 +10,7 @@ import shutil
 import os.path
 from astropy.io import fits
 import core.parameter as par
+from acatable import AcaTable
 
 #INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H, HDO')]
 #INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
@@ -21,12 +21,12 @@ import core.parameter as par
 #DEFAULT_CO_ABUND=1.0
 
 
+
 DEFAULT_DBPATH= 'ASYDO'
 
 
 class IMC(Component):
     """ Interstellar Molecular Core """
-
     def __init__(self, mol_list, temp,dbpath=DEFAULT_DBPATH,equiv=u.doppler_radio):
         Component.__init__(self)
         self.equiv=equiv
@@ -35,48 +35,33 @@ class IMC(Component):
         self.mol_list = mol_list
 
     def _draw(self,cube,flux,freq,cutoff):
-       # TODO
-       pass
+        raise NotImplementedError("Draw not implemented.")
 
     def info(self):
         return ""
 
     def project(self, cube, cutoff):
-        #TODO Make all this with astropy units from the call functions
+        # TODO Make all this with astropy units from the call functions
 
-        lin_code = []
-        mol = []
-        chname = []
-        rest_freq = []
-        obs_freq = []
-        fwhm = []
-        temp = []
-        intens = []
-        pos_alpha = []
-        pos_delta = []
-        sigma_alpha = []
-        sigma_delta = []
-        angle = []
-        gradient_alpha = []
-        gradient_delta = []
+        table = AcaTable("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity")
 
-        dba = db.lineDB(self.dbpath) # Maybe we can have an always open DB
+        dba = db.lineDB(self.dbpath)  # Maybe we can have an always open DB
         dba.connect()
-        fwin= cube.get_wcs_limits(axis=2)
-        #print "fwin",fwin
-        cor_fwin =  np.array(fwin/(1 + self.z))*u.Hz
+        fwin = cube.get_wcs_limits(axis=2)
+        # print "fwin",fwin
+        cor_fwin = np.array(fwin/(1 + self.z))*u.Hz
         cor_fwin = cor_fwin.to(u.MHz).value
-        #print "cor_fwin",cor_fwin
+        # print "cor_fwin",cor_fwin
         counter = 0
         used = False
         for mol in self.mol_list:
             # For each molecule specified in the dictionary
             # load its spectral lines
             linlist = dba.getSpeciesLines(mol, cor_fwin[0], cor_fwin[1])  # Selected spectral lines for this molecule
-            #rinte = INTEN_VALUES[0]
-            #for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
-            #    if mol in INTEN_GROUP[j]:
-            #        rinte = INTEN_VALUES[j]
+            # rinte = INTEN_VALUES[0]
+            # for j in range(len(INTEN_GROUP)):  # TODO: baaad python, try a more pythonic way..
+            #     if mol in INTEN_GROUP[j]:
+            #         rinte = INTEN_VALUES[j]
             abun = random.uniform(self.mol_list[mol][0], self.mol_list[mol][1])*u.Jy/u.beam
 
             for lin in linlist:
@@ -89,70 +74,68 @@ class IMC(Component):
 
                 flux = np.exp(-abs(trans_temp - self.temp) / trans_temp) * inten * abun
                 flux = flux.value * u.Jy/u.beam
-                #print trans_temp, self.temp, flux
+                # print trans_temp, self.temp, flux
                 freq = (1 + self.z) * lin[3]*u.MHz  # TODO: astropy
-                #print flux, cutoff
+                # print flux, cutoff
                 if flux < cutoff: # TODO: astropy units!
                     log.info('    - Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because I='+str(flux)+' < '+str(cutoff))
                     continue
+
                 log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') intens='+ str(flux))
                 self._draw(cube,flux,freq,cutoff)
                 used = True
 
                 # add line to the table.
-                lin_code.append(self.comp_name + '-r' + str("ALPHA") + '-d' + str("DELTA") + "-l" + str(counter))
-                mol.append(mol)
-                chname.append(str(lin[2]))
-                rest_freq.append(str(lin[3]))
-                obs_freq.append("*")
-                fwhm.append("*")
-                temp.append("*")
-                intens.append("*")
-                pos_alpha.append("*")
-                pos_delta.append("*")
-                sigma_alpha.append("*")
-                sigma_delta.append("*")
-                angle.append("*")
-                gradient_alpha.append("*")
-                gradient_delta.append("*")
+                # TODO: modificar ultimo valor, que corresponde a la intensidad.
+                table += (self.comp_name + "-l" + str(counter), mol, str(lin[2]), str(lin[3]), flux, "*")
 
         dba.disconnect()
         if not used:
             return None
 
-        col_values = [lin_code, mol, chname, rest_freq, obs_freq, fwhm, temp, intens, pos_alpha, pos_delta, sigma_alpha,
-                      sigma_delta, angle, gradient_alpha, gradient_delta]
-        col_names = ["lin_code", "mol", "chname", "rest_freq", "obs_freq", "fwhm", "temp", "intens",
-                     "pos_alpha", "pos_delta", "sigma_alpha", "sigma_delta", "angle", "gradient_alpha",
-                     "gradient_delta"]
-        return table.Table(col_values, names=col_names)
+        return table
 
     def get_model_name(self):
         return "IMC"
 
+    def get_meta_data(self):
+        raise NotImplementedError("Get meta data not implemented.")
 
 class GaussianIMC(IMC):
     def get_model_name(self):
         return "Gaussian IMC"
 
-    def __init__(self,mol_list, temp, offset,std, angle, fwhm, gradient, dbpath=DEFAULT_DBPATH,equiv=u.doppler_radio):
-        IMC.__init__(self,mol_list, temp,dbpath,equiv)
-        self.offset=par.to_deg(offset)
-        self.std= std
+    def __init__(self,mol_list, temp, offset,std, angle, fwhm, gradient, dbpath=DEFAULT_DBPATH, equiv=u.doppler_radio):
+        IMC.__init__(self,mol_list, temp, dbpath, equiv)
+        self.offset = par.to_deg(offset) # vector numpy.
+        self.std = std   # es un vector numpy.
         self.angle = angle
         self.fwhm = fwhm
-        self.gradient = gradient
+        self.gradient = gradient  # vector numpy.
 
     def _draw(self,cube,flux,freq,cutoff):
-       new_pos=self.pos + self.offset
-       (mu,P)=flx.clump_to_gauss(new_pos,self.std,self.angle,freq,self.fwhm,self.gradient)
-       #print "mu",mu
-       (mcub,lower,upper)=flx.create_gauss_flux(cube,mu,P,flux,cutoff)
-       cube.add_flux(mcub,lower,upper)
+        new_pos = self.pos + self.offset
+        mu, p = flx.clump_to_gauss(new_pos, self.std, self.angle, freq, self.fwhm, self.gradient)
+        mcub, lower, upper = flx.create_gauss_flux(cube, mu, p, flux, cutoff)
+        cube.add_flux(mcub, lower, upper)
 
     def info(self):
-       return "species = " + str(self.mol_list) + " temp = "+str(self.temp)+" offset"+str(self.offset)+" std = "+str(self.std)+" angle ="+str(self.angle)+" fwhm ="+str(self.fwhm)+"  gradient ="+str(self.gradient)
+        return "species = " + str(self.mol_list) + " temp = "+str(self.temp)+" offset"+str(self.offset)+" std = "+str(self.std)+" angle ="+str(self.angle)+" fwhm ="+str(self.fwhm)+"  gradient ="+str(self.gradient)
 
+    def get_meta_data(self):
+        return {
+            # TODO: make the keys constants, NOT HARDCODED!!!
+            'CRVAL1': self.pos[0],
+            'CRVAL2': self.pos[1],
+            '__STD1': self.std[0],
+            '__STD2': self.std[1],
+            '__GRD1': self.gradient[0],
+            '__GRD2': self.gradient[1],
+            '__FWHM': self.fwhm,
+            '__TEMP': self.temp,
+            '__ANGL': self.angle,
+
+        }
 
 ################ ATTIC #######################
 

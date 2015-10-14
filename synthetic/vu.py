@@ -1,4 +1,3 @@
-from astropy.table import table
 from core.data import *
 from astropy import log
 import numpy as np
@@ -6,6 +5,7 @@ import astropy.constants as const
 import core.parameter as par
 import core.data as dt
 import astropy.wcs as wcs
+from acatable import AcaTable
 
 class Universe:
     """
@@ -30,43 +30,18 @@ class Universe:
 
     def _gen_sources_table(self):
         """
-        Will generate a table with the following columns:
-            - Component ID
-            - Source name
-            - Model
-            - Alpha
-            - Delta
-            - Red shift (z)
-            - Radial velocity
-
-        :return: an astropy table.
+        Will generate a resumed table of each component.
+        :return: an Aca Table.
         """
 
-        # create columns for all fields.
-        col_comp_id = []
-        col_source_name = []
-        col_model = []
-        col_alpha = []
-        col_delta = []
-        col_redshift = []
-        col_radial_velocity = []
-
-        # run through all sources and components, and add those values to the above lists.
+        table = AcaTable("Comp ID", "Source Name", "Model", "Alpha", "Delta", "Redshift", "Radial Vel")
         for source in self.sources:
             for component in self.sources[source].comp:
-                col_comp_id.append(component.comp_name)
-                col_source_name.append(self.sources[source].name)
-                col_model.append(component.get_model_name())
-                col_alpha.append(component.pos[0].value)
-                col_delta.append(component.pos[1].value)
-                col_redshift.append(component.get_redshift().value)
-                col_radial_velocity.append(component.get_velocity().value)
+                table += (component.comp_name, self.sources[source].name, component.get_model_name(),
+                          component.pos[0].value, component.pos[1].value, component.get_redshift().value,
+                          component.get_velocity().value)
 
-        # create two lists for the table, this is to not pollute the table construction line.
-        col_values = [col_comp_id, col_source_name, col_model, col_alpha,
-                      col_delta, col_redshift, col_radial_velocity]
-        col_names = ["Comp ID", "Source name", "Model", "Alpha", "Delta", "Redshift", "Radial Vel"]
-        return table.Table(col_values, names=col_names)
+        return table
     
     def gen_cube(self, pos, ang_res, fov, freq, spe_res, bw, noise):
         """
@@ -83,59 +58,47 @@ class Universe:
         - spe_res : spectral resolution
         - bw  : spectral bandwidth
         """
-            # Create a new WCS object.
-        pos=par.to_deg(pos)
-        ang_res=par.to_deg(ang_res)
-        fov=par.to_deg(fov)
+
+        # Create a new WCS object.
+        pos = par.to_deg(pos)
+        ang_res = par.to_deg(ang_res)
+        fov = par.to_deg(fov)
         #print pos,ang_res,fov
-        freq=par.to_hz(freq)
-        spe_res=par.to_hz(spe_res)
-        bw=par.to_hz(bw)
+        freq = par.to_hz(freq)
+        spe_res = par.to_hz(spe_res)
+        bw = par.to_hz(bw)
         #print freq,spe_res,bw
         w = wcs.WCS(naxis=3)
-        w.wcs.crval = np.array([pos[0].value, pos[1].value,freq.value])
-        w.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value,spe_res.value])
-        mm = np.array([int(abs(fov[0]/ang_res[0])),int(abs(fov[1]/ang_res[1])),int(abs(bw/spe_res))])
-        w.wcs.crpix = mm/2.0
+        w.wcs.crval = np.array([pos[0].value, pos[1].value, freq.value])
+        w.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value, spe_res.value])
+        mm = np.array([int(abs(fov[0]/ang_res[0])), int(abs(fov[1]/ang_res[1])), int(abs(bw/spe_res))])
+        w.wcs.crpix = mm / 2.0
         w.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
         data=np.zeros((mm[2],mm[1],mm[0]))
         #w.wcs.print_contents()
-        cube = dt.AcaData(data,w,None,u.Jy/u.beam)
+        cube = dt.AcaData(data, w, None, u.Jy / u.beam)
 
-        # this will generate a dictionary of AstroPy tables, in the following manner:
-        # first, generate a full resume of all sources in this universe, with that, and put it in the
-        # key "sources". Next, run through all sources projecting the source, the project method needs to
-        # return a dictionary which contains all it's components in tables. For the IMC model, every row will
-        # be a different row. So the structure will be like this:
-        # sources -> (astropy table)
-        #
-        # source1 ->
-        #   - component::1 -> (astropy table)
-        #   - component::2 (astropy table)
-        #
-        # source2 ->
-        #   - component::1 -> (astropy table)
-        #   - component::2 -> (astropy table)
-
-        tables = dict()
-        tables['sources'] = self._gen_sources_table()
+        sources_table = self._gen_sources_table()
 
         print "[DEBUG] ASTROPY TABLE FROM SOURCES:"
-        print tables['sources']
+        print sources_table
+
+        component_tables = dict()
 
         for source in self.sources:
             log.info('Projecting source ' + source)
-            source_tables = self.sources[source].project(cube, noise / 50.0)
-            tables[source] = source_tables
+            gen_tables = self.sources[source].project(cube, noise / 50.0)
+
+            # add all tables generated from each component of the source
+            # on the complete components dictionary.
+            component_tables.update(gen_tables)
 
         print "[DEBUG] ASTROPY COMPONENT TABLES"
-        for source_tables in tables:
-            if source_tables != "sources":
-                for comp_table in tables[source_tables]:
-                    print comp_table
+        for component_table in component_tables:
+            print component_table
 
         cube.add_flux(2 * noise * (np.random.random(cube.data.shape) - 0.5))
-        return cube, tables
+        return cube, (sources_table, component_tables)
 
     def save_cube(self, cube, filename):
         """
@@ -174,7 +137,7 @@ class Source:
 
         log.info('Added component ' + code + ' with model ' + model_cpy.info())
 
-    def project(self, cube,limit):
+    def project(self, cube, limit):
         """
         Projects all components in the source to a cube.
         """
@@ -187,7 +150,13 @@ class Source:
             comp_table = component.project(cube, limit)
 
             if comp_table is not None:
-                component_tables[component.comp_name] = comp_table
+                component_tables[self.name + "." + component.comp_name] = comp_table
+                meta_data = component.get_meta_data()
+
+                if isinstance(meta_data, dict):
+                    comp_table.meta = component.get_meta_data()
+                else:
+                    raise ValueError("get_meta_data return expected a dict, got %s instead" % type(meta_data))
 
         return component_tables
 
@@ -200,6 +169,9 @@ class Component:
         """
 
         self.z = 0 * u.Unit("")
+
+        self.comp_name = None
+        self.pos = None
 
     def set_velocity(self, rvel):
         """Set radial velocity rvel. If rvel has no units, we assume km/s"""
@@ -253,3 +225,6 @@ class Component:
 
     def get_model_name(self):
         raise NotImplementedError("Extending class did not override the get_model_name method.")
+
+    def get_meta_data(self):
+        raise NotImplementedError("Get meta data not implemented.")
