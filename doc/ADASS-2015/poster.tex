@@ -39,11 +39,13 @@
 %%        2         = 2.00     (for A1) 
 %%  
 %% 
-\def\breite{400mm}     % Special Format. 
-\def\hoehe{400mm}      % Scaled by 2.82 this gives 110cm x 90cm 
+%%\def\breite{400mm}     % Special Format. 
+%%\def\hoehe{400mm}      % Scaled by 2.82 this gives 110cm x 90cm 
 
-%\def\breite{390mm}     % Special Format. 
-%\def\hoehe{319.2mm}      % Scaled by 2.82 this gives 110cm x 90cm 
+%%\def\breite{390mm}     % Special Format. 
+%%\def\hoehe{319.2mm}      % Scaled by 2.82 this gives 110cm x 90cm 
+\def\breite{319.2mm}     % Special Format. 
+\def\hoehe{390mm}      % Scaled by 2.82 this gives 110cm x 90cm 
 \def\anzspalten{2}
 %%
 %%\def\breite{420mm}     % A3 LANDSCAPE
@@ -189,7 +191,7 @@
 \hfill
 \psshadowbox{\makebox[0.95\textwidth]{%
 %    \hfill
-	\parbox[c]{5cm}{\includegraphics[width=7cm,height=!]{logos/chivo_logo}}
+	\parbox[c]{5cm}{\includegraphics[width=6.5cm,height=!]{logos/chivo_logo}}
     \hfill
     \parbox[c]{0.5\linewidth}{%
       \begin{center}
@@ -259,11 +261,11 @@ either to images or to spectra.
 	\begin{kasten}
         \section*{\hspace{0.2cm} {\color{red} ACALIB} }
 
-      \begin{minipage}{0.6\textwidth}
+      \begin{minipage}{0.5\textwidth}
                         %\strut\vskip -\baselineskip
                         %\hfill
          \begin{center}
-                           \includegraphics[width=0.8\textwidth]{img/acageneral}
+                           \includegraphics[width=0.95\textwidth]{img/acageneral}
          \end{center}
 \textbf{Color notation}:
 \begin{itemize}
@@ -273,9 +275,8 @@ either to images or to spectra.
 \end{itemize}
                         %\vspace{0.1cm}
           \end{minipage}
-		\begin{minipage}{0.4\textwidth}
+		\begin{minipage}{0.5\textwidth}
 
-\textbf{Key points}:
 \begin{itemize}
 \item Library that implements several algorithms and
 tools for analyzing spectroscopic data cubes, images and spectra.
@@ -304,8 +305,7 @@ tools for analyzing spectroscopic data cubes, images and spectra.
 	\begin{kasten}
         \section*{\hspace{0.2cm} {\color{red} CORE MODULE} }
 			%\vspace{-0.1cm}
-			\begin{minipage}{0.5\linewidth}
-\textbf{Members}
+			\begin{minipage}{0.57\linewidth}
 \begin{itemize}
 \item \textbf{AData} is an extension of astropy NDData
 \begin{itemize}
@@ -325,22 +325,23 @@ tools for analyzing spectroscopic data cubes, images and spectra.
 \item Namespace: it works as a namespace for astronomical data
 \item Self-operations: Load and save FITS files
 \end{itemize}
-\end{itemize}
-\textbf{Planned features} 
-\begin{itemize}
-\item Cython integration for less memory consuming
-operations
-\item MPI integration for multiprocessing environments
-\item Hierarchical containers for supporting HDF5 format
+\item \textbf{AHierarchicalContainer} is a tree of AContainer objects for
+supporting the HDF5 format
 \end{itemize}
 			\end{minipage}
-			\begin{minipage}{0.5\textwidth}
+ \hfill
+			\begin{minipage}{0.40\textwidth}
                         %\strut\vskip -\baselineskip
                         %\hfill
 			\begin{center}
-                        	\includegraphics[width=0.8\textwidth]{img/acacore}
+                        	\includegraphics[width=0.85\textwidth]{img/acacore}
 			\end{center}
                         %\vspace{0.1cm}
+\textbf{Challenges to run in our Data Centre} 
+\begin{itemize}
+\item Cython integration for less memory consumption than NumPy
+\item MPI integration for speeding up automatic pipelines
+\end{itemize}
           \end{minipage}
 
 \mbox{}\\
@@ -357,7 +358,7 @@ operations
 	\begin{kasten}
         \section*{\hspace{0.2cm} {\color{red} PROCESS MODULE} }
 			%\vspace{-0.1cm}
-			\begin{minipage}{0.5\linewidth}
+			\begin{minipage}{0.45\linewidth}
 \textbf{Algorithms} (OA = Original Algorithms)
 \begin{itemize}
 \item \textbf{Clumping}: detect clumps in an AData. Similar to CUPID package [1].
@@ -377,19 +378,20 @@ al., 2015, SPIE) (OA)
 Thesis) (OA)
 \item Stacking: Automatic stacking of images \\ (Jara, 2015, Thesis) (OA)
 \end{itemize}
+			\end{minipage}
+\hfill
+			\begin{minipage}{0.50\textwidth}
+                        %\strut\vskip -\baselineskip
+                        %\hfill
+			\begin{center}
+                        	\includegraphics[width=0.85\textwidth]{img/acaprocess}
+			\end{center}
+                        %\vspace{0.1cm}
 \textbf{Under development}
 \begin{itemize}
 \item AutoDenoise: Denoising of images using deep autoencoders
 \item LongVarStar: Detection of long-term variable stars using ML
 \end{itemize}
-			\end{minipage}
-			\begin{minipage}{0.5\textwidth}
-                        %\strut\vskip -\baselineskip
-                        %\hfill
-			\begin{center}
-                        	\includegraphics[width=0.8\textwidth]{img/acaprocess}
-			\end{center}
-                        %\vspace{0.1cm}
           \end{minipage}
 	 \end{kasten}
 
@@ -418,7 +420,7 @@ the results of each algorithm.
                         %\strut\vskip -\baselineskip
                         %\hfill
          \begin{center}
-                           \includegraphics[width=0.8\textwidth]{img/asydo}\\
+                           \includegraphics[width=0.75\textwidth]{img/asydo}\\
 (SYNTHETIC)
          \end{center}
                         %\vspace{0.1cm}
