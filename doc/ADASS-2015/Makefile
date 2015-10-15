@@ -1,5 +1,5 @@
 SHELL=/bin/bash
-NOMBRE=$(shell grep -H \\documentclass *.tex | cut -d: -f1 | cut -d. -f1)
+NOMBRE=poster
 
 ifeq ($(strip $(wildcard $(NOMBRE).bib) ),)
 HAVE_BIB=no
