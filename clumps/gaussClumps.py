@@ -17,12 +17,10 @@ def jac_chi2(par,gc):
    val=np.nan*np.ones_like(par)
    if  par[ 3 ] > 0.0 and par[ 5 ] > 0.0 and par[ 8 ] > 0.0: 
       if gc.fixback:
-#         print "FIXBACK"
          par=np.insert(par,1,0.0)
       # update computations if necesary
       gc.update_comp(par)
       val=gc.get_jaco(par)
-#   print "jaco", val
    return val
 
 def chi2(par,gc):
@@ -30,19 +28,15 @@ def chi2(par,gc):
    # If the background is fixed, include zero background value
    if  par[ 3 ] > 0.0 and par[ 5 ] > 0.0 and par[ 8 ] > 0.0: 
       if gc.fixback:
- #        print "FIXBACK"
          par=np.insert(par,1,0.0)
       # update computations if necesary
       gc.update_comp(par)
       val=gc.get_chi2(par)
-#   print "par",par
-#   print "chi2", val
    return val
 
 class GaussClumps:
 
    def __init__(self):
-      # Set the very 
       self.defaultParams()
    
    def defaultParams(self):
@@ -183,11 +177,7 @@ class GaussClumps:
    
    def update_comp(self,par):
      if np.array_equal(par,self.old_par):
-     #    print "same par"
          return
-     #if self.old_par!=None:
-     #   print "pardiff", self.old_par-par
-     #print "guessdiff", self.guess-par
      self.old_par=par
      self.back_term=par[1] - self.guess[1]
      # Unpack parameters
@@ -208,8 +198,6 @@ class GaussClumps:
      peakfactor *= t/sy2
      t = par[8]*par[8]
      sv2 = self.velsq + t
-#     if np.isnan(sv2):
-#        print par[8],t,self.velsq
      f8 = self.velsq/(par[8]*sv2)
      peakfactor *= t/sv2 
     
@@ -249,11 +237,6 @@ class GaussClumps:
      expv = np.exp( -K*em )
      self.expv=expv
      model=self.peak*expv+ par[1]
-     #if np.isnan(self.val).any():
-     #   print "Val Fault"
-     #if np.isnan(model).any():
-     #   print "Model Fault"
-     #   print X,Y,sx2,sy2,self.vt_off,sv2
      res= self.val - model
      self.X=X
      self.Y=Y
@@ -382,37 +365,15 @@ class GaussClumps:
       if self.fixback:
          np.delete(guess,[1])
 
-      # Optimize at last!
-      #eps=1.0
-      #approx=approx_fprime(guess,chi2,eps,self)
-      #vec=approx-jac_chi2(guess,self)
-      #print vec
-      #print "err=",np.sqrt((vec*vec).sum())
-      #sys.exit()
-      #print "guess",guess
-      #opt=dict()
-      #opt['maxiter']=self.nf
-      #opt['disp']=True
-      #opt['norm']=2
-      #opt['gtol']=1e-10
-      
-      #retval=minimize(chi2, guess, args=marg, method='BFGS', jac=jac_chi2, hess=None, hessp=None, bounds=None, tol=None, callback=None, options=opt)
       marg=(self,)
       retval=fmin_bfgs(chi2, guess,args=marg,disp=False,full_output=True,fprime=jac_chi2)
-      #print retval
       # Unpack results
-      # #print xpot,fopt,gopt,Bopt,func_calls,grad_calls,warnflag
       (xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag)=retval
-      #print "warnflag",warnflag
       if warnflag!=0 and self.fixback:
          self.fixback=False
          (xopt,fopt,gopt,Bopt,func_calls,grad_calls,warnflag)=fmin_bfgs(chi2, guess,args=marg,fprime=jac_chi2,maxiter=maxnf,disp=True)
-      #if warnflag!=0:
-      #   return None
       if self.fixback:
          np.insert(xopt,1,self.bg)
-      #print "solution",xopt
-      #print retval
       if (xopt == self.guess).all():
          xopt=None
       # TODO: come back to normality!
@@ -461,9 +422,6 @@ class GaussClumps:
            if csum/nsum - vlow >= 3*rms/np.sqrt(nsum) and nsum >= fwhm:
               break
          prev=val
-      #if (plow==self.imax).all:
-      #   print self.imax
-      #   print csum,nsum,prev,val
       vlow+=rms
       # Do the same working upwards from the peak to upper axis values.
       prev=np.nan
@@ -526,9 +484,6 @@ class GaussClumps:
       cand=cand[cand<0.75]
       if cand.size!=0:
          default=1.665*(idx/np.log(cand)).sum()/cand.size
-      #if default==0:
-      #   print idx,cand,cand.size
-      #   print self.imax, plow
       return (default,off)
       
    def setInit(self):
@@ -810,201 +765,3 @@ class GaussClumps:
          #   print "Fits attempted for ",iclump," candidate clumps (",niter-iclump," failed)."
       return clist
 
-#def chi2(model,features,values,w,value_max,feature_max,res_vect,s_vect):
-#   sys.stdout.write('.')
-#   sys.stdout.flush()
-#   su=values - gauss_eval(features,to_gauss(model))
-#   nf=len(su) - 11
-#   t1 = (np.square(su)*w).sum()/nf
-#   t2 = (np.exp(-su)).sum()/nf
-#   t3 = np.square((model[2]-feature_max[0])/res_vect[0]) + np.square((model[3]-feature_max[1])/res_vect[1]) + np.square((model[4]-feature_max[2])/res_vect[2])
-#   t4 = np.square(model[0]+model[1] - value_max)
-#   return(t1 + s_vect[0]*t2 + s_vect[1]*t3 + s_vect[2]*t4)
-#
-#def jac_chi2(model,features,values,w,value_max,feature_max,res_vect,s_vect):
-#   sys.stdout.write('*')
-#   sys.stdout.flush()
-#
-#   # Unpack values
-#   (a, b, x0, y0, v0, phi, sx, sy, sv, dvx, dvy) = model
-#   (a,b,mu,L)=to_gauss(model)
-#
-#def next_clump(cube,syn,params):
-#   # Non-blocking plot 
-#   plt.ion() 
-#   plt.clf() 
-#   
-#   (value_max,feature_max) = cube.max()
-#   b=params['rms'] # need to be a local minima... not good
-#   a=value_max - b
-#   
-#   # Initial guess: position and orientation
-#   x0=feature_max[0]
-#   y0=feature_max[1]
-#   v0=feature_max[2]
-#   phi=0
-#   
-#   # Initial guess: variances
-#   res_vect=np.array([params['beam_size'],params['beam_size'],params['spe_res']])
-#   s_vect=np.array([params['s0'],params['sc'],params['sa']])
-# 
-#   # Initial guess: redshift
-#   dvalp=0
-#   dvdel=0
-#  
-#   # Compute the weight vector and the feature space
-#   w_sigmas=params['weight_deltas']*res_vect # several times the resolution
-#   (features,sc_index) = cube.feature_space(feature_max,2*w_sigmas) 
-#   w_shape=(1,0,x0,y0,v0,0,w_sigmas[0],w_sigmas[1],w_sigmas[2],0,0)
-#   w=gauss_eval(features,to_gauss(w_shape),False)
-# 
-#   #Plot current cube
-#   plt.subplot(2, 3, 4)
-#   plt.imshow(cube.stack())
-#   rect=plt.Rectangle((sc_index[0],sc_index[2]),sc_index[1]-sc_index[0]+1,sc_index[3]-sc_index[2]+1,alpha=1, facecolor='none')
-#   plt.gca().add_patch(rect)
-#   
-#   #Plot current subcube
-#   plt.subplot(2, 3, 1)
-#   plt.imshow(cube.stack(sc_index))
-#
-#   
-#   # Ravel the values
-#   values=cube.ravel(sc_index)
-#   
-#   idx=(values-a/2).argmin()
-#   sq2l2=np.sqrt(2*np.log(2))
-#   sx=np.abs(features[0][idx]-feature_max[0])/sq2l2
-#   sy=np.abs(features[1][idx]-feature_max[1])/sq2l2
-#   sv=np.abs(features[2][idx]-feature_max[2])/sq2l2
-#   # Compile first guess
-#   guess=np.array([a,b,x0,y0,v0,phi,sx,sy,sv,dvalp,dvdel])
-#   print "GUESS"
-#   print guess
-#   
-#   # Pack all args of chi2
-#   chi2_args=(features,values,w,value_max,feature_max,res_vect,s_vect)
-#   
-#
-#   print "grad error", check_grad(chi2,jac_chi2,guess,features,values,w,value_max,feature_max,res_vect,s_vect)
-#   #print "PREV= ", chi2_args
-#   # Standarize everything
-#   #(std_args,tr_vect)=standarize(chi2_args)
-#   #print "STAND= ", std_args
-#   #print "tr= ", tr_vect
-#   #s_guess=guess/tr_vect
-#   # OPTIMIZE
-#   #res = minimize(chi2,guess,jac=jac_chi2,method='CG',args=chi2_args)
-#   res=fmin_bfgs(chi2, guess,fprime=jac_chi2, args=chi2_args)
-#   #res=fmin_bfgs(chi2, guess,args=chi2_args)
-#   #res = minimize(chi2,guess,jac=jac_chi2,method='BFGS',args=chi2_args,tol=1e-30)
-#   print
-#   print "res =", res
-#   print
-#   print "clump =", res  #*tr_vect
-#   sys.stdout.flush()
-#   # Clump values
-#   #print "AND NOW THE GAUSS"
-#   #print to_gauss(res.x) 
-#   val_fit=gauss_eval(features,to_gauss(res),False)
-#   fit_cube=cube_data_unravel(val_fit,sc_index)
-#   # Remove clump from the real cube 
-#   cube.add(-fit_cube,sc_index)
-#   # Add clump to the synthetic cube
-#   syn.add(fit_cube,sc_index)
-#   
-#   #Plot current cube
-#   plt.subplot(2, 3, 5)
-#   plt.imshow(cube.stack())
-#   plt.gca().add_patch(rect)
-#   
-#   #Plot current subcube
-#   plt.subplot(2, 3, 2)
-#   plt.imshow(cube.stack(sc_index))
-#   
-#   #Plot clump
-#   plt.subplot(2, 3, 3)
-#   plt.imshow(cube_data_stack(fit_cube))
-#
-#   #Plot synthetic
-#   plt.subplot(2, 3, 6)
-#   plt.imshow(syn.stack())
-#   plt.gca().add_patch(rect)
-#
-#   #END
-#   #M=clu.reshape((v_ub-v_lb+1,y_ub-y_lb+1,x_ub-x_lb+1))
-#   
-#   #cube.data[v_lb:v_ub+1,y_lb:y_ub+1,x_lb:x_ub+1] -= M
-#   #syn[v_lb:v_ub+1,y_lb:y_ub+1,x_lb:x_ub+1] += M
-#   
-#   # Matrices for displaying results (NOT ALGORITHMIC CODE)
-#   #ma=cube.data[v_lb:v_ub+1,y_lb:y_ub+1,x_lb:x_ub+1].sum(axis=0)
-#   #spe=cube.data[v_lb:v_ub+1,y_lb:y_ub+1,x_lb:x_ub+1].sum(axis=(1,2))
-#   #prof=M.sum(axis=0)
-#   #vmin=ma.min()
-#   #vmax=ma.max()
-#   #plt.clf() 
-#   #plt.subplot(2, 3, 1)
-#   #plt.imshow(ma,vmin=vmin,vmax=vmax)
-#   #plt.subplot(2, 3, 3)
-#   #plt.imshow(prof)
-#   #plt.subplot(2, 3, 2)
-#
-#  
-#
-#   # SHOW results (NOT ALGORITHMIC CODE)
-#   #spe2=cube.data[v_lb:v_ub+1,y_lb:y_ub+1,x_lb:x_ub+1].sum(axis=(1,2))
-#   #plt.imshow(cube.data[v_lb:v_ub+1,y_lb:y_ub+1,x_lb:x_ub+1].sum(axis=0),vmin=vmin,vmax=vmax)
-#   #plt.subplot(2, 3, 6)
-#   #plt.imshow(syn.sum(axis=0))
-#   #plt.subplot(2, 3, 5)
-#   #plt.imshow(cube.data.sum(axis=0))
-#   #plt.gca().add_patch(plt.Rectangle((x_lb,y_lb),x_ub-x_lb+1,y_ub-y_lb+1,alpha=1, facecolor='none'))
-#   #plt.subplot(2, 3, 4)
-#   #plt.plot(spe,"b")
-#   #plt.plot(spe2,"r")
-#   plt.show() 
-#   plt.pause(0.01)
-#
-#   # Return the clump parameters
-#   return res
-#
-#
-#
-#def compute_rms(data):
-#   res=data[data < 0]
-#   fin=(res*res).sum()/len(res)
-#   return np.sqrt(fin)
-#
-#def gauss_clumps(orig_cube,params):
-#   cube=copy.deepcopy(orig_cube)
-#   syn=copy.copy(orig_cube)
-#   syn.data=np.empty_like(cube.data)
-#   C=[]
-#   stop=False
-#   norm=cube.data.mean()
-#   print "Initial Sum", norm
-#   params['beam_size']=abs(float(cube.meta['BMIN']))
-#   params['spe_res']=abs(float(cube.meta['CDELT3']))
-#   params['rms']=compute_rms(cube.data)
-#   print params['rms']
-#   while not stop:
-#      theta=next_clump(cube,syn,params)
-#      C.append(theta)
-#      norm=cube.data.mean()
-#      print "Sum", norm
-#      stop = (norm < params['threshold'])
-#   
-#   # SHOW RESULTS
-#   plt.clf() 
-#   plt.subplot(1, 3, 2)
-#   plt.imshow(cube.stack())
-#   plt.subplot(1, 3, 1)
-#   plt.imshow(orig_cube.stack())
-#   plt.subplot(1, 3, 3)
-#   plt.imshow(syn.stack())
-#   plt.show()
-#   plt.pause(100)
-#   print "RESULTS"
-#   print C
-#   return C

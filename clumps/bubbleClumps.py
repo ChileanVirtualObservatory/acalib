@@ -122,7 +122,7 @@ class BubbleClumps:
       """Update the energies, only from the lb to the ub points. 
       """
       #TODO: I do now know if get_slice actually states that we are making a copy...
-      mcb=self.data.get_slice(lb,ub)
+      mcb=self.residual.get_slice(lb,ub)
       #Obtain the reference of the eighth of the bubble.
       vv=self.eival
       ff=self.eifeat.T
@@ -149,8 +149,16 @@ class BubbleClumps:
          delta=np.array([-1,-1,-1])*d
          self._update_min_energy(mat,ub,lb,delta)
 
+  
    def fit(self,cube,verbose=False,use_meta=True):
-      
+      """Feed the algorithm with a Cube to bubblelize. This process generates:
+         - A synthetic cube with the subtracted values (self.syn)
+         - A residual cube with the original cube minus the synthetic (self.residual)
+         - The positions of the fitted bubbles (self.positions)
+         - The omplitued of the fitted bubbles (self.amplitudes)
+         - The energy cube, which is aneroded version of the residual (self.energy) """
+
+
       # Set the RMS, or automatically find an estimate for it
       if not self.par.has_key('RMS'):
          rms=cube.estimate_rms()
@@ -167,8 +175,8 @@ class BubbleClumps:
       # Copy the supplied cube into a work cube which will hold the
       # residuals remaining after subtraction of the fitted Gaussians. 
       self.orig=cube
-      self.data=cube.copy()
-      datamax=self.data.max()
+      self.residual=cube.copy()
+      datamax=self.residual.max()
       datamax=datamax[0]
       self.syn=cube.empty_like()
       self.energy=cube.copy()
@@ -187,7 +195,7 @@ class BubbleClumps:
          log.info("Computed Deltas ="+str((self.db,self.ds)))
       (self.eival,self.eifeat)=self._eighth_bubble()
       lb=(0,0,0)
-      ub=self.data.shape()
+      ub=self.residual.shape()
       self._update_energies(lb,ub)
       cb=self._create_bubble()
       delta=np.array([self.ds,self.db,self.db])
@@ -221,11 +229,12 @@ class BubbleClumps:
             log.info("Remove E = "+str(rem)+" SNR="+str(y/rms - 1.0))
          ub=xmax + delta + 1
          lb=xmax - delta
-         self.data.add_flux(-rem*cb,lb,ub)
+         self.residual.add_flux(-rem*cb,lb,ub)
          self.syn.add_flux(rem*cb,lb,ub)
          self._update_energies(lb,ub)
 
    def clusterize(self,verbose=False):
+      """Under development """
       # Heriarchical Clustering
       # Compute the condensated eucledian distance matrix
       vect=np.array(self.positions)
