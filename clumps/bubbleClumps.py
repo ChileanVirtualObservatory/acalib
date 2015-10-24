@@ -30,7 +30,17 @@ class BubbleClumps:
       # Cut level (how many RMSs we consider to force the compact support)
       self.par['CUTLEV']=1.0
 
-   def create_bubble(self):
+   def _create_bubble(self):
+      """This function creates a sub-cube containing a bubble, using the already computed values of 
+         $\Delta_b$, $\Delta_s$, $\sigma_b$, and $\sigma_s$.
+          
+         $bub(p)=\exp(-\frac{(p - \Delta/2)^\top \Lambda (p - \Delta/2)}{2.0})$
+         $p = [z y x]^\top$
+         $\Delta = [\Delta_s \Delta_b \Delta_b]^\top$
+         $\Lambda = \begin{array}{ccc} 1/\sigma_s^2 & 0 & 0 \\ 0 & 1/\sigma_s^2 & 0 \\ 0 & 0 & 1/\sigma_b^2  \end{array}$
+
+         returns: a 3D numpy array containing the bubble (bub)
+      """
       ds=self.ds
       db=self.db
       x=np.arange(-ds,ds+1)
@@ -45,10 +55,19 @@ class BubbleClumps:
       quad=V.sum(axis=0)
       res=np.exp(-quad/2.0)
       val=(res/res.max())
-      cb=val.reshape(2*ds+1,2*db+1,2*db+1)
-      return cb
+      bub=val.reshape(2*ds+1,2*db+1,2*db+1)
+      return bub
 
-   def eighth_bubble(self):
+   def _eighth_bubble(self):
+      """This function creates an eighth of a sub-cube containing a bubble.
+         It works similar to _create_bubble but it returns the values
+         in value-features arrays. The eighth of a bubble is usefull because 
+         the symetry of Gaussians (less values to process).
+
+         returns: 
+            - val: a 1D numpy array with the intensity values
+            - idx: a 2D numpy array with the positions of these values in z, y, and x
+      """
       ds=self.ds
       db=self.db
       x=np.arange(0,ds+1)
@@ -67,15 +86,20 @@ class BubbleClumps:
       quad=V.sum(axis=0)
       res=np.exp(-quad/2.0)
       val=(res/res.max())
-      
       return val,idx
 
-   def whosmin(self,mat,ub,lb,delta):
+   def _update_min_energy(self,mat,ub,lb,delta):
+     """Updates the minimum energies of self.energy from mat defaced by delta. 
+        ub and lb bounds are provided to shrink the mat matrix when required (out of bounds, or partial update)
+     """
      bord=np.array(self.energy.shape())
+     # TODO: Bad usage of AData, because we want a reference of the data to modify it
      ene=self.energy.data
+     # Numpyfy everithing
      ub=np.array(ub)
      lb=np.array(lb)
      delta=np.array(delta)
+     # Create energy (e) and mat (m) indices 
      eub=ub + delta
      elb=lb + delta
      mub=ub-lb
@@ -86,41 +110,44 @@ class BubbleClumps:
      mlb[lmask]-=elb[lmask]
      eub[umask]=bord[umask]
      elb[lmask]=0
+     # Obtain a reduced view of the matrices
      eview=ene[elb[0]:eub[0],elb[1]:eub[1],elb[2]:eub[2]]
      mview=mat[mlb[0]:mub[0],mlb[1]:mub[1],mlb[2]:mub[2]]
+     # Select those that are lower in mat than in energy
      cmat=mview < eview
+     # Update them in the energy matrix.
      eview[cmat]=mview[cmat]
-     #self.energy.data[elb[0]:eub[0],elb[1]:eub[1],elb[2]:eub[2]]=eview
      
-   def update_energies(self,lb,ub):
+   def _update_energies(self,lb,ub):
+      """Update the energies, only from the lb to the ub points. 
+      """
+      #TODO: I do now know if get_slice actually states that we are making a copy...
       mcb=self.data.get_slice(lb,ub)
+      #Obtain the reference of the eighth of the bubble.
       vv=self.eival
       ff=self.eifeat.T
-      # this is one because we do not want to repeat the position (0,0,0)
+      # Iterates for every point in the eighth of the bubble
+      # this starts from one because we do not want to repeat the position (0,0,0)
       for i in range(1,vv.size):
-         #print("."),
-         sys.stdout.flush()
          mat=mcb/vv[i]
-         delta=ff[i]
+         d=ff[i]
          # update in the eight directions
-         # check limits on the current direction
-         delta=np.array([1,1,1])*delta[0]
-         self.whosmin(mat,ub,lb,delta)
-         delta=np.array([1,1,-1])*delta[0]
-         self.whosmin(mat,ub,lb,delta)
-         delta=np.array([1,-1,1])*delta[0]
-         self.whosmin(mat,ub,lb,delta)
-         delta=np.array([1,-1,-1])*delta[0]
-         self.whosmin(mat,ub,lb,delta)
-         delta=np.array([-1,1,1])*delta[0]
-         self.whosmin(mat,ub,lb,delta)
-         delta=np.array([-1,1,-1])*delta[0]
-         self.whosmin(mat,ub,lb,delta)
-         delta=np.array([-1,-1,1])*delta[0]
-         self.whosmin(mat,ub,lb,delta)
-         delta=np.array([-1,-1,-1])*delta[0]
-         self.whosmin(mat,ub,lb,delta)
-      #print("DONE")
+         delta=np.array([1,1,1])*d
+         self._update_min_energy(mat,ub,lb,delta)
+         delta=np.array([1,1,-1])*d
+         self._update_min_energy(mat,ub,lb,delta)
+         delta=np.array([1,-1,1])*d
+         self._update_min_energy(mat,ub,lb,delta)
+         delta=np.array([1,-1,-1])*d
+         self._update_min_energy(mat,ub,lb,delta)
+         delta=np.array([-1,1,1])*d
+         self._update_min_energy(mat,ub,lb,delta)
+         delta=np.array([-1,1,-1])*d
+         self._update_min_energy(mat,ub,lb,delta)
+         delta=np.array([-1,-1,1])*d
+         self._update_min_energy(mat,ub,lb,delta)
+         delta=np.array([-1,-1,-1])*d
+         self._update_min_energy(mat,ub,lb,delta)
 
    def fit(self,cube,verbose=False,use_meta=True):
       
@@ -145,6 +172,7 @@ class BubbleClumps:
       datamax=datamax[0]
       self.syn=cube.empty_like()
       self.energy=cube.copy()
+      #TODO: wrong usage of AData. I need to fill all non-nan values with a value (datamax)
       mas=np.isnan(self.energy.data)
       self.energy.data[np.logical_not(mas)]=datamax
       # Sigma values
@@ -157,11 +185,11 @@ class BubbleClumps:
          log.info("Datamax =="+str(datamax))
          log.info("RMS ="+str(rms))
          log.info("Computed Deltas ="+str((self.db,self.ds)))
-      (self.eival,self.eifeat)=self.eighth_bubble()
+      (self.eival,self.eifeat)=self._eighth_bubble()
       lb=(0,0,0)
       ub=self.data.shape()
-      self.update_energies(lb,ub)
-      cb=self.create_bubble()
+      self._update_energies(lb,ub)
+      cb=self._create_bubble()
       delta=np.array([self.ds,self.db,self.db])
       iterate = True
       niter=0
@@ -195,7 +223,7 @@ class BubbleClumps:
          lb=xmax - delta
          self.data.add_flux(-rem*cb,lb,ub)
          self.syn.add_flux(rem*cb,lb,ub)
-         self.update_energies(lb,ub)
+         self._update_energies(lb,ub)
 
    def clusterize(self,verbose=False):
       # Heriarchical Clustering

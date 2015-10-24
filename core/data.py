@@ -41,7 +41,7 @@ class AcaData(ndd.NDData):
        sigma=self.data.std()
        mu=self.data.mean()
        return np.sqrt(sigma*sigma + mu*mu)
-
+    
     def get_wcs_limits(self,axis):
        lower=self.wcs.wcs_pix2world([[0,0,0]], 0) - self.wcs.wcs.cdelt/2.0
        shape=self.data.shape
@@ -51,44 +51,51 @@ class AcaData(ndd.NDData):
        return (lower[0][axis],upper[0][axis])    
 
     def copy(self):
-        return copy.deepcopy(self)
+       return copy.deepcopy(self)
 
     # TODO: get_flux should be for any slice, need more parameters
     def get_flux(self):
-    	return np.sum(self.data)   
+       """ Compute the flux of the whole data (sum) """ 
+       return np.sum(self.data)   
     
     def count(self):
-        return self.data.count()
+       """ Count the valid elements of the data 
+       """
+       return self.data.count()
     
     def empty_like(self):
-    	dat=np.zeros_like(self.data)
-    	cb=AcaData(dat,self.wcs,self.meta,self.unit)
-    	return cb
+      """ Create a new object with zero data values, but maintaining the same meta, wcs and units """
+      dat=np.zeros_like(self.data)
+      cb=AcaData(dat,self.wcs,self.meta,self.unit)
+      return cb
     
+    # TODO: modify consistency of wcs
     def scale(self, scale):
-        dim = 0
-        start_time = time.time()
-        if (scale == 1):
-            return self.data
-        elif (scale < 1):
-            new_data = self.data[::1/scale, ::1/scale, ::1/scale]
-            print("--- %s seconds ---" % (time.time() - start_time))
-            return (new_data/np.sum(new_data))*np.sum(self.data)
-        else:
-            new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
-            new_data[::scale, ::scale, ::scale] = self.data
-            
-            #Interpolation
-            arange = np.array([np.arange(new_data.shape[1])[::scale], np.arange(new_data.shape[2])[::scale]])
-            for layer in new_data:
-                values = new_data[dim,arange[0,:], arange[1,:]]
-                grid_x, grid_y = np.mgrid[0:new_data.shape[1]-1:complex(new_data.shape[1]),0:new_data.shape[2]-1:complex(new_data.shape[1])]
-                new_data[dim] = griddata(np.transpose(arange), values, (grid_x,grid_y), method='nearest')
-                dim+=1
+      """ Scales data 
+      """
+      dim = 0
+      start_time = time.time()
+      if (scale == 1):
+          return self.data
+      elif (scale < 1):
+          new_data = self.data[::1/scale, ::1/scale, ::1/scale]
+          print("--- %s seconds ---" % (time.time() - start_time))
+          return (new_data/np.sum(new_data))*np.sum(self.data)
+      else:
+          new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
+          new_data[::scale, ::scale, ::scale] = self.data
+          
+          #Interpolation
+          arange = np.array([np.arange(new_data.shape[1])[::scale], np.arange(new_data.shape[2])[::scale]])
+          for layer in new_data:
+              values = new_data[dim,arange[0,:], arange[1,:]]
+              grid_x, grid_y = np.mgrid[0:new_data.shape[1]-1:complex(new_data.shape[1]),0:new_data.shape[2]-1:complex(new_data.shape[1])]
+              new_data[dim] = griddata(np.transpose(arange), values, (grid_x,grid_y), method='nearest')
+              dim+=1
 
-            print("--- %s seconds ---" % (time.time() - start_time))
-            print new_data
-            return new_data
+          print("--- %s seconds ---" % (time.time() - start_time))
+          print new_data
+          return new_data
 
     def rotate(self, angle):
         if (angle != 0):
