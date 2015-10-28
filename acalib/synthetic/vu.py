@@ -5,7 +5,7 @@ import astropy.constants as const
 import core.parameter as par
 import core.data as dt
 import astropy.wcs as wcs
-from acatable import AcaTable
+from core.atable import ATable
 
 class Universe:
     """
@@ -76,7 +76,7 @@ class Universe:
         w.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
         data=np.zeros((mm[2],mm[1],mm[0]))
         #w.wcs.print_contents()
-        cube = dt.AcaData(data, w, None, u.Jy / u.beam)
+        cube = dt.AData(data, w, None, u.Jy / u.beam)
 
         sources_table = self._gen_sources_table()
 

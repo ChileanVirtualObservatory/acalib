@@ -1,7 +1,7 @@
 import collections
 from astropy.table.table import Table as AstropyTable
 
-class AcaTable(AstropyTable):
+class ATable(AstropyTable):
     def __init__(self, *names):
         AstropyTable.__init__(self, names=names)
 
@@ -11,7 +11,7 @@ class AcaTable(AstropyTable):
 
 
 if __name__ == "__main__":
-    table = AcaTable("Col1", "Col2", "Col3")
+    table = ATable("Col1", "Col2", "Col3")
     table += (1, 2, 3)
     table += (4, 5, 6)
 
