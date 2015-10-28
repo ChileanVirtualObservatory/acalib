@@ -1,7 +1,9 @@
 import copy
 import sys
+import ca
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 class FellWalker:
 
@@ -389,6 +391,7 @@ class FellWalker:
                                if iy < 0 or iy >= shape[1]: continue
                                for iz in range(oz-1, oz+2):
                                    if iz <0 or iz >= shape[2]: continue
+                                   if (ix,iy,iz)==(ox,oy,oz): continue
                                    tot += 1
                                    if inp[ix,iy,iz] == on: s += 1
                        if np.float(s)/np.float(tot) > thresh:
@@ -480,7 +483,8 @@ class FellWalker:
       on = self.par['ON']
       off = self.par['OFF']
       centre = self.par['CENTRE']
-      caa = self.remove_isolate(caa, frac, on, off, centre)
+      #caa = self.remove_isolate(caa, frac, on, off, centre)
+      caa = ca.remove_isolate(caa, frac, on, off, centre)
 
       #Some constants
       rms = self.par['RMS']
