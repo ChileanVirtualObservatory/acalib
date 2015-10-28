@@ -1,11 +1,18 @@
-from core.data import *
+
 from astropy import log
 import numpy as np
 import astropy.constants as const
-import core.parameter as par
-import core.data as dt
+
 import astropy.wcs as wcs
-from core.atable import ATable
+
+from ..core import parameter as par
+from ..core import data as dt
+from ..core import atable
+from ..core.atable import ATable
+#import core.parameter as par
+#import core.data as dt
+#from core.data import *
+#from core.atable import ATable
 
 class Universe:
     """

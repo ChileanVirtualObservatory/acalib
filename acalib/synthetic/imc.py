@@ -1,6 +1,6 @@
 from numpy import random
-from synthetic import db
-from synthetic.vu import Component
+from . import db
+from .vu import Component
 import core.flux as flx
 import astropy.units as u
 import numpy as np
@@ -9,8 +9,9 @@ import urllib
 import shutil
 import os.path
 from astropy.io import fits
-import core.parameter as par
-from core.atable import ATable
+from ..core import parameter as par
+from ..core import atable
+from ..core.atable import ATable
 
 #INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H, HDO')]
 #INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
