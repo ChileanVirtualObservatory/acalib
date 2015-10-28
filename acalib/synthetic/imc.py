@@ -10,7 +10,7 @@ import shutil
 import os.path
 from astropy.io import fits
 import core.parameter as par
-from acatable import AcaTable
+from core.atable import ATable
 
 #INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H, HDO')]
 #INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
@@ -43,7 +43,7 @@ class IMC(Component):
     def project(self, cube, cutoff):
         # TODO Make all this with astropy units from the call functions
 
-        table = AcaTable("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity")
+        table = ATable("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity")
 
         dba = db.lineDB(self.dbpath)  # Maybe we can have an always open DB
         dba.connect()

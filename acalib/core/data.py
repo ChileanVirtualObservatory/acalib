@@ -15,8 +15,9 @@ import traceback
 
 from scipy.interpolate import griddata
 
+__all__ = ["AData"]
 
-class AcaData(ndd.NDData):
+class AData(ndd.NDData):
     """
     A generic represenation of astronomical data.
     A spectra is a 3D cube with ra_axis and dec_axis of size 1
@@ -62,7 +63,7 @@ class AcaData(ndd.NDData):
     
     def empty_like(self):
     	dat=np.zeros_like(self.data)
-    	cb=AcaData(dat,self.wcs,self.meta,self.unit)
+    	cb=AData(dat,self.wcs,self.meta,self.unit)
     	return cb
     
     def scale(self, scale):
