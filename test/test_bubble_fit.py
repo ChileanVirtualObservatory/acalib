@@ -7,16 +7,16 @@ import cProfile
 import clumps.bubbleClumps as cl
 import matplotlib.pyplot as plt
 
-#ws.import_file("fits/M100line.image.fits")
+ws.import_file("fits/M100line.image.fits")
 #ws.import_file("fits/Orion.methanol.cbc.contsub.image.fits")
-ws.import_file("fits/Antennae_North.CO3_2Line.Clean.pcal1.image.fits")
+#ws.import_file("fits/Antennae_North.CO3_2Line.Clean.pcal1.image.fits")
 #ws.import_file("fits/Antennae_South.CO3_2Line.Clean.pcal1.image.fits")
 #ws.import_file("fits/CenA.CO2_1Line.Clean.image.fits")
 
 elm=ws.elements()
-#cube=elm['M100line.image-0']
+cube=elm['M100line.image-0']
 #cube=elm['Orion.methanol.cbc.contsub.image-0']
-cube=elm['Antennae_North.CO3_2Line.Clean.pcal1.image-0']
+#cube=elm['Antennae_North.CO3_2Line.Clean.pcal1.image-0']
 #cube=elm['Antennae_South.CO3_2Line.Clean.pcal1.image-0']
 #cube=elm['CenA.CO2_1Line.Clean.image-0']
 spar=cube.standarize()
