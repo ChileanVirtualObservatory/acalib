@@ -13,7 +13,34 @@ import parameter as par
 import time
 import traceback
 
+
 from scipy.interpolate import griddata
+
+
+
+
+def interpolate(data, scale_miss):
+    x = range(0,data[0].shape[0])
+    y = range(0,data[0].shape[1])
+    
+    xn,yn = np.meshgrid(x,y)
+        
+    #for i in range(0,data.shape[0],scale_miss):
+    #    points = np.argwhere(data[i] != 0)
+    #    values = data[i].reshape((data.shape[1] * data.shape[2]),1)
+    #    values = values[np.where(values!=0)]
+    #    grid = griddata(points, values, (xn,yn), method='cubic') 
+    #    data[i] = grid.T
+
+    z = range(0,data[:,0].shape[0])
+    zn,xn = np.meshgrid(z,x)
+    for i in range(0,data.shape[1],scale_miss):
+        points = np.argwhere(data[:,i] != 0)
+        values = data[:,i].reshape((data.shape[0] * data.shape[1]),1)
+        values = values[np.where(values!=0)]
+        grid = griddata(points, values, (xn,yn), method='cubic') 
+        data[:,i] = grid.T              
+    return data
 
 
 class AcaData(ndd.NDData):
@@ -65,6 +92,7 @@ class AcaData(ndd.NDData):
     	cb=AcaData(dat,self.wcs,self.meta,self.unit)
     	return cb
     
+    
     def scale(self, scale):
         dim = 0
         start_time = time.time()
@@ -72,23 +100,22 @@ class AcaData(ndd.NDData):
             return self.data
         elif (scale < 1):
             new_data = self.data[::1/scale, ::1/scale, ::1/scale]
-            print("--- %s seconds ---" % (time.time() - start_time))
             return (new_data/np.sum(new_data))*np.sum(self.data)
         else:
             new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
             new_data[::scale, ::scale, ::scale] = self.data
             
-            #Interpolation
-            arange = np.array([np.arange(new_data.shape[1])[::scale], np.arange(new_data.shape[2])[::scale]])
-            for layer in new_data:
-                values = new_data[dim,arange[0,:], arange[1,:]]
-                grid_x, grid_y = np.mgrid[0:new_data.shape[1]-1:complex(new_data.shape[1]),0:new_data.shape[2]-1:complex(new_data.shape[1])]
-                new_data[dim] = griddata(np.transpose(arange), values, (grid_x,grid_y), method='nearest')
-                dim+=1
 
-            print("--- %s seconds ---" % (time.time() - start_time))
-            print new_data
+            new_data = interpolate(new_data, scale)
+            
+
+            
+
+
+            
+
             return new_data
+
 
     def rotate(self, angle):
         if (angle != 0):

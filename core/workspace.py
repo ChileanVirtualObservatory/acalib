@@ -78,7 +78,7 @@ def _fits_consumer(path,name,ws=_ws_df):
 
          #print ndd.get_flux()
          ### SCALE DATA TEST ###
-         
+
          scale = ndd.scale(2)
          
          scale = _create_cube(np.array([scale]), hdu.header)
