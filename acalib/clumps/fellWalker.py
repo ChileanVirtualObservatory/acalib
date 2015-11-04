@@ -16,7 +16,7 @@ class FellWalker:
       """ Generic parameters  """
       # Spectral resoluion in pixels
       self.par['VELORES'] = 2.0
-      # Beam resolution in pixels 
+      # Beam resolution in pixels
       self.par['FWHMBEAM'] = 2.0
       # Maximum Clumps
       self.par['MAXCLUMPS'] = sys.maxint
@@ -214,7 +214,7 @@ class FellWalker:
             if neighId!=-1 and peaks[clumpId]<topcol+minDip:
                #Merge it!
                merge=True
-               break #dictionaries can't change size while iterating it 
+               break #dictionaries can't change size while iterating it
          if merge:
             """
             Tell the neighbours of clumpId that they are now neighbours of neighId
@@ -249,7 +249,7 @@ class FellWalker:
       next_pos=self.max_gradient(pos,data,caa)
 
       if caa[next_pos]>=1:
-         """ 
+         """
          If the next pixel on the route is already assigned to a
          clump, we now know what peak we are heading towards so use that clump
          index for the route so far, and abandon the rest of the walk.
@@ -271,8 +271,8 @@ class FellWalker:
          If there is no upward route from the current pixel, (i.e. if it is a
          local maximum), we check the slightly more extended neighbourhood for
          a higher pixel. We do this because a local maximum could be just a
-         noise spike. 
-         """   
+         noise spike.
+         """
          local_max=next_pos
          new_max=self.verify_peak(local_max,data,caa)
          if local_max==new_max:
@@ -282,21 +282,21 @@ class FellWalker:
             """
             return path,pathv
          else:
-            #Just a noise peak, keep walking up   
+            #Just a noise peak, keep walking up
             return self.walkup(new_max,path,pathv,data,caa)
 
-         """ 
+         """
          The walk has now finished because we have either reached a peak which
          is the highest point in its neighbourhood, or we have joined an earlier
          route and thus know which peak we would get to if we were to carry on.
          """
 
    def verify_flat(self, path, pathv, caa, flatSlope, seaLevel):
-      """ 
+      """
       Find the average gradient, if possible, over the last 4 steps, assuming
       each step is the same length. If it is above the user-supplied limit,
       indicate we have got the length of the initial flat section of the
-      route. 
+      route.
       """
       valid=-1 #valid flag, to indicate from what pixel path is valid
 
@@ -315,7 +315,7 @@ class FellWalker:
             if pathv[i]>=seaLevel:
                #valid from i-pixel
                valid=i
-               break   
+               break
             else:
                avg=(pathv[i+3]-pathv[i])/3
                if avg>=flatSlope:
@@ -323,7 +323,7 @@ class FellWalker:
                   valid=i
                   break
 
-      #update path and flat 
+      #update path and flat
       if valid==-1:
          flat=path
          flatv=pathv
@@ -366,7 +366,7 @@ class FellWalker:
        for ox in range(shape[0]):
            for oy in range(shape[1]):
                for oz in range(shape[2]):
-                   
+
                    if centre and inp[ox,oy,oz] == off:
                        """
                        If the corresponding input pixel is off, then the output must be also be
@@ -483,8 +483,8 @@ class FellWalker:
       on = self.par['ON']
       off = self.par['OFF']
       centre = self.par['CENTRE']
-      #caa = self.remove_isolate(caa, frac, on, off, centre)
-      caa = ca.remove_isolate(caa, frac, on, off, centre)
+      caa = self.remove_isolate(caa, frac, on, off, centre)
+      #caa = ca.remove_isolate(caa, frac, on, off, centre)
 
       #Some constants
       rms = self.par['RMS']
@@ -518,10 +518,10 @@ class FellWalker:
                """
                We now start walking away from this pixel up hill (up the steepest
                gradient). We store the vector index of all pixels visited on this walk
-               in the route array. Whilst walking, we initially keep a record of the 
-               average gradient over the last 4 steps. We count how many steps we travel 
-               before we encounter an average gradient above the gradient limit. 
-               However, this initial flat section is only ignored if the walk starts from 
+               in the route array. Whilst walking, we initially keep a record of the
+               average gradient over the last 4 steps. We count how many steps we travel
+               before we encounter an average gradient above the gradient limit.
+               However, this initial flat section is only ignored if the walk starts from
                "sea level". Walks which start at a higher altitude are used in their entirety.
                """
                path,pathv=self.walkup(pos,path,pathv,data,caa)
@@ -533,7 +533,7 @@ class FellWalker:
                which is set unusable (-1). We ignore walks that were entirely on the
                coastal plain (indicated by a value of -2 for clump_index).
                """
-               
+
                #if not empty
                if flat:
                   #set pixels as unusable
@@ -545,7 +545,7 @@ class FellWalker:
                   continue
 
                """
-               If this peak has not already been assigned to a clump, increment the number 
+               If this peak has not already been assigned to a clump, increment the number
                of clumps and assign it the new clump index.
                """
                if caa[path[-1]]>0:
@@ -591,7 +591,7 @@ class FellWalker:
             del deleted[0]
             deleted.append(clumpId)
 
-      
+
       ####refine 2, merging clumps
       """
       Amalgamate adjoining clumps if there is no significant dip between the
@@ -629,7 +629,7 @@ class FellWalker:
       a number of times as given by configuration parameter CleanIter.
       """
       cleanIter = self.par['CLEANITER']
-      for i in range(cleanIter): 
+      for i in range(cleanIter):
          caa = self.smooth_boundary(caa,clump)
 
       ####some statistics
