@@ -34,10 +34,10 @@ class Universe:
         :return: an Aca Table.
         """
 
-        table = AcaTable("Comp ID", "Source Name", "Model", "Alpha", "Delta", "Redshift", "Radial Vel")
+        table = AcaTable("Source Name", "Comp ID", "Model", "Alpha", "Delta", "Redshift", "Radial Vel")
         for source in self.sources:
             for component in self.sources[source].comp:
-                table += (component.comp_name, self.sources[source].name, component.get_model_name(),
+                table += (self.sources[source].name, component.comp_name, component.get_model_name(),
                           component.pos[0].value, component.pos[1].value, component.get_redshift().value,
                           component.get_velocity().value)
 
@@ -80,9 +80,6 @@ class Universe:
 
         sources_table = self._gen_sources_table()
 
-        print "[DEBUG] ASTROPY TABLE FROM SOURCES:"
-        print sources_table
-
         component_tables = dict()
 
         for source in self.sources:
@@ -92,10 +89,6 @@ class Universe:
             # add all tables generated from each component of the source
             # on the complete components dictionary.
             component_tables.update(gen_tables)
-
-        print "[DEBUG] ASTROPY COMPONENT TABLES"
-        for component_table in component_tables:
-            print component_table
 
         cube.add_flux(2 * noise * (np.random.random(cube.data.shape) - 0.5))
         return cube, (sources_table, component_tables)
