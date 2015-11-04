@@ -18,8 +18,6 @@ from scipy.interpolate import griddata
 
 __all__ = ["AData"]
 
-<<<<<<< HEAD:core/data.py
-
 
 def interpolate(data, scale_miss):
     x = range(0,data[0].shape[0])
@@ -45,10 +43,9 @@ def interpolate(data, scale_miss):
     return data
 
 
-class AcaData(ndd.NDData):
-=======
+
 class AData(ndd.NDData):
->>>>>>> c3e87c2bd47e400e73d96e8dec848e2642a11734:acalib/core/data.py
+
     """
     A generic represenation of astronomical data.
     A spectra is a 3D cube with ra_axis and dec_axis of size 1
@@ -97,11 +94,7 @@ class AData(ndd.NDData):
     	cb=AData(dat,self.wcs,self.meta,self.unit)
     	return cb
     
-<<<<<<< HEAD:core/data.py
-    
-=======
-    # TODO: modify consistency of wcs
->>>>>>> c3e87c2bd47e400e73d96e8dec848e2642a11734:acalib/core/data.py
+
     def scale(self, scale):
         dim = 0
         start_time = time.time()
@@ -115,13 +108,7 @@ class AData(ndd.NDData):
             new_data[::scale, ::scale, ::scale] = self.data
             
 
-            new_data = interpolate(new_data, scale)
-            
-
-            
-
-
-            
+            new_data = interpolate(new_data, scale)          
 
             return new_data
 
