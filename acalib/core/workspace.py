@@ -61,7 +61,7 @@ def _create_cube(data,meta):
    data=data.sum(axis=0)*bscale+bzero
    mywcs=wcs.WCS(meta)
    mywcs=mywcs.dropaxis(3)
-   return dt.AcaData(data,mywcs,meta,bunit)
+   return dt.AData(data,mywcs,meta,bunit)
 
 def _fits_consumer(path,name,ws=_ws_df):
 #TODO: Support more filetypes

@@ -16,7 +16,9 @@ import traceback
 
 from scipy.interpolate import griddata
 
+__all__ = ["AData"]
 
+<<<<<<< HEAD:core/data.py
 
 
 def interpolate(data, scale_miss):
@@ -24,9 +26,7 @@ def interpolate(data, scale_miss):
     y = range(0,data[0].shape[1])
     
     xn,yn = np.meshgrid(x,y)
-    
-    #First interpolation, it works
-
+        
     #for i in range(0,data.shape[0],scale_miss):
     #    points = np.argwhere(data[i] != 0)
     #    values = data[i].reshape((data.shape[1] * data.shape[2]),1)
@@ -45,7 +45,10 @@ def interpolate(data, scale_miss):
     return data
 
 
+class AcaData(ndd.NDData):
+=======
 class AData(ndd.NDData):
+>>>>>>> c3e87c2bd47e400e73d96e8dec848e2642a11734:acalib/core/data.py
     """
     A generic represenation of astronomical data.
     A spectra is a 3D cube with ra_axis and dec_axis of size 1
@@ -94,7 +97,11 @@ class AData(ndd.NDData):
     	cb=AData(dat,self.wcs,self.meta,self.unit)
     	return cb
     
+<<<<<<< HEAD:core/data.py
     
+=======
+    # TODO: modify consistency of wcs
+>>>>>>> c3e87c2bd47e400e73d96e8dec848e2642a11734:acalib/core/data.py
     def scale(self, scale):
         dim = 0
         start_time = time.time()
