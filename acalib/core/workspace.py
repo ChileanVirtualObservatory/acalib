@@ -78,9 +78,10 @@ def _fits_consumer(path,name,ws=_ws_df):
 
          #print ndd.get_flux()
          ### SCALE DATA TEST ###
-
+         start_time = time.time()
          scale = ndd.scale(2)
-         
+         print("--- %s seconds ---" % (time.time() - start_time))
+
          scale = _create_cube(np.array([scale]), hdu.header)
          #print scale.get_flux()  ## SAME FLUX
          counter+=1

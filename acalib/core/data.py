@@ -23,23 +23,26 @@ def interpolate(data, scale_miss):
     x = range(0,data[0].shape[0])
     y = range(0,data[0].shape[1])
     
+    mask = np.nonzero(data)
+    points = np.argwhere(data[:,0] != 0)
+
     xn,yn = np.meshgrid(x,y)
-        
-    #for i in range(0,data.shape[0],scale_miss):
-    #    points = np.argwhere(data[i] != 0)
-    #    values = data[i].reshape((data.shape[1] * data.shape[2]),1)
-    #    values = values[np.where(values!=0)]
-    #    grid = griddata(points, values, (xn,yn), method='cubic') 
-    #    data[i] = grid.T
+            
+    for i in range(0,data.shape[0],scale_miss):
+        points = np.argwhere(data[i] != 0)
+        values = data[i].reshape((data.shape[1] * data.shape[2]),1)
+        values = values[np.where(values!=0)]
+        grid = griddata(points, values, (xn,yn), method='nearest') 
+        data[i] = grid.T
 
     z = range(0,data[:,0].shape[0])
-    zn,xn = np.meshgrid(z,x)
-    for i in range(0,data.shape[1],scale_miss):
+    xn,zn = np.meshgrid(x,z)
+    for i in range(1,data.shape[1]):
         points = np.argwhere(data[:,i] != 0)
         values = data[:,i].reshape((data.shape[0] * data.shape[1]),1)
-        values = values[np.where(values!=0)]
-        grid = griddata(points, values, (xn,yn), method='cubic') 
-        data[:,i] = grid.T              
+        values = values[np.where(values!= 0)]
+        grid = griddata(points, values, (zn,xn), method='nearest') 
+        data[:,i] = grid
     return data
 
 
