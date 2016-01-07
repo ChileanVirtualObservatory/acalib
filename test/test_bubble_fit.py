@@ -1,10 +1,10 @@
-import core.workspace as ws
+import acalib.core.workspace as ws
 import time
 import numpy as np
 import matplotlib.pyplot as plt
 import timeit
 import cProfile
-import clumps.bubbleClumps as cl
+import acalib.clumps.bubbleClumps as cl
 import matplotlib.pyplot as plt
 
 ws.import_file("fits/M100line.image.fits")
@@ -34,7 +34,7 @@ tim=[]
 
 total=cube.sum()
 telem=float(cube.count())
-n=9
+n=8
 maxporc=0.001
 samples=maxporc*telem
 print "Maximum Bubbles",int(samples),"= ",maxporc*100,"%" 
@@ -53,7 +53,7 @@ for i in range(n):
    plt.subplot(2, n,0*n + i + 1)
    plt.imshow(gc.syn.get_stacked())
    plt.subplot(2, n,1*n + i + 1)
-   plt.imshow(gc.data.get_stacked())
+   plt.imshow(gc.residual.get_stacked())
    print "data =",elem[-1]*100,"%"
    #plt.subplot(3, n,2*n + i + 1)
    #pos=np.array(gc.positions)

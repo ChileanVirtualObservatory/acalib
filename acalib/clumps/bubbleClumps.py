@@ -8,13 +8,14 @@ import scipy.spatial.distance as dist
 import scipy.cluster.hierarchy as hier
 import matplotlib.cm as cm
 
+
 class BubbleClumps:
 
    def __init__(self):
       self.FWHM_TO_SIGMA = 1. / (8 * np.log(2))**0.5
       # Set the very 
       self.defaultParams()
-   
+    
    def defaultParams(self):
       self.par=dict()
       # Spectral Resoluion in pixels (smoothing function)
@@ -186,6 +187,7 @@ class BubbleClumps:
       # Sigma values
       self.sb=bsize*fwhmbeam*self.FWHM_TO_SIGMA
       self.ss=bsize*velres*self.FWHM_TO_SIGMA
+      self.S=2*np.array([[1.0/np.square(self.ss),0,0],[0,1.0/np.square(self.sb),0],[0,0,1/np.square(self.sb)]])
       # Deltas
       self.db=int(np.sqrt(-2*self.sb*self.sb*np.log(cutlev*rms/datamax)))
       self.ds=int(np.sqrt(-2*self.ss*self.ss*np.log(cutlev*rms/datamax)))
@@ -238,15 +240,15 @@ class BubbleClumps:
       # Heriarchical Clustering
       # Compute the condensated eucledian distance matrix
       vect=np.array(self.positions)
-      M=dist.pdist(vect)
+      M=dist.pdist(vect,lambda x,y: np.exp(-(x-y).T*self.S*(x-y)))
       # Compute the weighting factors of the distance matrix
       #W=dist.pdist(self.amplitudes,lambda u,v: u+v)
       # Perform agglomerative clustering
       #Z=hier.linkage(M*W)
       Z=hier.linkage(M)
+      print Z
       hier.dendrogram(Z)
       plt.show()
-      samp=1000
       #offset=5
       #mult=5
       #n=1
@@ -277,10 +279,26 @@ class BubbleClumps:
          #   plt.scatter(v[:,2],v[:,1], color=next(colors),marker='+',alpha=0.5)
          #n=n+1
       nnn=[]
-      for j in range(samp):
-         T=hier.fcluster(Z,0.1+2.0*j/(float(samp)))
-         nnn.append(max(T))
-      plt.plot(nnn)
+      T=hier.fcluster(Z,0.0)
+      lim=float(max(T))/2.0
+      print "lim",lim
+      step=0.01
+      val=0.0
+      while True:
+         #print "val",val
+         val+=step
+         T=hier.fcluster(Z,val)
+         k=max(T)
+         #print "k,lim",k,lim
+         if k < lim:
+            break
+
+      colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
+      plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
+      for i in range(k+1):
+         v=vect[T==i]
+         print v
+         plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
       plt.show()
 
      

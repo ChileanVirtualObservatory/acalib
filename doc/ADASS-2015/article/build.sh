@@ -1,1 +1,1 @@
-latex article.tex && bibtex article && latex article.tex && latex article.tex && dvipdf article.dvi && open article.pdf 
+latex P102.tex && bibtex P102 && latex P102.tex && latex P102.tex && dvipdf P102.dvi
