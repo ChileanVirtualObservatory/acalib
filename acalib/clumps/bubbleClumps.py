@@ -238,9 +238,11 @@ class BubbleClumps:
          self._update_energies(lb,ub)
 
    def clusterize(self,verbose=False):
+      # Binary Search
+      
       pos=np.array(self.positions)
       for j in range(20):
-         db = DBSCAN(eps=1.0+2.0*j,).fit(pos)
+         db = DBSCAN(eps=1.0+10.0*j,).fit(pos)
          vect=db.labels_
          k=int(np.max(db.labels_))
          print vect
@@ -248,9 +250,9 @@ class BubbleClumps:
          colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
          plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
          v=pos[vect==-1]
-         plt.scatter(v[:,2],v[:,1], color='black',marker='o',alpha=0.5)
+         plt.scatter(v[:,2],v[:,1], color='black',marker='+',alpha=0.5)
          for i in range(k+1):
-            v=pos[vect==i-1]
+            v=pos[vect==i]
             plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
          plt.show()
   
