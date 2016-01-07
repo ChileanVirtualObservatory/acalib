@@ -6,6 +6,8 @@ import sys
 from astropy import log
 import scipy.spatial.distance as dist
 import scipy.cluster.hierarchy as hier
+from sklearn.cluster import DBSCAN
+from sklearn import metrics
 import matplotlib.cm as cm
 
 
@@ -99,7 +101,7 @@ class BubbleClumps:
      # Numpyfy everithing
      ub=np.array(ub)
      lb=np.array(lb)
-     delta=np.array(delta)
+     delta=np.array(delta,dtype=int)
      # Create energy (e) and mat (m) indices 
      eub=ub + delta
      elb=lb + delta
@@ -107,7 +109,7 @@ class BubbleClumps:
      mlb=np.array([0,0,0])
      umask=eub > bord
      lmask=elb < 0
-     mub[umask]-=eub[umask]-bord[umask]
+     mub[umask]-=eub[umask] - bord[umask]
      mlb[lmask]-=elb[lmask]
      eub[umask]=bord[umask]
      elb[lmask]=0
@@ -236,49 +238,32 @@ class BubbleClumps:
          self._update_energies(lb,ub)
 
    def clusterize(self,verbose=False):
+      pos=np.array(self.positions)
+      for j in range(20):
+         db = DBSCAN(eps=1.0+2.0*j,).fit(pos)
+         vect=db.labels_
+         k=int(np.max(db.labels_))
+         print vect
+         print k
+         colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
+         plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
+         v=pos[vect==-1]
+         plt.scatter(v[:,2],v[:,1], color='black',marker='o',alpha=0.5)
+         for i in range(k+1):
+            v=pos[vect==i-1]
+            plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
+         plt.show()
+  
+ 
+   def clusterize_hier(self,verbose=False):
       """Under development """
       # Heriarchical Clustering
       # Compute the condensated eucledian distance matrix
       vect=np.array(self.positions)
       M=dist.pdist(vect,lambda x,y: np.exp(-(x-y).T*self.S*(x-y)))
-      # Compute the weighting factors of the distance matrix
-      #W=dist.pdist(self.amplitudes,lambda u,v: u+v)
-      # Perform agglomerative clustering
-      #Z=hier.linkage(M*W)
       Z=hier.linkage(M)
-      print Z
       hier.dendrogram(Z)
       plt.show()
-      #offset=5
-      #mult=5
-      #n=1
-      #for j in range(ll):
-         #k=j*mult+offset
-         #T=hier.fcluster(Z,k,criterion='maxclust')
-         #plt.subplot(ll, 3, n)
-         #colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
-         #plt.imshow(self.syn.get_stacked(axis=2),cmap='Greys')
-         #for i in range(k+1):
-         #   v=vect[T==i]
-         #   print v
-         #   plt.scatter(v[:,1],v[:,0], color=next(colors),marker='+',alpha=0.5)
-         #n=n+1
-         #plt.subplot(ll, 3, n)
-         #colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
-         #plt.imshow(self.syn.get_stacked(axis=1),cmap='Greys')
-         #for i in range(k+1):
-         #   v=vect[T==i]
-         #   plt.scatter(v[:,2],v[:,0], color=next(colors),marker='+',alpha=0.5)
-         #n=n+1
-         #plt.subplot(ll, 3, n)
-         #plt.subplot(ll/3, 3, n)
-         #colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
-         #plt.imshow(self.syn.get_stacked(axis=0),cmap='binary')
-         #for i in range(k+1):
-         #   v=vect[T==i]
-         #   plt.scatter(v[:,2],v[:,1], color=next(colors),marker='+',alpha=0.5)
-         #n=n+1
-      nnn=[]
       T=hier.fcluster(Z,0.0)
       lim=float(max(T))/2.0
       print "lim",lim
