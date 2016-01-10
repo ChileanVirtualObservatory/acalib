@@ -32,11 +32,9 @@ maxporc=0.001
 samples=maxporc*telem
 print "Maximum Bubbles",int(samples),"= ",maxporc*100,"%" 
 gc.par['MAXBUB']=int(samples)
-snrlimit=1.0
+snrlimit=0.8
 print "SNR = ",snrlimit
 gc.par['SNRLIMIT']=snrlimit
 gc.fit(cube,verbose=True)
-gc.clusterize()
-plt.imshow(gc.syn.get_stacked())
-plt.show()
+gc.test_clustering()
 

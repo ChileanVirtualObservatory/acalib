@@ -1,5 +1,5 @@
 import numpy as np
-
+from collections import namedtuple
 import copy
 import matplotlib.pyplot as plt
 import sys
@@ -7,6 +7,10 @@ from astropy import log
 import scipy.spatial.distance as dist
 import scipy.cluster.hierarchy as hier
 from sklearn.cluster import DBSCAN
+from sklearn.cluster import KMeans
+from sklearn.cluster import AffinityPropagation
+from sklearn.cluster import SpectralClustering
+from mpl_toolkits.mplot3d import Axes3D
 from sklearn import metrics
 import matplotlib.cm as cm
 
@@ -189,7 +193,7 @@ class BubbleClumps:
       # Sigma values
       self.sb=bsize*fwhmbeam*self.FWHM_TO_SIGMA
       self.ss=bsize*velres*self.FWHM_TO_SIGMA
-      self.S=2*np.array([[1.0/np.square(self.ss),0,0],[0,1.0/np.square(self.sb),0],[0,0,1/np.square(self.sb)]])
+      self.S=np.array([[1.0/np.square(self.ss),0,0],[0,1.0/np.square(self.sb),0],[0,0,1/np.square(self.sb)]])
       # Deltas
       self.db=int(np.sqrt(-2*self.sb*self.sb*np.log(cutlev*rms/datamax)))
       self.ds=int(np.sqrt(-2*self.ss*self.ss*np.log(cutlev*rms/datamax)))
@@ -236,60 +240,141 @@ class BubbleClumps:
          self.residual.add_flux(-rem*cb,lb,ub)
          self.syn.add_flux(rem*cb,lb,ub)
          self._update_energies(lb,ub)
-
-   def clusterize(self,verbose=False):
-      # Binary Search
-      
-      pos=np.array(self.positions)
-      for j in range(20):
-         db = DBSCAN(eps=1.0+10.0*j,).fit(pos)
-         vect=db.labels_
-         k=int(np.max(db.labels_))
-         print vect
-         print k
-         colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
-         plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
-         v=pos[vect==-1]
-         plt.scatter(v[:,2],v[:,1], color='black',marker='+',alpha=0.5)
-         for i in range(k+1):
-            v=pos[vect==i]
-            plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
-         plt.show()
+      # Type hack..
+      self.positions=np.array(self.positions)
   
- 
-   def clusterize_hier(self,verbose=False):
-      """Under development """
-      # Heriarchical Clustering
-      # Compute the condensated eucledian distance matrix
-      vect=np.array(self.positions)
-      M=dist.pdist(vect,lambda x,y: np.exp(-(x-y).T*self.S*(x-y)))
-      Z=hier.linkage(M)
-      hier.dendrogram(Z)
-      plt.show()
-      T=hier.fcluster(Z,0.0)
-      lim=float(max(T))/2.0
-      print "lim",lim
-      step=0.01
-      val=0.0
-      while True:
-         #print "val",val
-         val+=step
-         T=hier.fcluster(Z,val)
-         k=max(T)
-         #print "k,lim",k,lim
-         if k < lim:
-            break
 
-      colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
-      plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
-      for i in range(k+1):
-         v=vect[T==i]
-         print v
-         plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
-      plt.show()
+   def linkage(self,verbose=False,show_dendogram=False):
+      vect=self.positions
+      print vect
+      self.D=dist.pdist(vect,lambda x,y: np.exp(-(x-y).T*self.S*(x-y)))
+      self.link=hier.linkage(D)
+      if show_dendogram:
+         hier.dendrogram(self.link)
+         plt.show()
 
-     
+   def clustering(self,val,method='dbscan'):
+       pos=self.positions
+       if method=='dbscan':
+          clust=DBSCAN(eps=val).fit(pos) # epsilon
+       elif method=='kmeans':
+          clust=KMeans(n_clusters=val).fit(pos) # k-clusters
+       elif method=='agglomerative':
+          clust=self.agglo_clust(val); # inconsistency
+       elif method=='affinity_propagation':
+          clust=AffinityPropagation(damping=val).fit(pos)  # damping
+       elif method=='spectral': 
+          clust=SpectralClustering(n_clusters=val).fit(pos) # n-clusters
+       else:
+          log.warning("The clustering algorithm is not supported yet.")
+       return clust
+
+   def agglo_clust(self,val,criterion='inconsistent'):
+       lab=hier.fcluster(self.link,val,criterion=criterion)
+       return namedtuple('labels_',lab,'linkage_',self.link,'pdist_',self.dist)
+
+   def draw_cluster(self,fig,clust):
+       
+       ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
+
+       plt.cla()
+       labels = clust.labels_
+
+       ax.scatter(self.positions[:, 2], self.positions[:, 1], self.positions[:, 0], c=labels.astype(np.float))
+
+       ax.w_xaxis.set_ticklabels([])
+       ax.w_yaxis.set_ticklabels([])
+       ax.w_zaxis.set_ticklabels([])
+       ax.set_xlabel('Declination')
+       ax.set_ylabel('Right Ascension')
+       ax.set_zlabel('Velocity')
+
+   def test_clustering(self):
+
+       plt.clf()
+       cl=self.clustering(30,'dbscan')
+       fig = plt.figure(1, figsize=(4, 3))
+       plt.title('dbscan')
+       self.draw_cluster(fig,cl)
+
+       cl=self.clustering(0.7,'affinity_propagation')
+       fig = plt.figure(2, figsize=(4, 3))
+       plt.title('affinity_propagation')
+       self.draw_cluster(fig,cl)
+
+       cl=self.clustering(5,'kmeans')
+       fig = plt.figure(3, figsize=(4, 3))
+       plt.title('kmeans')
+       self.draw_cluster(fig,cl)
+
+       cl=self.clustering(5,'spectral')
+       fig = plt.figure(4, figsize=(4, 3))
+       plt.title('spectral')
+       self.draw_cluster(fig,cl)
+
+       #self.linkage()
+       #cl=self.clustering(0.8,'agglomerative')
+       #fig = plt.figure(5, figsize=(4, 3))
+       #plt.title('agglomerative')
+
+       #self.draw_cluster(fig,cl)
+       plt.show()
+       
 
 
-
-
+#   def clusterize(self,verbose=False):
+#      # Binary Search
+#      
+#      pos=np.array(self.positions)
+#      for j in range(20):
+#         db = DBSCAN(eps=1.0+10.0*j,).fit(pos)
+#         vect=db.labels_
+#         k=int(np.max(db.labels_))
+#         print vect
+#         print k
+#         colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
+#         plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
+#         v=pos[vect==-1]
+#         plt.scatter(v[:,2],v[:,1], color='black',marker='+',alpha=0.5)
+#         for i in range(k+1):
+#            v=pos[vect==i]
+#            plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
+#         plt.show()
+#
+#
+#   def clusterize_hier(self,verbose=False):
+#      """Under development """
+#      # Heriarchical Clustering
+#      # Compute the condensated eucledian distance matrix
+#      vect=np.array(self.positions)
+#      M=dist.pdist(vect,lambda x,y: np.exp(-(x-y).T*self.S*(x-y)))
+#      Z=hier.linkage(M)
+#      hier.dendrogram(Z)
+#      plt.show()
+#      T=hier.fcluster(Z,0.0)
+#      lim=float(max(T))/2.0
+#      print "lim",lim
+#      step=0.01
+#      val=0.0
+#      while True:
+#         #print "val",val
+#         val+=step
+#         T=hier.fcluster(Z,val)
+#         k=max(T)
+#         #print "k,lim",k,lim
+#         if k < lim:
+#            break
+#
+#      colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
+#      plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
+#      for i in range(k+1):
+#         v=vect[T==i]
+#         print v
+#         plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
+#      plt.show()
+#
+#     
+#
+#
+#
+#
