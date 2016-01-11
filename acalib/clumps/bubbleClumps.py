@@ -10,6 +10,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.cluster import KMeans
 from sklearn.cluster import AffinityPropagation
 from sklearn.cluster import SpectralClustering
+from sklearn.metrics.cluster import adjusted_mutual_info_score as ami_score
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import metrics
 import matplotlib.cm as cm
@@ -258,13 +259,13 @@ class BubbleClumps:
        if method=='dbscan':
           clust=DBSCAN(eps=val).fit(pos) # epsilon
        elif method=='kmeans':
-          clust=KMeans(n_clusters=val).fit(pos) # k-clusters
+          clust=KMeans(n_clusters=int(val)).fit(pos) # k-clusters
        elif method=='agglomerative':
           clust=self.agglo_clust(val); # inconsistency
        elif method=='affinity_propagation':
           clust=AffinityPropagation(damping=val).fit(pos)  # damping
        elif method=='spectral': 
-          clust=SpectralClustering(n_clusters=val).fit(pos) # n-clusters
+          clust=SpectralClustering(n_clusters=int(val)).fit(pos) # n-clusters
        else:
           log.warning("The clustering algorithm is not supported yet.")
        return clust
@@ -288,6 +289,74 @@ class BubbleClumps:
        ax.set_xlabel('Declination')
        ax.set_ylabel('Right Ascension')
        ax.set_zlabel('Velocity')
+
+   def recursive_candidate(self,l_labels,r_labels,val,l_val,r_val,ami_th=0.6,granularity=1.0,method='dbscan'):
+       if r_val - l_val < granularity:
+          return
+       clust=self.clustering(val,method)
+       labels=clust.labels_
+       print labels
+       print r_labels
+       print l_labels
+       l_ami=ami_score(labels,l_labels)
+       r_ami=ami_score(labels,r_labels)
+       #print l_labels
+       #print r_labels
+       print "val = "+str(val)
+       #print "l_val = "+str(l_val)
+       #print "r_val = "+str(r_val)
+       #print "l_ami = "+str(l_ami)
+       #print "r_ami = "+str(r_ami)
+       flag=0;
+       if (l_ami < ami_th):
+          flag=1
+          self.recursive_candidate(l_labels,labels,(l_val + val)/2.0,l_val,val,ami_th,granularity,method)
+       if (r_ami < ami_th):
+          flag=1
+          self.recursive_candidate(labels,r_labels,(r_val + val)/2.0,val,r_val,ami_th,granularity,method)
+       if flag!=0:
+          self.solution.append(clust)
+          print "candidates = "+str(len(self.solution))
+
+   def cluster_candidates(self,ami_th=0.6,method='dbscan'):
+       pos=self.positions
+       if method=='dbscan':
+          v_ini=2.0
+          v_end=self.positions.max()/2.0
+          granularity=1.0
+       elif method=='kmeans':
+          v_ini=1
+          v_end=self.positions.shape[0]/2.0
+          granularity=1.0
+       elif method=='agglomerative':
+          v_ini=0.0
+          v_end=10.0
+          granularity=0.01
+          clust=self.agglo_clust(val); # inconsistency
+       elif method=='affinity_propagation':
+          v_ini=0.5
+          v_end=0.9
+          granularity=0.001
+       elif method=='spectral':
+          v_ini=1
+          v_end=self.positions.shape[0]/2.0
+          granularity=1.0
+       log.info("v_ini="+str(v_ini)+" v_end="+str(v_end))
+       self.solution=[]
+       cl=self.clustering(v_ini,method)
+       self.solution.append(cl)
+       l_labels=cl.labels_
+       cl=self.clustering(v_end,method)
+       self.solution.append(cl)
+       r_labels=cl.labels_
+       self.recursive_candidate(l_labels,r_labels,(v_ini + v_end)/2.0,v_ini,v_end,ami_th=ami_th,granularity=granularity,method=method)
+       f_num=0
+       plt.clf()
+       for cl in self.solution:
+           f_num+=1
+           fig = plt.figure(f_num, figsize=(4, 3))
+           self.draw_cluster(fig,cl)
+       plt.show()
 
    def test_clustering(self):
 
