@@ -37,5 +37,6 @@ print "SNR = ",snrlimit
 gc.par['SNRLIMIT']=snrlimit
 gc.fit(cube,verbose=True)
 #gc.test_clustering()
-gc.cluster_candidates(method='affinity_propagation')
+#gc.cluster_candidates(method='affinity_propagation')
+gc.scan(30)
 

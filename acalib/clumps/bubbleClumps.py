@@ -254,6 +254,42 @@ class BubbleClumps:
          hier.dendrogram(self.link)
          plt.show()
 
+   def scan(self,max_sol):
+       v_ini=1.0
+       self.solution=[]
+       #self.scores=[]
+       cl=self.clustering(0.5)
+       old_labels=cl.labels_
+       while len(self.solution)<max_sol:
+          cl=self.clustering(v_ini)
+          labels=cl.labels_
+          #score=ami_score(labels,old_labels)
+          #self.scores.append(score)
+          if labels.max() > 0:
+             self.solution.append(cl)
+       #      print labels
+          old_labels=labels
+          v_ini+=1
+       f_num=0
+       #print self.scores
+       #plt.clf()
+       #plt.plot(self.scores)
+       #plt.show()
+       si=len(self.solution)
+       affin=np.zeros((si,si))
+       for i in range(si):
+          for j in range(si):
+             affin[i,j]=ami_score(self.solution[i].labels_,self.solution[j].labels_)
+       print affin
+       
+       plt.clf()
+       for cl in self.solution:
+           f_num+=1
+           fig = plt.figure(f_num, figsize=(4, 3))
+           self.draw_cluster(fig,cl)
+       plt.show()
+
+
    def clustering(self,val,method='dbscan'):
        pos=self.positions
        if method=='dbscan':
@@ -280,8 +316,11 @@ class BubbleClumps:
 
        plt.cla()
        labels = clust.labels_
-
-       ax.scatter(self.positions[:, 2], self.positions[:, 1], self.positions[:, 0], c=labels.astype(np.float))
+       lab_select=labels[labels>-1]
+       pos_select=self.positions[labels>-1,:]
+       pos_noselect=self.positions[labels==-1,:]
+       ax.scatter(pos_noselect[:, 2], pos_noselect[:, 1], pos_noselect[:, 0], c='black',alpha=0.5)
+       ax.scatter(pos_select[:, 2], pos_select[:, 1], pos_select[:, 0], c=lab_select.astype(np.float))
 
        ax.w_xaxis.set_ticklabels([])
        ax.w_yaxis.set_ticklabels([])
