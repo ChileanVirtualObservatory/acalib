@@ -1,12 +1,20 @@
 import numpy as np
-
+from collections import namedtuple
 import copy
 import matplotlib.pyplot as plt
 import sys
 from astropy import log
 import scipy.spatial.distance as dist
 import scipy.cluster.hierarchy as hier
+from sklearn.cluster import DBSCAN
+from sklearn.cluster import KMeans
+from sklearn.cluster import AffinityPropagation
+from sklearn.cluster import SpectralClustering
+from sklearn.metrics.cluster import adjusted_mutual_info_score as ami_score
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn import metrics
 import matplotlib.cm as cm
+from mayavi import mlab
 
 class BubbleClumps:
 
@@ -14,7 +22,7 @@ class BubbleClumps:
       self.FWHM_TO_SIGMA = 1. / (8 * np.log(2))**0.5
       # Set the very 
       self.defaultParams()
-   
+    
    def defaultParams(self):
       self.par=dict()
       # Spectral Resoluion in pixels (smoothing function)
@@ -98,7 +106,7 @@ class BubbleClumps:
      # Numpyfy everithing
      ub=np.array(ub)
      lb=np.array(lb)
-     delta=np.array(delta)
+     delta=np.array(delta,dtype=int)
      # Create energy (e) and mat (m) indices 
      eub=ub + delta
      elb=lb + delta
@@ -106,7 +114,7 @@ class BubbleClumps:
      mlb=np.array([0,0,0])
      umask=eub > bord
      lmask=elb < 0
-     mub[umask]-=eub[umask]-bord[umask]
+     mub[umask]-=eub[umask] - bord[umask]
      mlb[lmask]-=elb[lmask]
      eub[umask]=bord[umask]
      elb[lmask]=0
@@ -186,6 +194,7 @@ class BubbleClumps:
       # Sigma values
       self.sb=bsize*fwhmbeam*self.FWHM_TO_SIGMA
       self.ss=bsize*velres*self.FWHM_TO_SIGMA
+      self.S=np.array([[1.0/np.square(self.ss),0,0],[0,1.0/np.square(self.sb),0],[0,0,1/np.square(self.sb)]])
       # Deltas
       self.db=int(np.sqrt(-2*self.sb*self.sb*np.log(cutlev*rms/datamax)))
       self.ds=int(np.sqrt(-2*self.ss*self.ss*np.log(cutlev*rms/datamax)))
@@ -232,59 +241,307 @@ class BubbleClumps:
          self.residual.add_flux(-rem*cb,lb,ub)
          self.syn.add_flux(rem*cb,lb,ub)
          self._update_energies(lb,ub)
+      # Type hack..
+      self.positions=np.array(self.positions)
+      # TODO: put this in cube
+      sh=cube.data.shape
+      xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
+      print xi.shape
+      print cube.data.shape
+      grid = mlab.pipeline.scalar_field(xi, yi, zi, cube.data)
+      mmin = cube.data.min()
+      mmax = cube.data.max()
+      figure = mlab.figure('Orig')
+      mlab.pipeline.volume(grid)
+#, vmin=mmin, vmax=mmin + .*(mmax-mmin))
+      mlab.axes()
+      #mlab.show()
+      figure = mlab.figure('Synthetic')
+      grid = mlab.pipeline.scalar_field(xi, yi, zi, self.syn.data)
+      mmin = self.syn.data.min()
+      mmax = self.syn.data.max()
+      mlab.pipeline.volume(grid)
+#, vmin=mmin, vmax=mmin + .5*(mmax-mmin))
+      mlab.axes()
+      mlab.show()
 
-   def clusterize(self,verbose=False):
-      """Under development """
-      # Heriarchical Clustering
-      # Compute the condensated eucledian distance matrix
-      vect=np.array(self.positions)
-      M=dist.pdist(vect)
-      # Compute the weighting factors of the distance matrix
-      #W=dist.pdist(self.amplitudes,lambda u,v: u+v)
-      # Perform agglomerative clustering
-      #Z=hier.linkage(M*W)
-      Z=hier.linkage(M)
-      hier.dendrogram(Z)
-      plt.show()
-      samp=1000
-      #offset=5
-      #mult=5
-      #n=1
-      #for j in range(ll):
-         #k=j*mult+offset
-         #T=hier.fcluster(Z,k,criterion='maxclust')
-         #plt.subplot(ll, 3, n)
-         #colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
-         #plt.imshow(self.syn.get_stacked(axis=2),cmap='Greys')
-         #for i in range(k+1):
-         #   v=vect[T==i]
-         #   print v
-         #   plt.scatter(v[:,1],v[:,0], color=next(colors),marker='+',alpha=0.5)
-         #n=n+1
-         #plt.subplot(ll, 3, n)
-         #colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
-         #plt.imshow(self.syn.get_stacked(axis=1),cmap='Greys')
-         #for i in range(k+1):
-         #   v=vect[T==i]
-         #   plt.scatter(v[:,2],v[:,0], color=next(colors),marker='+',alpha=0.5)
-         #n=n+1
-         #plt.subplot(ll, 3, n)
-         #plt.subplot(ll/3, 3, n)
-         #colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
-         #plt.imshow(self.syn.get_stacked(axis=0),cmap='binary')
-         #for i in range(k+1):
-         #   v=vect[T==i]
-         #   plt.scatter(v[:,2],v[:,1], color=next(colors),marker='+',alpha=0.5)
-         #n=n+1
-      nnn=[]
-      for j in range(samp):
-         T=hier.fcluster(Z,0.1+2.0*j/(float(samp)))
-         nnn.append(max(T))
-      plt.plot(nnn)
-      plt.show()
+      
 
-     
+   def linkage(self,verbose=False,show_dendogram=False):
+      vect=self.positions
+      print vect
+      self.D=dist.pdist(vect,lambda x,y: np.exp(-(x-y).T*self.S*(x-y)))
+      self.link=hier.linkage(D)
+      if show_dendogram:
+         hier.dendrogram(self.link)
+         plt.show()
+
+   def reasonable_cluster(self):
+       two_delta=2*self.db*np.sqrt(3)
+       cl=self.clustering(two_delta)
+       plt.clf()
+       fig = plt.figure(1, figsize=(4, 3))
+       print " eps="+str(two_delta)+" k="+str(cl.labels_.max()+1)
+       self.draw_cluster(fig,cl)
+       plt.show()
+
+   def selected_clusters(self,n_sols):
+       v_ini=1.0
+       self.solution=[]
+       #self.scores=[]
+       cl=self.clustering(1.0)
+       old_labels=cl.labels_
+       labels=old_labels
+       while True:
+          cl=self.clustering(v_ini)
+          labels=cl.labels_
+          #score=ami_score(labels,old_labels)
+          #self.scores.append(score)
+          lab_max=labels.max()
+          lab_min=labels.min()
+          print v_ini,lab_max,lab_min
+          old_labels=labels
+          v_ini+=1
+          if lab_max > -1:
+             self.solution.append(cl)
+          else:
+             continue
+          if lab_min == lab_max:
+              break
+       #print self.scores
+       #plt.clf()
+       #plt.plot(self.scores)
+       #plt.show()
+       si=len(self.solution)
+       affin=np.zeros((si,si))
+       for i in range(si):
+          for j in range(si):
+             affin[i,j]=ami_score(self.solution[i].labels_,self.solution[j].labels_)
+       affin+=1
+       sclust=SpectralClustering(n_clusters=n_sols,affinity='precomputed')
+       sclust.fit(affin)
+       slabels=sclust.labels_
+       sscore=[0]*n_sols
+       sol_tmp=[None]*n_sols
+       sol_eps=[0]*n_sols
+       for i in range(si):
+          k=slabels[i]
+          c_score=affin[i,slabels==k].sum()
+          if c_score > sscore[k]:
+             sscore[k]=c_score
+             sol_tmp[k]=self.solution[i]
+             sol_eps[k]=i
+       self.solution=sol_tmp
+       plt.clf()
+       f_num=0
+       for cl in self.solution:
+           f_num+=1
+           fig = plt.figure(f_num, figsize=(4, 3))
+           print "sol "+str(f_num)+" eps="+str(sol_eps[f_num-1])+" k="+str(cl.labels_.max()+1)
+           self.draw_cluster(fig,cl)
+       plt.show()
 
 
+   def clustering(self,val,method='dbscan'):
+       pos=self.positions
+       if method=='dbscan':
+          clust=DBSCAN(eps=val).fit(pos) # epsilon
+       elif method=='kmeans':
+          clust=KMeans(n_clusters=int(val)).fit(pos) # k-clusters
+       elif method=='agglomerative':
+          clust=self.agglo_clust(val); # inconsistency
+       elif method=='affinity_propagation':
+          clust=AffinityPropagation(damping=val).fit(pos)  # damping
+       elif method=='spectral': 
+          clust=SpectralClustering(n_clusters=int(val)).fit(pos) # n-clusters
+       else:
+          log.warning("The clustering algorithm is not supported yet.")
+       return clust
+
+   def agglo_clust(self,val,criterion='inconsistent'):
+       lab=hier.fcluster(self.link,val,criterion=criterion)
+       return namedtuple('labels_',lab,'linkage_',self.link,'pdist_',self.dist)
+
+   def draw_cluster(self,fig,clust):
+       
+       ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
+
+       plt.cla()
+       amp=np.array(self.amplitudes)
+       amp=300.0*amp/amp.max()
+       labels = clust.labels_
+       lab_select=labels[labels>-1]
+       pos_select=self.positions[labels>-1,:]
+       sur_select=amp[labels>-1]
+       pos_noselect=self.positions[labels==-1,:]
+       sur_noselect=amp[labels==-1]
+       ax.scatter(pos_noselect[:, 2], pos_noselect[:, 1], pos_noselect[:, 0], c='black',alpha=0.5,s=sur_noselect)
+       ax.scatter(pos_select[:, 2], pos_select[:, 1], pos_select[:, 0], c=lab_select.astype(np.float),alpha=0.5,s=sur_select)
+
+       ax.w_xaxis.set_ticklabels([])
+       ax.w_yaxis.set_ticklabels([])
+       ax.w_zaxis.set_ticklabels([])
+       ax.set_xlabel('Declination')
+       ax.set_ylabel('Right Ascension')
+       ax.set_zlabel('Velocity')
 
 
+   def test_clustering(self):
+
+       plt.clf()
+       cl=self.clustering(30,'dbscan')
+       fig = plt.figure(1, figsize=(4, 3))
+       plt.title('dbscan')
+       self.draw_cluster(fig,cl)
+
+       cl=self.clustering(0.7,'affinity_propagation')
+       fig = plt.figure(2, figsize=(4, 3))
+       plt.title('affinity_propagation')
+       self.draw_cluster(fig,cl)
+
+       cl=self.clustering(5,'kmeans')
+       fig = plt.figure(3, figsize=(4, 3))
+       plt.title('kmeans')
+       self.draw_cluster(fig,cl)
+
+       cl=self.clustering(5,'spectral')
+       fig = plt.figure(4, figsize=(4, 3))
+       plt.title('spectral')
+       self.draw_cluster(fig,cl)
+
+       #self.linkage()
+       #cl=self.clustering(0.8,'agglomerative')
+       #fig = plt.figure(5, figsize=(4, 3))
+       #plt.title('agglomerative')
+
+       #self.draw_cluster(fig,cl)
+       plt.show()
+ 
+
+
+      
+#   def recursive_candidate(self,l_labels,r_labels,val,l_val,r_val,ami_th=0.6,granularity=1.0,method='dbscan'):
+#       if r_val - l_val < granularity:
+#          return
+#       clust=self.clustering(val,method)
+#       labels=clust.labels_
+#       print labels
+#       print r_labels
+#       print l_labels
+#       l_ami=ami_score(labels,l_labels)
+#       r_ami=ami_score(labels,r_labels)
+#       #print l_labels
+#       #print r_labels
+#       print "val = "+str(val)
+#       #print "l_val = "+str(l_val)
+#       #print "r_val = "+str(r_val)
+#       #print "l_ami = "+str(l_ami)
+#       #print "r_ami = "+str(r_ami)
+#       flag=0;
+#       if (l_ami < ami_th):
+#          flag=1
+#          self.recursive_candidate(l_labels,labels,(l_val + val)/2.0,l_val,val,ami_th,granularity,method)
+#       if (r_ami < ami_th):
+#          flag=1
+#          self.recursive_candidate(labels,r_labels,(r_val + val)/2.0,val,r_val,ami_th,granularity,method)
+#       if flag!=0:
+#          self.solution.append(clust)
+#          print "candidates = "+str(len(self.solution))
+#
+#   def cluster_candidates(self,ami_th=0.6,method='dbscan'):
+#       pos=self.positions
+#       if method=='dbscan':
+#          v_ini=2.0
+#          v_end=self.positions.max()/2.0
+#          granularity=1.0
+#       elif method=='kmeans':
+#          v_ini=1
+#          v_end=self.positions.shape[0]/2.0
+#          granularity=1.0
+#       elif method=='agglomerative':
+#          v_ini=0.0
+#          v_end=10.0
+#          granularity=0.01
+#          clust=self.agglo_clust(val); # inconsistency
+#       elif method=='affinity_propagation':
+#          v_ini=0.5
+#          v_end=0.9
+#          granularity=0.001
+#       elif method=='spectral':
+#          v_ini=1
+#          v_end=self.positions.shape[0]/2.0
+#          granularity=1.0
+#       log.info("v_ini="+str(v_ini)+" v_end="+str(v_end))
+#       self.solution=[]
+#       cl=self.clustering(v_ini,method)
+#       self.solution.append(cl)
+#       l_labels=cl.labels_
+#       cl=self.clustering(v_end,method)
+#       self.solution.append(cl)
+#       r_labels=cl.labels_
+#       self.recursive_candidate(l_labels,r_labels,(v_ini + v_end)/2.0,v_ini,v_end,ami_th=ami_th,granularity=granularity,method=method)
+#       f_num=0
+#       plt.clf()
+#       for cl in self.solution:
+#           f_num+=1
+#           fig = plt.figure(f_num, figsize=(4, 3))
+#           self.draw_cluster(fig,cl)
+#       plt.show()
+
+
+#   def clusterize(self,verbose=False):
+#      # Binary Search
+#      
+#      pos=np.array(self.positions)
+#      for j in range(20):
+#         db = DBSCAN(eps=1.0+10.0*j,).fit(pos)
+#         vect=db.labels_
+#         k=int(np.max(db.labels_))
+#         print vect
+#         print k
+#         colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
+#         plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
+#         v=pos[vect==-1]
+#         plt.scatter(v[:,2],v[:,1], color='black',marker='+',alpha=0.5)
+#         for i in range(k+1):
+#            v=pos[vect==i]
+#            plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
+#         plt.show()
+#
+#
+#   def clusterize_hier(self,verbose=False):
+#      """Under development """
+#      # Heriarchical Clustering
+#      # Compute the condensated eucledian distance matrix
+#      vect=np.array(self.positions)
+#      M=dist.pdist(vect,lambda x,y: np.exp(-(x-y).T*self.S*(x-y)))
+#      Z=hier.linkage(M)
+#      hier.dendrogram(Z)
+#      plt.show()
+#      T=hier.fcluster(Z,0.0)
+#      lim=float(max(T))/2.0
+#      print "lim",lim
+#      step=0.01
+#      val=0.0
+#      while True:
+#         #print "val",val
+#         val+=step
+#         T=hier.fcluster(Z,val)
+#         k=max(T)
+#         #print "k,lim",k,lim
+#         if k < lim:
+#            break
+#
+#      colors = iter(cm.rainbow(np.linspace(0, 1, k+1)))
+#      plt.imshow(self.syn.get_stacked(axis=0),cmap='Greys')
+#      for i in range(k+1):
+#         v=vect[T==i]
+#         print v
+#         plt.scatter(v[:,2],v[:,1], color=next(colors),marker='o',alpha=0.5)
+#      plt.show()
+#
+#     
+#
+#
+#
+#

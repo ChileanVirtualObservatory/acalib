@@ -12,7 +12,7 @@ from astropy.vo.samp import SAMPIntegratedClient
 from urlparse import urlparse, urljoin
 import time
 import tempfile
-import data as dt
+import adata as dt
 
 def create(name):
    ws=dict()
@@ -78,15 +78,14 @@ def _fits_consumer(path,name,ws=_ws_df):
 
          #print ndd.get_flux()
          ### SCALE DATA TEST ###
-         start_time = time.time()
-         scale = ndd.scale(2)
-         print("--- %s seconds ---" % (time.time() - start_time))
 
-         scale = _create_cube(np.array([scale]), hdu.header)
+         #scale = ndd.scale(2)
+         
+         #scale = _create_cube(np.array([scale]), hdu.header)
          #print scale.get_flux()  ## SAME FLUX
          counter+=1
-         ide = name+"-"+str(counter)
-         ws[ide] = scale
+         #ide = name+"-"+str(counter)
+         #ws[ide] = scale
 
 
          ### CUT DATA TEST ####

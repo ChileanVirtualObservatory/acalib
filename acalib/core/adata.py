@@ -237,21 +237,7 @@ class AData(ndd.NDData):
    
     def variance(self):
         return self.data.std()
-
-#    def _add_HDU(self, hdu):
-#    		self.hdulist.append(hdu)
-    
-#    def save_fits(self, filename):
-#    		""" Simple as that... saves the whole cube """
-#    		# TODO: Check this, I think we should add STOKES to be 100% compatible to ALMA
-#    		# TODO: Add a proper wcs._to_header or wcs._to_fits...
-#    		self.hdulist.writeto(filename, clobber=True)
-#    
-#    def _updatefig(self, j):
-#    		""" Animate helper function """
-#    		self.im.set_array(self.data[j, :, :])
-#    		return self.im,
-    
+       
 #    def animate(self, inte, rep=True):
 #    		#TODO: this is not ported to the new wcs usage: maybe we must use wcsaxes to plot the wcs information...
 #    		""" Simple animation of the cube.
@@ -266,29 +252,4 @@ class AData(ndd.NDData):
 #    		ani = animation.FuncAnimation(fig, self._updatefig, frames=range(len(self.freq_axis)), interval=inte, blit=True,
 #    																	repeat=rep)
 #    		plt.show()
-
-#    def max_energy(self,sc,idx):
-#          target=self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]]
-#          if target.shape != sc.shape:
-#            si=np.array([0,sc.shape[2],0,sc.shape[1],0,sc.shape[0]])
-#            mm=target.min()
-#            datum=mm*np.ones_like(sc)
-#            if idx[4] == 0:
-#               si[4]=si[5]  - idx[5]
-#            if idx[2] == 0:
-#               si[2]=si[3]  - idx[3]
-#            if idx[0] == 0:
-#               si[0]=si[1]  - idx[1]
-#            if idx[5] == self.nu_axis.size:
-#               si[5] =idx[5] - idx[4] 
-#            if idx[3] == self.dec_axis.size:
-#               si[3] =idx[3] - idx[2] 
-#            if idx[1] == self.ra_axis.size:
-#               si[1] =idx[1] - idx[0]
-#            datum[si[4]:si[5],si[2]:si[3],si[0]:si[1]]=target
-#            #max_energy=(self.data[idx[4]:idx[5],idx[2]:idx[3],idx[0]:idx[1]]/sc[si[4]:si[5],si[2]:si[3],si[0]:si[1]]).min()
-#          else:
-#            datum=target
-#          max_energy=(datum/sc).min()
-#          return max_energy
 
