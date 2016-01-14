@@ -9,7 +9,7 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 import wx.lib.inspection
 #from wx.lib.mixins.listctrl import ColumnSorterMixin
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
-import core.workspace as ws
+import acalib.core.workspace as ws
 from astropy.nddata import NDData
 from astropy.table import Table
 from matplotlib import pyplot as plt  
@@ -17,8 +17,9 @@ from matplotlib import pyplot as plt
 def load_test():
    #ws.import_file("../fits/calibrated.ms.image.spectrum.J113740.6-010454.spw0.image.fits")
    #ws.import_file("../fits/calibrated.ms.line.spw0.source15.image.fits" )
-   #ws.import_file("../fits/M100line.image.fits" )
+   ws.import_file("../fits/M100line.image.fits" )
    ws.import_file("../fits/Orion.methanol.cbc.contsub.image.fits" )
+   ws.import_file("../fits/HOT2_EI__e_03_TE_source.6.13CO.image.pbcor.fits")
    #ws.import_file("../fits/NGC6240_continuum.fits")
    #ws.import_file("../fits/logfile_alma_hatlas_cycle1_inc-z_beye.fits")
 

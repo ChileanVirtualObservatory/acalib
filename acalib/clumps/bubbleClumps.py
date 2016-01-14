@@ -14,7 +14,7 @@ from sklearn.metrics.cluster import adjusted_mutual_info_score as ami_score
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import metrics
 import matplotlib.cm as cm
-
+from mayavi import mlab
 
 class BubbleClumps:
 
@@ -243,7 +243,29 @@ class BubbleClumps:
          self._update_energies(lb,ub)
       # Type hack..
       self.positions=np.array(self.positions)
-  
+      # TODO: put this in cube
+      sh=cube.data.shape
+      xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
+      print xi.shape
+      print cube.data.shape
+      grid = mlab.pipeline.scalar_field(xi, yi, zi, cube.data)
+      mmin = cube.data.min()
+      mmax = cube.data.max()
+      figure = mlab.figure('Orig')
+      mlab.pipeline.volume(grid)
+#, vmin=mmin, vmax=mmin + .*(mmax-mmin))
+      mlab.axes()
+      #mlab.show()
+      figure = mlab.figure('Synthetic')
+      grid = mlab.pipeline.scalar_field(xi, yi, zi, self.syn.data)
+      mmin = self.syn.data.min()
+      mmax = self.syn.data.max()
+      mlab.pipeline.volume(grid)
+#, vmin=mmin, vmax=mmin + .5*(mmax-mmin))
+      mlab.axes()
+      mlab.show()
+
+      
 
    def linkage(self,verbose=False,show_dendogram=False):
       vect=self.positions
@@ -254,23 +276,38 @@ class BubbleClumps:
          hier.dendrogram(self.link)
          plt.show()
 
-   def scan(self,max_sol):
+   def reasonable_cluster(self):
+       two_delta=2*self.db*np.sqrt(3)
+       cl=self.clustering(two_delta)
+       plt.clf()
+       fig = plt.figure(1, figsize=(4, 3))
+       print " eps="+str(two_delta)+" k="+str(cl.labels_.max()+1)
+       self.draw_cluster(fig,cl)
+       plt.show()
+
+   def selected_clusters(self,n_sols):
        v_ini=1.0
        self.solution=[]
        #self.scores=[]
-       cl=self.clustering(0.5)
+       cl=self.clustering(1.0)
        old_labels=cl.labels_
-       while len(self.solution)<max_sol:
+       labels=old_labels
+       while True:
           cl=self.clustering(v_ini)
           labels=cl.labels_
           #score=ami_score(labels,old_labels)
           #self.scores.append(score)
-          if labels.max() > 0:
-             self.solution.append(cl)
-       #      print labels
+          lab_max=labels.max()
+          lab_min=labels.min()
+          print v_ini,lab_max,lab_min
           old_labels=labels
           v_ini+=1
-       f_num=0
+          if lab_max > -1:
+             self.solution.append(cl)
+          else:
+             continue
+          if lab_min == lab_max:
+              break
        #print self.scores
        #plt.clf()
        #plt.plot(self.scores)
@@ -280,12 +317,27 @@ class BubbleClumps:
        for i in range(si):
           for j in range(si):
              affin[i,j]=ami_score(self.solution[i].labels_,self.solution[j].labels_)
-       print affin
-       
+       affin+=1
+       sclust=SpectralClustering(n_clusters=n_sols,affinity='precomputed')
+       sclust.fit(affin)
+       slabels=sclust.labels_
+       sscore=[0]*n_sols
+       sol_tmp=[None]*n_sols
+       sol_eps=[0]*n_sols
+       for i in range(si):
+          k=slabels[i]
+          c_score=affin[i,slabels==k].sum()
+          if c_score > sscore[k]:
+             sscore[k]=c_score
+             sol_tmp[k]=self.solution[i]
+             sol_eps[k]=i
+       self.solution=sol_tmp
        plt.clf()
+       f_num=0
        for cl in self.solution:
            f_num+=1
            fig = plt.figure(f_num, figsize=(4, 3))
+           print "sol "+str(f_num)+" eps="+str(sol_eps[f_num-1])+" k="+str(cl.labels_.max()+1)
            self.draw_cluster(fig,cl)
        plt.show()
 
@@ -315,12 +367,16 @@ class BubbleClumps:
        ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
 
        plt.cla()
+       amp=np.array(self.amplitudes)
+       amp=300.0*amp/amp.max()
        labels = clust.labels_
        lab_select=labels[labels>-1]
        pos_select=self.positions[labels>-1,:]
+       sur_select=amp[labels>-1]
        pos_noselect=self.positions[labels==-1,:]
-       ax.scatter(pos_noselect[:, 2], pos_noselect[:, 1], pos_noselect[:, 0], c='black',alpha=0.5)
-       ax.scatter(pos_select[:, 2], pos_select[:, 1], pos_select[:, 0], c=lab_select.astype(np.float))
+       sur_noselect=amp[labels==-1]
+       ax.scatter(pos_noselect[:, 2], pos_noselect[:, 1], pos_noselect[:, 0], c='black',alpha=0.5,s=sur_noselect)
+       ax.scatter(pos_select[:, 2], pos_select[:, 1], pos_select[:, 0], c=lab_select.astype(np.float),alpha=0.5,s=sur_select)
 
        ax.w_xaxis.set_ticklabels([])
        ax.w_yaxis.set_ticklabels([])
@@ -329,73 +385,6 @@ class BubbleClumps:
        ax.set_ylabel('Right Ascension')
        ax.set_zlabel('Velocity')
 
-   def recursive_candidate(self,l_labels,r_labels,val,l_val,r_val,ami_th=0.6,granularity=1.0,method='dbscan'):
-       if r_val - l_val < granularity:
-          return
-       clust=self.clustering(val,method)
-       labels=clust.labels_
-       print labels
-       print r_labels
-       print l_labels
-       l_ami=ami_score(labels,l_labels)
-       r_ami=ami_score(labels,r_labels)
-       #print l_labels
-       #print r_labels
-       print "val = "+str(val)
-       #print "l_val = "+str(l_val)
-       #print "r_val = "+str(r_val)
-       #print "l_ami = "+str(l_ami)
-       #print "r_ami = "+str(r_ami)
-       flag=0;
-       if (l_ami < ami_th):
-          flag=1
-          self.recursive_candidate(l_labels,labels,(l_val + val)/2.0,l_val,val,ami_th,granularity,method)
-       if (r_ami < ami_th):
-          flag=1
-          self.recursive_candidate(labels,r_labels,(r_val + val)/2.0,val,r_val,ami_th,granularity,method)
-       if flag!=0:
-          self.solution.append(clust)
-          print "candidates = "+str(len(self.solution))
-
-   def cluster_candidates(self,ami_th=0.6,method='dbscan'):
-       pos=self.positions
-       if method=='dbscan':
-          v_ini=2.0
-          v_end=self.positions.max()/2.0
-          granularity=1.0
-       elif method=='kmeans':
-          v_ini=1
-          v_end=self.positions.shape[0]/2.0
-          granularity=1.0
-       elif method=='agglomerative':
-          v_ini=0.0
-          v_end=10.0
-          granularity=0.01
-          clust=self.agglo_clust(val); # inconsistency
-       elif method=='affinity_propagation':
-          v_ini=0.5
-          v_end=0.9
-          granularity=0.001
-       elif method=='spectral':
-          v_ini=1
-          v_end=self.positions.shape[0]/2.0
-          granularity=1.0
-       log.info("v_ini="+str(v_ini)+" v_end="+str(v_end))
-       self.solution=[]
-       cl=self.clustering(v_ini,method)
-       self.solution.append(cl)
-       l_labels=cl.labels_
-       cl=self.clustering(v_end,method)
-       self.solution.append(cl)
-       r_labels=cl.labels_
-       self.recursive_candidate(l_labels,r_labels,(v_ini + v_end)/2.0,v_ini,v_end,ami_th=ami_th,granularity=granularity,method=method)
-       f_num=0
-       plt.clf()
-       for cl in self.solution:
-           f_num+=1
-           fig = plt.figure(f_num, figsize=(4, 3))
-           self.draw_cluster(fig,cl)
-       plt.show()
 
    def test_clustering(self):
 
@@ -427,7 +416,77 @@ class BubbleClumps:
 
        #self.draw_cluster(fig,cl)
        plt.show()
-       
+ 
+
+
+      
+#   def recursive_candidate(self,l_labels,r_labels,val,l_val,r_val,ami_th=0.6,granularity=1.0,method='dbscan'):
+#       if r_val - l_val < granularity:
+#          return
+#       clust=self.clustering(val,method)
+#       labels=clust.labels_
+#       print labels
+#       print r_labels
+#       print l_labels
+#       l_ami=ami_score(labels,l_labels)
+#       r_ami=ami_score(labels,r_labels)
+#       #print l_labels
+#       #print r_labels
+#       print "val = "+str(val)
+#       #print "l_val = "+str(l_val)
+#       #print "r_val = "+str(r_val)
+#       #print "l_ami = "+str(l_ami)
+#       #print "r_ami = "+str(r_ami)
+#       flag=0;
+#       if (l_ami < ami_th):
+#          flag=1
+#          self.recursive_candidate(l_labels,labels,(l_val + val)/2.0,l_val,val,ami_th,granularity,method)
+#       if (r_ami < ami_th):
+#          flag=1
+#          self.recursive_candidate(labels,r_labels,(r_val + val)/2.0,val,r_val,ami_th,granularity,method)
+#       if flag!=0:
+#          self.solution.append(clust)
+#          print "candidates = "+str(len(self.solution))
+#
+#   def cluster_candidates(self,ami_th=0.6,method='dbscan'):
+#       pos=self.positions
+#       if method=='dbscan':
+#          v_ini=2.0
+#          v_end=self.positions.max()/2.0
+#          granularity=1.0
+#       elif method=='kmeans':
+#          v_ini=1
+#          v_end=self.positions.shape[0]/2.0
+#          granularity=1.0
+#       elif method=='agglomerative':
+#          v_ini=0.0
+#          v_end=10.0
+#          granularity=0.01
+#          clust=self.agglo_clust(val); # inconsistency
+#       elif method=='affinity_propagation':
+#          v_ini=0.5
+#          v_end=0.9
+#          granularity=0.001
+#       elif method=='spectral':
+#          v_ini=1
+#          v_end=self.positions.shape[0]/2.0
+#          granularity=1.0
+#       log.info("v_ini="+str(v_ini)+" v_end="+str(v_end))
+#       self.solution=[]
+#       cl=self.clustering(v_ini,method)
+#       self.solution.append(cl)
+#       l_labels=cl.labels_
+#       cl=self.clustering(v_end,method)
+#       self.solution.append(cl)
+#       r_labels=cl.labels_
+#       self.recursive_candidate(l_labels,r_labels,(v_ini + v_end)/2.0,v_ini,v_end,ami_th=ami_th,granularity=granularity,method=method)
+#       f_num=0
+#       plt.clf()
+#       for cl in self.solution:
+#           f_num+=1
+#           fig = plt.figure(f_num, figsize=(4, 3))
+#           self.draw_cluster(fig,cl)
+#       plt.show()
 
 
 #   def clusterize(self,verbose=False):
