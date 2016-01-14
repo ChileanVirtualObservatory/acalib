@@ -8,7 +8,6 @@ from astropy import log
 import astropy.nddata as ndd
 import numpy.ma as ma
 import astropy.wcs as astrowcs
-import matplotlib.pyplot as plt
 import parameter as par
 import time
 import traceback
@@ -69,62 +68,50 @@ class AData(ndd.NDData):
     def data(self, value):
         self._data = value
     
+    def empty_like(self):
+    	dat=np.zeros_like(self.data)
+    	cb=AData(dat,self.wcs,self.meta,self.unit)
+    	return cb
+
+    def copy(self):
+        return copy.deepcopy(self)
+
     def estimate_rms(self):
        sigma=self.data.std()
        mu=self.data.mean()
        return np.sqrt(sigma*sigma + mu*mu)
 
-    def get_wcs_limits(self,axis):
-       lower=self.wcs.wcs_pix2world([[0,0,0]], 0) - self.wcs.wcs.cdelt/2.0
-       shape=self.data.shape
-       shape=[shape[::-1]]
-       upper=self.wcs.wcs_pix2world(shape, 1) + self.wcs.wcs.cdelt/2.0
-       #print lower,upper
-       return (lower[0][axis],upper[0][axis])    
-
-    def copy(self):
-        return copy.deepcopy(self)
 
     # TODO: get_flux should be for any slice, need more parameters
-    def get_flux(self):
+    def flux(self):
     	return np.sum(self.data)   
     
     def count(self):
         return self.data.count()
     
-    def empty_like(self):
-    	dat=np.zeros_like(self.data)
-    	cb=AData(dat,self.wcs,self.meta,self.unit)
-    	return cb
     
 
-    def scale(self, scale):
-        dim = 0
-        start_time = time.time()
-        if (scale == 1):
-            return self.data
-        elif (scale < 1):
-            new_data = self.data[::1/scale, ::1/scale, ::1/scale]
-            return (new_data/np.sum(new_data))*np.sum(self.data)
-        else:
-            new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
-            new_data[::scale, ::scale, ::scale] = self.data
-            
+    def shape(self):
+        return self.data.shape
+   
+    def max(self):
+    	        index=np.unravel_index(np.argmax(self.data),self.data.shape)
+    		y=self.data[index]
+    		return (y,index)
+    
+    def min(self):
+    		index=np.unravel_index(np.argmin(self.data),self.data.shape)
+    		y=self.data[index]
+    		return (y,index)
 
-            new_data = interpolate(new_data, scale)          
+    def variance(self):
+        return self.data.std()
 
-            return new_data
+    def stack(self,lower=None,upper=None,axis=(0)):
+                sli=self.slice(lower,upper)
+    		return np.sum(self.data[sli],axis=axis)
 
-
-    def rotate(self, angle):
-        if (angle != 0):
-            new_data = self.data.rotate(angle, Image.BICUBIC,1)
-            return new_data
-        else:
-            return self.data
-    							 
-    	 
-    def m_slice(self,lower,upper):
+    def _slice(self,lower,upper):
                 #traceback.print_stack()
     		if lower==None:
     				lower=(0,0,0)
@@ -152,37 +139,35 @@ class AData(ndd.NDData):
     				upper[uuc]=np.array(self.data.shape)[uuc]
     		return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2])]
     			
-    def get_stacked(self,lower=None,upper=None,axis=(0)):
-                sli=self.m_slice(lower,upper)
-    		return np.sum(self.data[sli],axis=axis)
-    
-    def add_flux(self,flux,lower=None,upper=None):
-    		sli=self.m_slice(lower,upper)
-    		fl=np.array([0,0,0])
-    		fu=np.array(flux.shape)
-    		for i in range(0,3):
-    			 if sli[i].start == 0:
-    					fl[i]=flux.shape[i] - sli[i].stop
-    			 if sli[i].stop == self.data.shape[i]:
-    					fu[i]=sli[i].stop - sli[i].start
-    		self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
 
-    def shape(self):
-        return self.data.shape
-   
-    def max(self):
-                #try:
-    	        index=np.unravel_index(np.argmax(self.data),self.data.shape)
-    		y=self.data[index]
-                #except ValueError:
-                #y=np.nan
-                #index=np.nan
-    		return (y,index)
-    
-    def min(self):
-    		index=np.unravel_index(np.argmin(self.data),self.data.shape)
-    		y=self.data[index]
-    		return (y,index)
+    def scale(self, scale):
+        dim = 0
+        start_time = time.time()
+        if (scale == 1):
+            return self.data
+        elif (scale < 1):
+            new_data = self.data[::1/scale, ::1/scale, ::1/scale]
+            return (new_data/np.sum(new_data))*np.sum(self.data)
+        else:
+            new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
+            new_data[::scale, ::scale, ::scale] = self.data
+            
+
+            new_data = interpolate(new_data, scale)          
+
+            return new_data
+
+
+    def rotate(self, angle):
+        if (angle != 0):
+            new_data = self.data.rotate(angle, Image.BICUBIC,1)
+            return new_data
+        else:
+            return self.data
+    							 
+
+    	 
+    # WCS
     
     def index_to_wcs(self,index):
     		val=self.wcs.wcs_pix2world([index[::-1]],0)
@@ -191,9 +176,17 @@ class AData(ndd.NDData):
     
     def get_axis_names(self):
     		return self.wcs.axis_type_names
+
+    def get_wcs_limits(self,axis):
+       lower=self.wcs.wcs_pix2world([[0,0,0]], 0) - self.wcs.wcs.cdelt/2.0
+       shape=self.data.shape
+       shape=[shape[::-1]]
+       upper=self.wcs.wcs_pix2world(shape, 1) + self.wcs.wcs.cdelt/2.0
+       return (lower[0][axis],upper[0][axis])    
+
      
     def get_index_features(self,lower=None,upper=None):
-                sli=self.m_slice(lower,upper)
+                sli=self.slice(lower,upper)
                 x=np.arange(sli[0].start,sli[0].stop)
                 y=np.arange(sli[1].start,sli[1].stop)
                 z=np.arange(sli[2].start,sli[2].stop)
@@ -212,7 +205,7 @@ class AData(ndd.NDData):
     		return f
     
     def get_slice(self,lower=None,upper=None):
-    		sli=self.m_slice(lower,upper)
+    		sli=self.slice(lower,upper)
     		return self.data[sli[0],sli[1],sli[2]].copy()
     
     def index_from_window(self,wcs_center,wcs_window):
@@ -222,6 +215,9 @@ class AData(ndd.NDData):
 		   upper=np.array([ld,lu]).max(axis=0)
 		   return (lower[0][::-1],upper[0][::-1])
 
+
+    # Make modifications
+       
     def standarize(self):
        y_min=self.data.min()
        self.data=self.data - y_min
@@ -232,11 +228,20 @@ class AData(ndd.NDData):
     def unstandarize(self,(y_min,y_fact)):
         self.data=self.data*y_fact + y_min
 
-    def sum(self):
-        return self.data.sum()
-   
-    def variance(self):
-        return self.data.std()
+    
+    def add_flux(self,flux,lower=None,upper=None):
+    		sli=self.slice(lower,upper)
+    		fl=np.array([0,0,0])
+    		fu=np.array(flux.shape)
+    		for i in range(0,3):
+    			 if sli[i].start == 0:
+    					fl[i]=flux.shape[i] - sli[i].stop
+    			 if sli[i].stop == self.data.shape[i]:
+    					fu[i]=sli[i].stop - sli[i].start
+    		self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
+
+
+
        
 #    def animate(self, inte, rep=True):
 #    		#TODO: this is not ported to the new wcs usage: maybe we must use wcsaxes to plot the wcs information...
