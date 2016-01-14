@@ -89,8 +89,6 @@ class AData(ndd.NDData):
     def count(self):
         return self.data.count()
     
-    
-
     def shape(self):
         return self.data.shape
    
@@ -108,7 +106,7 @@ class AData(ndd.NDData):
         return self.data.std()
 
     def stack(self,lower=None,upper=None,axis=(0)):
-                sli=self.slice(lower,upper)
+                sli=self._slice(lower,upper)
     		return np.sum(self.data[sli],axis=axis)
 
     def _slice(self,lower,upper):
@@ -139,7 +137,7 @@ class AData(ndd.NDData):
     				upper[uuc]=np.array(self.data.shape)[uuc]
     		return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2])]
     			
-
+#TODO: Only works for integers! (Axel... enjoy politics!)
     def scale(self, scale):
         dim = 0
         start_time = time.time()
@@ -150,9 +148,7 @@ class AData(ndd.NDData):
             return (new_data/np.sum(new_data))*np.sum(self.data)
         else:
             new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
-            new_data[::scale, ::scale, ::scale] = self.data
-            
-
+            #new_data[::scale, ::scale, ::scale] = self.data
             new_data = interpolate(new_data, scale)          
 
             return new_data
@@ -160,11 +156,14 @@ class AData(ndd.NDData):
 
     def rotate(self, angle):
         if (angle != 0):
-            new_data = self.data.rotate(angle, Image.BICUBIC,1)
+            new_data = self.data.data.rotate(angle, Image.BICUBIC,1)
             return new_data
         else:
             return self.data
     							 
+    def cut(self,lower=None,upper=None):
+    		sli=self._slice(lower,upper)
+    		return self.data[sli[0],sli[1],sli[2]].copy()
 
     	 
     # WCS
@@ -174,10 +173,10 @@ class AData(ndd.NDData):
     		if val.shape[0]==1: val=val[0]
     		return val
     
-    def get_axis_names(self):
+    def axis_names(self):
     		return self.wcs.axis_type_names
 
-    def get_wcs_limits(self,axis):
+    def wcs_limits(self,axis):
        lower=self.wcs.wcs_pix2world([[0,0,0]], 0) - self.wcs.wcs.cdelt/2.0
        shape=self.data.shape
        shape=[shape[::-1]]
@@ -185,8 +184,8 @@ class AData(ndd.NDData):
        return (lower[0][axis],upper[0][axis])    
 
      
-    def get_index_features(self,lower=None,upper=None):
-                sli=self.slice(lower,upper)
+    def index_features(self,lower=None,upper=None):
+                sli=self._slice(lower,upper)
                 x=np.arange(sli[0].start,sli[0].stop)
                 y=np.arange(sli[1].start,sli[1].stop)
                 z=np.arange(sli[2].start,sli[2].stop)
@@ -198,15 +197,12 @@ class AData(ndd.NDData):
                 return ii
 
 
-    def get_features(self,lower=None,upper=None):
+    def features(self,lower=None,upper=None):
                 ii=self.get_index_features(lower,upper)
     		f=self.wcs.wcs_pix2world(ii.T,0)
     		f=f.T
     		return f
     
-    def get_slice(self,lower=None,upper=None):
-    		sli=self.slice(lower,upper)
-    		return self.data[sli[0],sli[1],sli[2]].copy()
     
     def index_from_window(self,wcs_center,wcs_window):
 		   ld=np.rint(self.wcs.wcs_world2pix([wcs_center-wcs_window],0))
@@ -230,7 +226,7 @@ class AData(ndd.NDData):
 
     
     def add_flux(self,flux,lower=None,upper=None):
-    		sli=self.slice(lower,upper)
+    		sli=self._slice(lower,upper)
     		fl=np.array([0,0,0])
     		fu=np.array(flux.shape)
     		for i in range(0,3):
