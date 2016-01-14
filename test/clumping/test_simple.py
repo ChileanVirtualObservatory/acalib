@@ -7,11 +7,9 @@ import clumps.simpleClumps as sclumps
 import matplotlib.pyplot as plt
 
 ws.import_file("fits/M100line.image.fits")
-#ws.import_file("fits/Orion.methanol.cbc.contsub.image.fits")
 
 elm=ws.elements()
 cube=elm['M100line.image-0']
-#cube=elm['Orion.methanol.cbc.contsub.image-0']
 spar=cube.standarize()
 sc=sclumps.SimpleClumps()
 print "spar",spar
