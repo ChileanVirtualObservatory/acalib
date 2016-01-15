@@ -162,7 +162,7 @@ class AData(ndd.NDData):
     							 
     def cut(self,lower=None,upper=None):
     		sli=self._slice(lower,upper)
-    		return self.data[sli[0],sli[1],sli[2]].copy()
+    		return self.data[sli[0],sli[1],sli[2]]
 
     	 
     # WCS
