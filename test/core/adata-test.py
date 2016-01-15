@@ -58,19 +58,20 @@ log.info('WCS center= '+str(iw))
 #dt.index_features(self,lower=None,upper=None):
 #dt.features(self,lower=None,upper=None):
 
-plt.figure(1)
-plt.subplot(1,3,1)
-plt.imshow(dt.stack())
-plt.subplot(1,3,2)
-plt.imshow(dt.stack(axis=1))
-plt.subplot(1,3,3)
-plt.imshow(dt.stack(axis=2))
+#plt.figure(1)
+#plt.subplot(1,3,1)
+#plt.imshow(dt.stack())
+#plt.subplot(1,3,2)
+#plt.imshow(dt.stack(axis=1))
+#plt.subplot(1,3,3)
+#plt.imshow(dt.stack(axis=2))
+#plt.show()
 
+#log.info(str(dt.cut(lower=(20,300,300),upper=(22,302,302))))
 (y_min,y_fact)=dt.standarize()
 tflux=dt.flux()
 log.info('Normalized Total Flux =  '+str(tflux))
-dt.unstandarize((y_min,y_fact)
 
-plt.show()
-
-log.info(str(dt.cut(lower=(20,300,300),upper=(22,302,302))))
+dt.volume_show()
+dt.contour_show()
+dt.velocity_show()
