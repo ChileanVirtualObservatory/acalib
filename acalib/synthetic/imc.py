@@ -1,7 +1,7 @@
 from numpy import random
 from . import db
 from .vu import Component
-import core.flux as flx
+from ..core import flux as flx
 import astropy.units as u
 import numpy as np
 from astropy import log
@@ -23,7 +23,7 @@ from ..core.atable import ATable
 
 
 
-DEFAULT_DBPATH= 'ASYDO'
+DEFAULT_DBPATH= '../../bindata/db/ASYDO'
 
 
 class IMC(Component):
@@ -44,11 +44,11 @@ class IMC(Component):
     def project(self, cube, cutoff):
         # TODO Make all this with astropy units from the call functions
 
-        table = ATable("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity")
+        #table = ATable("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity")
 
         dba = db.lineDB(self.dbpath)  # Maybe we can have an always open DB
         dba.connect()
-        fwin = cube.get_wcs_limits(axis=2)
+        fwin = cube.wcs_limits(axis=2)
         # print "fwin",fwin
         cor_fwin = np.array(fwin/(1 + self.z))*u.Hz
         cor_fwin = cor_fwin.to(u.MHz).value
@@ -88,13 +88,14 @@ class IMC(Component):
 
                 # add line to the table.
                 # TODO: modificar ultimo valor, que corresponde a la intensidad.
-                table += (self.comp_name + "-l" + str(counter), mol, str(lin[2]), str(lin[3]), flux, "*")
+                #table += (self.comp_name + "-l" + str(counter), mol, str(lin[2]), str(lin[3]), flux, "*")
 
         dba.disconnect()
         if not used:
             return None
 
-        return table
+        #return table
+        return []
 
     def get_model_name(self):
         return "IMC"
