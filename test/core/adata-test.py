@@ -8,7 +8,8 @@ from matplotlib import pyplot as plt
 
 
 binpath='../../bindata/fits/cubes/'
-fn=binpath+'M100line.image.fits'
+fn=binpath+'Orion.methanol.cbc.contsub.image.fits'
+#fn=binpath+'M100line.image.fits'
 
 # Load from container
 c = AContainer()
@@ -68,10 +69,11 @@ log.info('WCS center= '+str(iw))
 #plt.show()
 
 #log.info(str(dt.cut(lower=(20,300,300),upper=(22,302,302))))
-(y_min,y_fact)=dt.standarize()
-tflux=dt.flux()
-log.info('Normalized Total Flux =  '+str(tflux))
+#(y_min,y_fact)=dt.standarize()
+#tflux=dt.flux()
+#log.info('Normalized Total Flux =  '+str(tflux))
 
+dt.stacked_show()
 dt.volume_show()
 dt.contour_show()
-dt.velocity_show()
+#dt.velocity_show()

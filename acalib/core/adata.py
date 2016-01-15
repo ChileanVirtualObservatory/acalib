@@ -197,7 +197,7 @@ class AData(ndd.NDData):
 
 
     def features(self,lower=None,upper=None):
-                ii=self.get_index_features(lower,upper)
+                ii=self.index_features(lower,upper)
     		f=self.wcs.wcs_pix2world(ii.T,0)
     		f=f.T
     		return f
@@ -240,53 +240,73 @@ class AData(ndd.NDData):
     def _get_mesh(self):
          sh=self.shape()
          xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
+         return xi,yi,zi
+
+    def _get_ranges(self):  
+         sh=self.shape()
          lower=self.wcs.wcs_pix2world([[0,0,0]], 0)
          lower=lower[0]
          sh=sh[::-1]
-         upper=self.wcs.wcs_pix2world([sh], 1) 
+         upper=self.wcs.wcs_pix2world([sh], 1)
          upper=upper[0]
-         extent=[lower[2],upper[2],lower[1],upper[1],lower[0],upper[0]]
-         #xx=np.linspace(lower[2],upper[2],shape[2])
-         #yy=np.linspace(lower[1],upper[1],shape[1])
-         #zz=np.linspace(lower[0],upper[0],shape[0])
-         #xi, yi, zi = np.meshgrid(xx,yy,zz,indexing='ij')
-         return xi,yi,zi,extent
-         
+         lfreq=lower[2]*u.Hz
+         ufreq=upper[2]*u.Hz
+         rfreq=self.wcs.wcs.restfrq*u.Hz
+         eq= u.doppler_radio(rfreq)
+         lvel=lfreq.to(u.km/u.s, equivalencies=eq)
+         uvel=ufreq.to(u.km/u.s, equivalencies=eq)
+         ranges=[lvel.value,uvel.value,lower[1],upper[1],lower[0],upper[0]]      
+         return ranges
 
     def volume_show(self):
-         xi, yi, zi,ranges = self._get_mesh()
+         xi, yi, zi = self._get_mesh()
+         ranges=self._get_ranges()
          grid = mlab.pipeline.scalar_field(xi, yi, zi, self.data)
          mmin = self.data.min()
          mmax = self.data.max()
          #figure = mlab.figure('Volume Plot')
          mlab.pipeline.volume(grid)#,vmin=mmin, vmax=mmin)
-         mlab.axes(xlabel="VEL",ylabel="DEC",zlabel="RA",ranges=ranges,nb_labels=5)
+         ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
+         ax.axes.label_format='%.3f'
          mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
          mlab.show()
 
  
     def contour_show(self):
-         xi, yi, zi,ranges = self._get_mesh()
+         xi, yi, zi = self._get_mesh()
+         ranges=self._get_ranges()
          mmin = self.min()
          mmax = self.max()
          figure = mlab.figure('Contour Plot')
          mlab.contour3d(xi,yi,zi,self.data,transparent=True,contours=10,opacity=0.5)
-         mlab.axes(xlabel="VEL",ylabel="DEC",zlabel="RA",ranges=ranges,nb_labels=5)
+         ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
+         ax.axes.label_format='%.3f'
          mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
          mlab.show()
     
-    def velocity_show(self):
-         img=self.stack()
-         figure = mlab.figure('Velocity Plot')
-         #mlab.imshow(img)
-         nn=self.data.shape[0]
-         vect=np.linspace(-nn/2.0,nn/2.0,nn)
-         vfield=np.average(self.data,axis=0,weights=vect)
-         mlab.colorbar(title='velocity', orientation='vertical', nb_labels=5)
-         mlab.surf(vfield)
-         mlab.show()
+#    def velocity_show(self):
+#         ranges=self._get_ranges()
+#         ranges=[ranges[2],ranges[3],ranges[4],ranges[5],ranges[0],ranges[1]]
+#         figure = mlab.figure('Velocity Plot')
+#         nn=self.data.shape[0]
+#         vect=np.linspace(0.0,1.0,nn)
+#         vfield=np.average(self.data,axis=0,weights=vect)
+#         mlab.surf(vfield,warp_scale="auto")
+#         ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="VEL [km/s] ",ranges=ranges,nb_labels=5)
+#         ax.axes.label_format='%.3f'
+#         mlab.colorbar(title='velocity', orientation='vertical', nb_labels=5)
+#         mlab.show()
         
-         
+    def stacked_show(self):
+         ranges=self._get_ranges()
+         ranges=[ranges[2],ranges[3],ranges[4],ranges[5],ranges[0],ranges[1]]
+         figure = mlab.figure('Stacked Plot')
+         img=self.stack()
+         mlab.imshow(img)
+         ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="VEL [km/s] ",ranges=ranges,nb_labels=5)
+         ax.axes.label_format='%.3f'
+         mlab.show()
+   
            
 #    def animate(self, inte, rep=True):
 #    		#TODO: this is not ported to the new wcs usage: maybe we must use wcsaxes to plot the wcs information...

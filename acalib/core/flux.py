@@ -1,5 +1,6 @@
 import astropy.units as u
 import numpy as np
+import parameter as par
 
 def clump_to_gauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
    # Parameter sanitization
@@ -48,7 +49,7 @@ def create_gauss_flux(cube,mu,P,peak,cutoff):
    #print "win",window
    lower,upper=cube.index_from_window(mu,window)
    #print lower,upper
-   feat=cube.get_features(lower,upper)
+   feat=cube.features(lower,upper)
    res=create_gauss(mu,P,feat,peak)
    res=res.reshape(upper[0]-lower[0],upper[1]-lower[1],upper[2]-lower[2])
    return res,lower,upper

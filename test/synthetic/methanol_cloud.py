@@ -1,7 +1,9 @@
-import matplotlib.pyplot as plt
-import synthetic.imc as imc
+import sys
+sys.path.append('../../')
+
+import acalib.synthetic.imc as imc
 import astropy.units as u
-import synthetic.vu as vu
+import acalib.synthetic.vu as vu
 import numpy as np
 import math
 import random
@@ -40,18 +42,15 @@ for i in range(10):
   univ.add_component('example',model)
 
 # Create Cube
-ang_res=np.array([1.0,1.0])*u.arcsec
+ang_res=np.array([2.0,2.0])*u.arcsec
 fov=np.array([200,200])*u.arcsec
 freq=229.5*u.GHz
-spe_res=0.005*u.GHz
-bw=2*u.GHz
+spe_res=0.01*u.GHz
+bw=1*u.GHz
 noise=0.01*u.Jy/u.beam
 
 (cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise)
 print tab
-plt.plot(cube.get_stacked(axis=(1,2)))
-plt.show()
-plt.clf
-plt.imshow(cube.get_stacked())
-plt.show()
-
+cube.stacked_show()
+cube.volume_show()
+cube.contour_show()

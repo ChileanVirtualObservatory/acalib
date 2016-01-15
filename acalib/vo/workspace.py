@@ -12,7 +12,7 @@ from astropy.vo.samp import SAMPIntegratedClient
 from urlparse import urlparse, urljoin
 import time
 import tempfile
-import adata as dt
+from ..core import adata as dt
 
 def create(name):
    ws=dict()

@@ -4,15 +4,14 @@ import numpy as np
 import astropy.constants as const
 
 import astropy.wcs as wcs
+import astropy.units as u
 
 from ..core import parameter as par
-from ..core import data as dt
+from ..core import adata as dt
 from ..core import atable
 from ..core.atable import ATable
-#import core.parameter as par
-#import core.data as dt
-#from core.data import *
-#from core.atable import ATable
+import copy
+
 
 class Universe:
     """
@@ -41,7 +40,7 @@ class Universe:
         :return: an Aca Table.
         """
 
-        table = AcaTable("Source Name", "Comp ID", "Model", "Alpha", "Delta", "Redshift", "Radial Vel")
+        table = ATable("Source Name", "Comp ID", "Model", "Alpha", "Delta", "Redshift", "Radial Vel")
         for source in self.sources:
             for component in self.sources[source].comp:
                 table += (self.sources[source].name, component.comp_name, component.get_model_name(),
@@ -77,6 +76,7 @@ class Universe:
         #print freq,spe_res,bw
         w = wcs.WCS(naxis=3)
         w.wcs.crval = np.array([pos[0].value, pos[1].value, freq.value])
+        w.wcs.restfrq = freq.value
         w.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value, spe_res.value])
         mm = np.array([int(abs(fov[0]/ang_res[0])), int(abs(fov[1]/ang_res[1])), int(abs(bw/spe_res))])
         w.wcs.crpix = mm / 2.0
@@ -85,8 +85,8 @@ class Universe:
         #w.wcs.print_contents()
         cube = dt.AData(data, w, None, u.Jy / u.beam)
 
-        sources_table = self._gen_sources_table()
-
+        #sources_table = self._gen_sources_table()
+        sources_table=[]
         component_tables = dict()
 
         for source in self.sources:
@@ -149,14 +149,14 @@ class Source:
             log.info('Projecting ' + component.comp_name)
             comp_table = component.project(cube, limit)
 
-            if comp_table is not None:
-                component_tables[self.name + "." + component.comp_name] = comp_table
-                meta_data = component.get_meta_data()
+            #if comp_table is not None:
+            #    component_tables[self.name + "." + component.comp_name] = comp_table
+            #    meta_data = component.get_meta_data()
 
-                if isinstance(meta_data, dict):
-                    comp_table.meta = component.get_meta_data()
-                else:
-                    raise ValueError("get_meta_data return expected a dict, got %s instead" % type(meta_data))
+            #    if isinstance(meta_data, dict):
+            #        comp_table.meta = component.get_meta_data()
+            #    else:
+            #        raise ValueError("get_meta_data return expected a dict, got %s instead" % type(meta_data))
 
         return component_tables
 
