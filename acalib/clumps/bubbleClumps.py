@@ -130,7 +130,7 @@ class BubbleClumps:
       """Update the energies, only from the lb to the ub points. 
       """
       #TODO: I do now know if get_slice actually states that we are making a copy...
-      mcb=self.residual.get_slice(lb,ub)
+      mcb=self.residual.cut(lb,ub)
       #Obtain the reference of the eighth of the bubble.
       vv=self.eival
       ff=self.eifeat.T
@@ -244,26 +244,26 @@ class BubbleClumps:
       # Type hack..
       self.positions=np.array(self.positions)
       # TODO: put this in cube
-      sh=cube.data.shape
-      xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
-      print xi.shape
-      print cube.data.shape
-      grid = mlab.pipeline.scalar_field(xi, yi, zi, cube.data)
-      mmin = cube.data.min()
-      mmax = cube.data.max()
-      figure = mlab.figure('Orig')
-      mlab.pipeline.volume(grid)
-#, vmin=mmin, vmax=mmin + .*(mmax-mmin))
-      mlab.axes()
-      #mlab.show()
-      figure = mlab.figure('Synthetic')
-      grid = mlab.pipeline.scalar_field(xi, yi, zi, self.syn.data)
-      mmin = self.syn.data.min()
-      mmax = self.syn.data.max()
-      mlab.pipeline.volume(grid)
-#, vmin=mmin, vmax=mmin + .5*(mmax-mmin))
-      mlab.axes()
-      mlab.show()
+#      sh=cube.data.shape
+#      xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
+#      print xi.shape
+#      print cube.data.shape
+#      grid = mlab.pipeline.scalar_field(xi, yi, zi, cube.data)
+#      mmin = cube.data.min()
+#      mmax = cube.data.max()
+#      figure = mlab.figure('Orig')
+#      mlab.pipeline.volume(grid)
+##, vmin=mmin, vmax=mmin + .*(mmax-mmin))
+#      mlab.axes()
+#      #mlab.show()
+#      figure = mlab.figure('Synthetic')
+#      grid = mlab.pipeline.scalar_field(xi, yi, zi, self.syn.data)
+#      mmin = self.syn.data.min()
+#      mmax = self.syn.data.max()
+#      mlab.pipeline.volume(grid)
+##, vmin=mmin, vmax=mmin + .5*(mmax-mmin))
+#      mlab.axes()
+#      mlab.show()
 
       
 

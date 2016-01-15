@@ -325,8 +325,8 @@ class GaussClumps:
       # Store the data normalised to the
       # RMS noise level. Also calculate and store the Gaussian weight for the
       # pixel.
-      self.val=self.data.get_slice(lb,ub).ravel()
-      self.feat=self.data.get_index_features(lb,ub)
+      self.val=self.data.cut(lb,ub).ravel()
+      self.feat=self.data.index_features(lb,ub)
       
       xw_off=(self.feat[0] - self.cval[0])/(self.fobs[0]*wwidth)
       yw_off=(self.feat[1] - self.cval[1])/(self.fobs[1]*wwidth)
@@ -609,7 +609,7 @@ class GaussClumps:
       # Sum of the values in all the used clumps so far 
       sumclumps = 0.0
       # Sum of the supplied data values 
-      sumdata = self.data.get_flux()
+      sumdata = self.data.flux()
       
       # peaks contains the last npeaks... 
       peaks=np.zeros(npeaks)
