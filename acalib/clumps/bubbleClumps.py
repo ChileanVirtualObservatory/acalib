@@ -143,7 +143,9 @@ class BubbleClumps:
       """Update the energies, only from the lb to the ub points. 
       """
       #TODO: I do now know if get_slice actually states that we are making a copy...
-      mcb=self.residual.cut(lb,ub).copy()
+      lb=self.residual.fix_limits(lb)
+      ub=self.residual.fix_limits(ub)
+      mcb=self.residual.cut(lb,ub)
       #Obtain the reference of the eighth of the bubble.
       vv=self.eival
       ff=self.eifeat.T
