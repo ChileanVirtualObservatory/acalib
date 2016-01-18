@@ -121,16 +121,29 @@ class BubbleClumps:
      # Obtain a reduced view of the matrices
      eview=ene[elb[0]:eub[0],elb[1]:eub[1],elb[2]:eub[2]]
      mview=mat[mlb[0]:mub[0],mlb[1]:mub[1],mlb[2]:mub[2]]
+     mview=mview.copy()
      # Select those that are lower in mat than in energy
+     #print elb, eub, mlb, mub
+     #print eview.shape,eview.shape
      cmat=mview < eview
+     #print cmat
+     #print eview[cmat]
+     #print mview
      # Update them in the energy matrix.
+     try:
+        a=mview[cmat]
+     except IndexError:
+        print eview.shape
+        print mview.shape
+        print mat.shape
+        print elb,eub,mlb,mub
      eview[cmat]=mview[cmat]
      
    def _update_energies(self,lb,ub):
       """Update the energies, only from the lb to the ub points. 
       """
       #TODO: I do now know if get_slice actually states that we are making a copy...
-      mcb=self.residual.cut(lb,ub)
+      mcb=self.residual.cut(lb,ub).copy()
       #Obtain the reference of the eighth of the bubble.
       vv=self.eival
       ff=self.eifeat.T

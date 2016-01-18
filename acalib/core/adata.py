@@ -109,32 +109,50 @@ class AData(ndd.NDData):
                 sli=self._slice(lower,upper)
     		return np.sum(self.data[sli],axis=axis)
 
+    def fix_limits(self,vect):
+                if isinstance(vect,tuple):
+                   vect=np.array(vect)
+                vect=vect.astype(int)
+                low=vect < 0
+                up=vect > self.data.shape
+                if vect.any():
+                   vect[low]=0
+                if vect.any():
+                   vect[up]=np.array(self.data.shape)[up]
+                return vect
+
+   
     def _slice(self,lower,upper):
                 #traceback.print_stack()
     		if lower==None:
     				lower=(0,0,0)
     		if upper==None:
     				upper=self.data.shape
-    		if isinstance(lower,tuple):
-    				lower=np.array(lower)
-    		if isinstance(upper,tuple):
-    				upper=np.array(upper)
-    		llc=lower < 0
-    		ulc=lower > self.data.shape
-    		luc=upper < 0
-    		uuc=upper > self.data.shape
-    		if llc.any():
-    		                #log.warning("Negative lower index "+str(lower)+". Correcting to zero.")
-    				lower[llc]=0
-    		if ulc.any():
-    				#log.warning("Lower index out of bounds "+str(lower)+" > "+str(self.data.shape)+". Correcting to max.")
-    				upper[ulc]=np.array(self.data.shape)[ulc]
-    		if luc.any():
-    				#log.warning("Negative upper index "+str(upper)+". Correcting to zero.")
-    				lower[luc]=0
-    		if uuc.any():
-    				#log.warning("Upper index out of bounds "+str(upper)+" > "+str(self.data.shape)+". Correcting to max.")
-    				upper[uuc]=np.array(self.data.shape)[uuc]
+                lower=self.fix_limits(lower)
+                upper=self.fix_limits(upper)
+    		#if isinstance(lower,tuple):
+    		#		lower=np.array(lower)
+    		#if isinstance(upper,tuple):
+    		#		upper=np.array(upper)
+                #lower=lower.astype(int)
+                #upper=upper.astype(int)
+    		#llc=lower < 0
+    		#ulc=lower > self.data.shape
+    		#luc=upper < 0
+    		#uuc=upper > self.data.shape
+    		#if llc.any():
+    		#                log.warning("Negative lower index "+str(lower)+". Correcting to zero.")
+    		#		lower[llc]=0
+    		#if ulc.any():
+    		#		log.warning("Lower index out of bounds "+str(lower)+" > "+str(self.data.shape)+". Correcting to max.")
+    		#		upper[ulc]=np.array(self.data.shape)[ulc]
+    		#if luc.any():
+    		#		log.warning("Negative upper index "+str(upper)+". Correcting to zero.")
+    		#		lower[luc]=0
+    		#if uuc.any():
+    		#		log.warning("Upper index out of bounds "+str(upper)+" > "+str(self.data.shape)+". Correcting to max.")
+    		#		upper[uuc]=np.array(self.data.shape)[uuc]
+                #p#rint "fix",lower,upper
     		return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2])]
     			
 #TODO: Only works for integers! (Axel... enjoy politics!)
@@ -305,6 +323,7 @@ class AData(ndd.NDData):
          mlab.imshow(img)
          ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="VEL [km/s] ",ranges=ranges,nb_labels=5)
          ax.axes.label_format='%.3f'
+         mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
          mlab.show()
    
            

@@ -166,6 +166,12 @@ class GaussClumps:
    def updateResults(self,clump,lb,ub):
      self.update_comp(clump)
      ff=self.model - clump[1]
+     #print lb,ub
+     lb=self.data.fix_limits(lb)
+     ub=self.data.fix_limits(ub)
+     #print lb,ub
+     #print ub[0]-lb[0],ub[1]-lb[1],ub[2]-lb[2]
+     #print ff.shape
      ff=ff.reshape(ub[0]-lb[0],ub[1]-lb[1],ub[2]-lb[2])
      ff*=self.par['RMS']
      self.data.add_flux(-ff,lb,ub)
@@ -310,7 +316,6 @@ class GaussClumps:
       beamfwhm=self.par['FWHMBEAM']
       self.bfsq=beamfwhm*beamfwhm
       self.velsq=velres*velres
-
       # Gaussian Window
 
       # The factor which scales the FWHM on each axis to the half-width of the
@@ -325,7 +330,7 @@ class GaussClumps:
       # Store the data normalised to the
       # RMS noise level. Also calculate and store the Gaussian weight for the
       # pixel.
-      self.val=self.data.cut(lb,ub).ravel()
+      self.val=self.data.cut(lb,ub).copy().ravel()
       self.feat=self.data.index_features(lb,ub)
       
       xw_off=(self.feat[0] - self.cval[0])/(self.fobs[0]*wwidth)
@@ -455,6 +460,7 @@ class GaussClumps:
          off=np.min(vlow,vup) + rms
       except ValueError:
         print vlow,vup,rms
+        print self.imax
         self.data.data[self.imax]
         sys.exit()
       if vlow < vup:
@@ -624,7 +630,6 @@ class GaussClumps:
          # Find the cube index of the element with the largest value in the residuals cube.
          # imax: Index of element with largest residual
          (self.valmax,self.imax) = self.data.max()
- 
          # Finish iterating if all the residuals are bad, or if too many iterations
          # have been performed since the last succesfully fitted clump. 
          if np.isnan(self.imax).any():
@@ -641,6 +646,7 @@ class GaussClumps:
                continue
          # If not, make an initial guess at the Gaussian clump parameters centred on the current peak.
          self.setInit()
+
          
          # Find the best fitting parameters, starting from the above initial guess.
          (clump,lb,ub)=self.optimize()
