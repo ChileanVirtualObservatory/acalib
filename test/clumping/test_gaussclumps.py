@@ -36,7 +36,6 @@ gc.syn.stacked_show()
 gc.syn.volume_show()
 gc.syn.contour_show()
 
-
 gc.data.stacked_show()
 gc.data.volume_show()
 gc.data.contour_show()
