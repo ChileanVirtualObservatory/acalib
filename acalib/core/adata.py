@@ -93,12 +93,12 @@ class AData(ndd.NDData):
         return self.data.shape
    
     def max(self):
-    	        index=np.unravel_index(np.argmax(self.data),self.data.shape)
+    	        index=np.unravel_index(self.data.argmax(),self.data.shape)
     		y=self.data[index]
     		return (y,index)
     
     def min(self):
-    		index=np.unravel_index(np.argmin(self.data),self.data.shape)
+    		index=np.unravel_index(self.data.argmin(),self.data.shape)
     		y=self.data[index]
     		return (y,index)
 

@@ -8,8 +8,8 @@ from matplotlib import pyplot as plt
 
 
 binpath='../../bindata/fits/cubes/'
-fn=binpath+'Orion.methanol.cbc.contsub.image.fits'
-#fn=binpath+'M100line.image.fits'
+#fn=binpath+'Orion.methanol.cbc.contsub.image.fits'
+fn=binpath+'M100line.image.fits'
 
 # Load from container
 c = AContainer()
