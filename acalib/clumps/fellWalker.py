@@ -631,6 +631,7 @@ class FellWalker:
       cleanIter = self.par['CLEANITER']
       for i in range(cleanIter):
          caa = self.smooth_boundary(caa,clump)
+         #caa = ca.smooth_boundary(caa,clump)
 
       ####some statistics
       nclump=len(clump)

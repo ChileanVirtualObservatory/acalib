@@ -77,9 +77,9 @@ class AData(ndd.NDData):
         return copy.deepcopy(self)
 
     def estimate_rms(self):
-       sigma=self.data.std()
-       mu=self.data.mean()
-       return np.sqrt(sigma*sigma + mu*mu)
+       mm=self.data * self.data
+       rms=np.sqrt(mm.sum()*1.0/mm.count())
+       return rms
 
 
     # TODO: get_flux should be for any slice, need more parameters
