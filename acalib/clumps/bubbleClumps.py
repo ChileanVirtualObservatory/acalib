@@ -151,6 +151,9 @@ class BubbleClumps:
       ff=self.eifeat.T
       # Iterates for every point in the eighth of the bubble
       # this starts from one because we do not want to repeat the position (0,0,0)
+      delta=np.array([1,1,1])*0
+      mat=mcb/vv[0]
+      self._update_min_energy(mat,ub,lb,delta)
       for i in range(1,vv.size):
          mat=mcb/vv[i]
          d=ff[i]
@@ -211,8 +214,8 @@ class BubbleClumps:
       self.ss=bsize*velres*self.FWHM_TO_SIGMA
       self.S=np.array([[1.0/np.square(self.ss),0,0],[0,1.0/np.square(self.sb),0],[0,0,1/np.square(self.sb)]])
       # Deltas
-      self.db=int(np.sqrt(-2*self.sb*self.sb*np.log(cutlev*rms/datamax)))
-      self.ds=int(np.sqrt(-2*self.ss*self.ss*np.log(cutlev*rms/datamax)))
+      self.db=int(self.sb* np.sqrt(2*np.log(datamax/(cutlev*rms))))
+      self.ds=int(self.ss*np.sqrt(2**np.log(datamax/(cutlev*rms))))
       if verbose:
          log.info("Datamax =="+str(datamax))
          log.info("RMS ="+str(rms))
