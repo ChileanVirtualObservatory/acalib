@@ -44,7 +44,7 @@ class Universe:
         for source in self.sources:
             for component in self.sources[source].comp:
                 table += (self.sources[source].name, component.comp_name, component.get_model_name(),
-                          component.pos[0].value, component.pos[1].value, component.get_redshift().value,
+                          component.pos[0].value + component.offset[1].value, component.pos[1].value + component.offset[0].value, component.get_redshift().value,
                           component.get_velocity().value)
 
         return table
