@@ -22,21 +22,21 @@ import acalib.clumps.fellWalker as fwalker
 
 
 binpath='../../bindata/fits/cubes/'
-ws.import_file(binpath+"M100line.image.fits")
+#ws.import_file(binpath+"M100line.image.fits")
 #ws.import_file(binpath+"Orion.methanol.cbc.contsub.image.fits")
 #ws.import_file(binpath+"Boom.cm.cln.fits")
 #ws.import_file(binpath+"Antennae_North.CO3_2Line.Clean.pcal1.image.fits")
 #ws.import_file(binpath+"Antennae_South.CO3_2Line.Clean.pcal1.image.fits")
-#ws.import_file(binpath+"calibrated.ms.contsub.bin4.line.fits")
+ws.import_file(binpath+"calibrated.ms.contsub.bin4.line.fits")
 #ws.import_file(binpath+"calibrated.ms.contsub.bin4.line.image.fits")
 
 elm=ws.elements()
-cube=elm['M100line.image-0']
+#cube=elm['M100line.image-0']
 #cube=elm['Orion.methanol.cbc.contsub.image-0']
 #cube=elm['Boom.cm.cln-0']
 #cube=elm['Antennae_North.CO3_2Line.Clean.pcal1.image-0']
 #cube=elm['Antennae_South.CO3_2Line.Clean.pcal1.image-0']
-#cube=elm['calibrated.ms.contsub.bin4.line-0']
+cube=elm['calibrated.ms.contsub.bin4.line-0']
 #cube=elm['calibrated.ms.contsub.bin4.line.image-0']
 spar=cube.standarize()
 
@@ -106,14 +106,14 @@ def PTProc():
    return newcube
 
 
-def FWProc():
-   rms=cube.estimate_rms()
-   newcube=cube.copy()
-   newcube.data[newcube.data<=rms +  snrlimit*rms]=0
-   newcube.data[newcube.data>rms +  snrlimit*rms]=newcube.data[newcube.data>rms +  snrlimit*rms] - rms
-   print "PointThreshold"
-   print "elem/total ",float(newcube.data[newcube.data>rms +  snrlimit*rms].count())/float(cube.data.count())
-   return newcube
+#def FWProc():
+#   rms=cube.estimate_rms()
+#   newcube=cube.copy()
+#   newcube.data[newcube.data<=rms +  snrlimit*rms]=0
+#   newcube.data[newcube.data>rms +  snrlimit*rms]=newcube.data[newcube.data>rms +  snrlimit*rms] - rms
+#   print "PointThreshold"
+#   print "elem/total ",float(newcube.data[newcube.data>rms +  snrlimit*rms].count())/float(cube.data.count())
+#   return newcube
 
 # Show Original Cube
 

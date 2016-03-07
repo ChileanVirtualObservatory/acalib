@@ -44,7 +44,7 @@ class IMC(Component):
     def project(self, cube, cutoff):
         # TODO Make all this with astropy units from the call functions
 
-        #table = ATable("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity")
+        table = ATable(names=("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity"),dtype=('S80','S40','S40','f8','f8','f8'))
 
         dba = db.lineDB(self.dbpath)  # Maybe we can have an always open DB
         dba.connect()
@@ -88,14 +88,14 @@ class IMC(Component):
 
                 # add line to the table.
                 # TODO: modificar ultimo valor, que corresponde a la intensidad.
-                #table += (self.comp_name + "-l" + str(counter), mol, str(lin[2]), str(lin[3]), flux, "*")
+                table += (self.comp_name + "-l" + str(counter), mol, str(lin[2]), str(lin[3]),freq, flux)
 
         dba.disconnect()
         if not used:
             return None
 
-        #return table
-        return []
+        return table
+        #return []
 
     def get_model_name(self):
         return "IMC"

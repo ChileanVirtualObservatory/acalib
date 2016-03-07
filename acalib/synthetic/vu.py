@@ -40,7 +40,7 @@ class Universe:
         :return: an Aca Table.
         """
 
-        table = ATable("Source Name", "Comp ID", "Model", "Alpha", "Delta", "Redshift", "Radial Vel")
+        table = ATable(names=("Source Name", "Comp ID", "Model", "Alpha", "Delta", "Redshift", "Radial Vel"),dtype=('S80','S80','S40','f8','f8','f8','f8'))
         for source in self.sources:
             for component in self.sources[source].comp:
                 table += (self.sources[source].name, component.comp_name, component.get_model_name(),
@@ -85,13 +85,14 @@ class Universe:
         #w.wcs.print_contents()
         cube = dt.AData(data, w, None, u.Jy / u.beam)
 
-        #sources_table = self._gen_sources_table()
-        sources_table=[]
+        sources_table = self._gen_sources_table()
         component_tables = dict()
 
         for source in self.sources:
             log.info('Projecting source ' + source)
             gen_tables = self.sources[source].project(cube, noise / 50.0)
+            print gen_tables
+            #gen_tables = self.sources[source].project(cube, noise)
 
             # add all tables generated from each component of the source
             # on the complete components dictionary.
@@ -149,14 +150,14 @@ class Source:
             log.info('Projecting ' + component.comp_name)
             comp_table = component.project(cube, limit)
 
-            #if comp_table is not None:
-            #    component_tables[self.name + "." + component.comp_name] = comp_table
-            #    meta_data = component.get_meta_data()
+            if comp_table is not None:
+                component_tables[self.name + "." + component.comp_name] = comp_table
+                meta_data = component.get_meta_data()
 
-            #    if isinstance(meta_data, dict):
-            #        comp_table.meta = component.get_meta_data()
-            #    else:
-            #        raise ValueError("get_meta_data return expected a dict, got %s instead" % type(meta_data))
+                if isinstance(meta_data, dict):
+                    comp_table.meta = component.get_meta_data()
+                else:
+                    raise ValueError("get_meta_data return expected a dict, got %s instead" % type(meta_data))
 
         return component_tables
 
