@@ -6,8 +6,8 @@ from os.path import isfile
 
 
 class ATable(AstropyTable):
-    def __init__(self, *names):
-        AstropyTable.__init__(self, *names)
+    def __init__(self, names,dtype):
+        AstropyTable.__init__(self, names=names,dtype=dtype)
 
     def __iadd__(self, other):
         self.add_row(other)

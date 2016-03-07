@@ -226,7 +226,10 @@ class AData(ndd.NDData):
 		   lu=np.rint(self.wcs.wcs_world2pix([wcs_center+wcs_window],0))
 		   lower=np.array([ld,lu]).min(axis=0)
 		   upper=np.array([ld,lu]).max(axis=0)
-		   return (lower[0][::-1],upper[0][::-1])
+
+                   lower=self.fix_limits(lower[0][::-1])
+                   upper=self.fix_limits(upper[0][::-1])
+		   return (lower,upper)
 
 
     # Make modifications

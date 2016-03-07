@@ -18,11 +18,11 @@ univ.create_source('methcloud',center)
 # Defines a central component
 mol_list=dict()
 mol_list['CH3OHvt=0']=[200,200]* u.Jy/u.beam
-temp=500*u.K
+temp=100*u.K
 offset=np.array([0,0])*u.arcsec
 std = np.array([15,15])*u.arcsec
 angle=0*u.rad
-fwhm=50*u.km/u.s
+fwhm=10*u.km/u.s
 gradient=np.array([0.0,0.0])*u.km/(u.s*u.arcsec)
 rad_vel=150*u.km/u.s
 # Create Component
@@ -35,8 +35,8 @@ for i in range(5):
   offset=(80*np.random.random(2) - 40)*u.arcsec
   std = 20*np.random.random(2)*u.arcsec
   angle= random.random()*math.pi*u.rad
-  fwhm=100*random.random()*u.km/u.s
-  gradient=(10*np.random.random(2) - 5)*u.km/(u.s*u.arcsec)
+  fwhm=10*random.random()*u.km/u.s
+  gradient=(4*np.random.random(2) - 2)*u.km/(u.s*u.arcsec)
   model=imc.GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
   model.set_velocity(rad_vel)
   univ.add_component('methcloud',model)
@@ -44,10 +44,10 @@ for i in range(5):
 # Create Cube
 ang_res=np.array([2.0,2.0])*u.arcsec
 fov=np.array([200,200])*u.arcsec
-freq=229.8*u.GHz
+freq=229.700*u.GHz
 spe_res=0.01*u.GHz
-bw=0.5*u.GHz
-noise=0.01*u.Jy/u.beam
+bw=1.0*u.GHz
+noise=0.005*u.Jy/u.beam
 
 (cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise)
 print tab

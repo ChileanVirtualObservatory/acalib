@@ -64,12 +64,13 @@ univ.add_component('example',model)
 # Create Cube
 ang_res=np.array([3.0,3.0])*u.arcsec
 fov=np.array([200,200])*u.arcsec
-freq=300*u.GHz
-spe_res=0.02*u.GHz
-bw=2*u.GHz
+freq=299.898*u.GHz
+spe_res=0.002*u.GHz
+bw=0.2*u.GHz
 noise=0.001*u.Jy/u.beam
 
 cube, tab = univ.gen_cube(center, ang_res, fov, freq, spe_res, bw, noise)
+print tab
 
 cube.stacked_show()
 cube.volume_show()
