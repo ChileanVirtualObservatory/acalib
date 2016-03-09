@@ -1,6 +1,6 @@
 import copy
 import sys
-import ca
+#import ca
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -29,7 +29,7 @@ class FellWalker:
       #Minimum dip between distinct peaks
       self.par['MINDIP'] = 3
       #Minimum size (in pixels) of clumps
-      self.par['MINSIZE'] = 20
+      self.par['MINSIZE'] = 15
       #Lowest gradient which marks the start of the walk
       self.par['FLATSLOPE'] = 0.001
       #Data values less than this are at "sea level"
@@ -408,6 +408,8 @@ class FellWalker:
        for ox in range(shape[0]):
            for oy in range(shape[1]):
                for oz in range(shape[2]):
+                   #variant to cupid version
+                   #if inp[ox, oy, oz] == -1: continue
 
                    party = dict()
                    maxvotes = 0
@@ -421,6 +423,8 @@ class FellWalker:
                                if iz < 0 or iz >= shape[2]: continue
 
                                inp_value = inp[ix, iy, iz]
+                               #if inp_value == -1: continue
+
                                #update party
                                if inp_value not in party:
                                    party[inp_value] = 1
@@ -441,7 +445,7 @@ class FellWalker:
                        if reached: continue
 
                    #assign the winner
-                   prev_clump = out[ox, oy, oz]
+                   prev_clump = inp[ox, oy, oz]
                    out[ox, oy, oz] = winner
 
                    #update clump dictionary
@@ -569,10 +573,11 @@ class FellWalker:
                #Print some info
                print "id={0}, path: {1}".format(top_id,path)
 
+
       ###refine 1, removing small clumps
       print "\n Removing small clumps stage"
       minSize = self.par['MINSIZE']
-      deleted=list() #deleted id's
+      #deleted=list() #deleted id's
 
       for clumpId,pixels in clump.items():
          if len(pixels)<=minSize:
@@ -580,17 +585,8 @@ class FellWalker:
             for pos in pixels:
                caa[pos]=-1
             del clump[clumpId]
-            deleted.append(clumpId)
+            #deleted.append(clumpId)
             print "removed clump {0}".format(clumpId)
-         elif deleted:
-            #If deleted have any index
-            clump[deleted[0]]=clump.pop(clumpId)
-            #update caa
-            for pos in clump[deleted[0]]:
-               caa[pos]=deleted[0]
-            del deleted[0]
-            deleted.append(clumpId)
-
 
       ####refine 2, merging clumps
       """
@@ -622,6 +618,7 @@ class FellWalker:
                caa[pos]=seqId
          seqId+=1
 
+
       """
       Smooth the boundaries between the clumps. This cellular automata replaces
       each output pixels by the most commonly occuring value within a 3x3x3
@@ -633,19 +630,19 @@ class FellWalker:
          caa = self.smooth_boundary(caa,clump)
          #caa = ca.smooth_boundary(caa,clump)
 
-      ####some statistics
+      ####some info
       nclump=len(clump)
-      print "\n SOME USEFUL DATA"
+      print "\n SOME USEFUL INFO"
       print "Number of clumps:",nclump
       for clumpId,pixels in clump.items():
          print "Clump {0} has {1} pixels".format(clumpId,len(pixels))
 
-      """
-      Visualization of results
-      """
-      for pixels in clump.values():
-         for pos in pixels:
-            syn.data[pos]=data[pos]
-            cube.data[pos]
+      # """
+      # Visualization of results
+      # """
+      # for pixels in clump.values():
+      #    for pos in pixels:
+      #       syn.data[pos]=data[pos]
+      #       cube.data[pos]
 
       return caa,clump

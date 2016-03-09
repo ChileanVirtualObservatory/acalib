@@ -10,7 +10,7 @@ import cProfile
 import acalib.clumps.fellWalker as fwalker
 import matplotlib.pyplot as plt
 
-binpath='../../bindata/fits/cubes/'
+binpath='../bindata/fits/cubes/'
 #ws.import_file(binpath+"M100line.image.fits")
 ws.import_file(binpath+"Orion.methanol.cbc.contsub.image.fits")
 #ws.import_file(binpath+"Boom.cm.cln.fits")
