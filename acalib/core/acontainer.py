@@ -52,6 +52,24 @@ class AContainer:
 	   mywcs=mywcs.dropaxis(3)
 	   return dt.AData(data,mywcs,meta,bunit)
 
+        def save_to_fits(self,filepath):
+              #if self.adata == []:
+              #    primary=self.atable[0]
+              #    self.atable.remove(primary)
+              #else:
+              #    primary=self.adata[0]
+              #    self.adata.remove(primary)
+              # TODO. include meta!
+              phdu=fits.PrimaryHDU(data=self.primary.data.data,meta=self.primary.meta)
+              nlist=[phdu]
+              for elm in self.adata:
+                  nlist.append(fits.ImageHDU(data=elm.data,meta=elm.meta))
+              for elm in self.atable:
+                  nlist.append(fits.BinTableHDU.from_columns(np.array(elm)))
+              hdulist = fits.HDUList(nlist)
+              print hdulist
+              hdulist.writeto(filepath)
+
 	def load_from_fits(self, filePath):
 		hdulist = fits.open(filePath)
 		for counter,hdu in enumerate(hdulist):

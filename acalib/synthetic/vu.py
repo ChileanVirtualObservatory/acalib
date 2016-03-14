@@ -5,6 +5,7 @@ import astropy.constants as const
 
 import astropy.wcs as wcs
 import astropy.units as u
+import datetime 
 
 from ..core import parameter as par
 from ..core import adata as dt
@@ -74,24 +75,101 @@ class Universe:
         spe_res = par.to_hz(spe_res)
         bw = par.to_hz(bw)
         #print freq,spe_res,bw
-        w = wcs.WCS(naxis=3)
-        w.wcs.crval = np.array([pos[0].value, pos[1].value, freq.value])
-        w.wcs.restfrq = freq.value
-        w.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value, spe_res.value])
+        #w = wcs.WCS(naxis=3)
+        #w.wcs.crval = np.array([pos[0].value, pos[1].value, freq.value])
+        #w.wcs.restfrq = freq.value
+        #w.wcs.cdelt = np.array([ang_res[0].value, ang_res[1].value, spe_res.value])
         mm = np.array([int(abs(fov[0]/ang_res[0])), int(abs(fov[1]/ang_res[1])), int(abs(bw/spe_res))])
-        w.wcs.crpix = mm / 2.0
-        w.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
+        #w.wcs.crpix = mm / 2.0
+        #w.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
         data=np.zeros((mm[2],mm[1],mm[0]))
-        #w.wcs.print_contents()
-        cube = dt.AData(data, w, None, u.Jy / u.beam)
+        meta=dict()
+        meta['SIMPLE'] = True
+        meta['BITPIX'] = -32
+        meta['NAXIS0'] = 3
+        meta['NAXIS1'] = mm[0]
+        meta['NAXIS2'] = mm[1]
+        meta['NAXIS3'] = mm[2]
+        #meta['NAXIS4'] = 1
+        #meta['BSCALE'] = 1.0
+        #meta['BZERO'] = 0.0
+        meta['BMAJ'] = ang_res[0].value
+        meta['BMIN'] = ang_res[0].value
+        #meta['BPAN'] = 164.862686157
+        meta['BTYPE'] = "Intensity"
+        meta['OBJECT'] = "ACALIB Synthetic Object"
+        meta['BUNITT'] = "JY/BEAM"
+        meta['EQUINOX'] = 2000.0
+        meta['RADESYS'] = "FK5"
+        #meta['LONPOLE'] = 180.0
+        #meta['LATPOLE'] = -5.37638888889
+        #meta['PC001001'] = 1.0
+        #meta['PC002001'] = 0.0
+        #meta['PC003001'] = 0.0
+        #meta['PC004001'] = 0.0
+        #meta['PC001002'] = 0.0
+        #meta['PC002002'] = 1.0
+        #meta['PC003002'] = 0.0
+        #meta['PC004002'] = 0.0
+        #meta['PC001003'] = 0.0
+        #meta['PC002003'] = 0.0
+        #meta['PC003003'] = 1.0
+        #meta['PC004003'] = 0.0
+        #meta['PC001004'] = 0.0
+        #meta['PC002004'] = 0.0
+        #meta['PC003004'] = 0.0
+       # meta['PC004004'] = 1.0
 
+        meta['CTYPE1'] = "RA---SIN"
+        meta['CRVAL1'] = pos[0].value
+        meta['CDELT1'] = ang_res[0].value
+        meta['CRPIX1'] = int(mm[0]/2)
+        meta['CUNIT1'] = "deg"
+        meta['CTYPE2'] = "DEC--SIN"
+        meta['CRVAL2'] = pos[1].value
+        meta['CDELT2'] = ang_res[1].value
+        meta['CRPIX2'] = int(mm[1]/2)
+        meta['CUNIT2'] = "deg"
+        meta['CTYPE3'] = "FREQ"
+        meta['CRVAL3'] = freq.value
+        meta['CDELT3'] = spe_res.value
+        meta['CRPIX3'] = int(mm[2]/2)
+        meta['CUNIT3'] = "Hz"
+        #meta['CTYPE4'] = "STOKES"
+        #meta['CRVAL4'] = 1.0
+        #meta['CDELT4'] = 1.0
+        #meta['CRPIX4'] = 1.0
+        #meta['CUNIT4'] = ""
+        meta['PV2_1']= 0.0
+        meta['PV2_2'] = 0.0
+        meta['RESTFRQ'] = freq.value
+        meta['SPECSYS'] = "LSRK"
+        #meta['ALTRVAL'] = -5429.74494828
+        #meta['ALTRPIX'] = 1.0
+        meta['VELREF ']= 257
+
+        meta['COMMENT'] = "ACALIB Synthetic Object"
+        meta['TELESCOP'] = "ACALB"
+        meta['OBSERVER'] = "ACALIB"
+        now=a=datetime.datetime.utcnow()
+        meta['DATE-OBS'] = now.isoformat()
+        meta['TIMESYS'] = "UTC"
+        #meta['OBSRA'] = 83.8097916667
+        #meta['OBSDEC'] = -5.37638888889
+        #meta['OBSGEO-X'] = 2225142.18027
+        #meta['OBSGEO-Y'] = -5440307.37035
+        #meta['OBSGEO-Z'] = -2481029.85187
+        meta['DATE'] = meta['DATE-OBS']
+        meta['ORIGIN'] = "ACALIB"
+        mywcs=wcs.WCS(meta)
+        cube = dt.AData(data, mywcs, meta, u.Jy / u.beam)
         sources_table = self._gen_sources_table()
         component_tables = dict()
 
         for source in self.sources:
             log.info('Projecting source ' + source)
             gen_tables = self.sources[source].project(cube, noise / 50.0)
-            print gen_tables
+            #print gen_tables
             #gen_tables = self.sources[source].project(cube, noise)
 
             # add all tables generated from each component of the source

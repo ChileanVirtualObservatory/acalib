@@ -12,6 +12,9 @@ from astropy import log
 K=4*np.log(2.0)
 
 
+def syn_from_table(mytab):
+     
+
 def jac_chi2(par,gc):
    # If the background is fixed, include zero background value
    val=np.nan*np.ones_like(par)
@@ -623,7 +626,8 @@ class GaussClumps:
       
       # peaks contains the last npeaks... 
       peaks=np.zeros(npeaks)
-      clist=[]
+      clist=ATable(names=("Intensity", "Offset", "RA mu", "RA std","DEC mu", "DEC std","Angle","FREQ mu","FREQ std","RA vel grad","DEC vel grad"),dtype=('f8','f8','f8','f8','f8','f8','f8','f8','f8','f8','f8'))
+      clist.meta=cube.meta
       # Loop round fitting a gaussian to the largest remaining peak in the
       # residuals array. */
       while iterate:
@@ -689,7 +693,7 @@ class GaussClumps:
                # The standard deviation of the new residuals is returned. */
                if clump[0] >= peak_thresh:
                   #record clump
-                  clist.append(clump)
+                  clist+=tuple(clumps)
                   (csum,area)=self.updateResults(clump,lb,ub)
                   sumclumps+=csum
                   # TODO: implement this!
@@ -775,6 +779,7 @@ class GaussClumps:
          #else:
          #   print "Fits attempted for ",iclump," candidate clumps (",niter-iclump," failed)."
       return clist
+        
 
 
 #   def fit_up_to_SNR(self,cube,snr,verbose=False,):
