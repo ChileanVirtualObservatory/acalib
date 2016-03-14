@@ -127,8 +127,8 @@ class GaussianIMC(IMC):
     def get_meta_data(self):
         return {
             # TODO: make the keys constants, NOT HARDCODED!!!
-            'CRVAL1': self.pos[0],
-            'CRVAL2': self.pos[1],
+            'CRVAL1': self.pos[0] +  self.offset[0],
+            'CRVAL2': self.pos[1] +  self.offset[1],
             '__STD1': self.std[0],
             '__STD2': self.std[1],
             '__GRD1': self.gradient[0],
