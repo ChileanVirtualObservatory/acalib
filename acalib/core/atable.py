@@ -2,11 +2,14 @@ import collections
 from astropy.table.table import Table as AstropyTable
 from astropy.table.table import Column
 import json
+from copy import deepcopy
 from os.path import isfile
+from astropy.io import fits
+import numpy as np
 
 
 class ATable(AstropyTable):
-    def __init__(self, names,dtype):
+    def __init__(self,names,dtype,meta=None):
         AstropyTable.__init__(self, names=names,dtype=dtype)
 
     def __iadd__(self, other):
@@ -45,6 +48,41 @@ class ATable(AstropyTable):
             table += tuple(row)
 
         return table
+
+    def filled(self, fill_value=None):
+        """Return a copy of self, with masked values filled.
+
+        If input ``fill_value`` supplied then that value is used for all
+        masked entries in the table.  Otherwise the individual
+        ``fill_value`` defined for each table column is used.
+
+        Parameters
+        ----------
+        fill_value : str
+            If supplied, this ``fill_value`` is used for all masked entries
+            in the entire table.
+
+        Returns
+        -------
+        filled_table : Table
+            New table with masked values filled
+        """
+        if self.masked:
+            data = [col.filled(fill_value) for col in six.itervalues(self.columns)]
+        else:
+            data = self
+        return AstropyTable(data, meta=deepcopy(self.meta))
+
+
+    def get_hdu(self,primary=False):
+         if primary:
+            raise NotImplementedError("FITS Format do now support tables as primary HDU! You can set primary = None")        
+         else:
+            hdu=fits.BinTableHDU.from_columns(np.array(self.filled()))
+         if self.meta is not None:
+            for k, v in self.meta.iteritems():
+               hdu.header[k] = v
+         return hdu
 
 
 class AbstractImporter(object):
@@ -139,6 +177,7 @@ class JsonImporter(AbstractImporter):
                 values.append(col_values)
 
         return values
+
 
 
 # the client of the ATable importer should extend the AbstractImporter class

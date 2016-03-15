@@ -28,7 +28,7 @@ cube=elm['M100line.image-0']
 #cube=elm['calibrated.ms.contsub.bin4.line-0']
 #cube=elm['calibrated.ms.contsub.bin4.line.image-0']
 
-spar=cube.standarize()
+#spar=cube.standarize()
 
 fw = fwalker.FellWalker()
 

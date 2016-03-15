@@ -258,8 +258,18 @@ class AData(ndd.NDData):
     					fu[i]=sli[i].stop - sli[i].start
     		self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
 
-    # TODO allow subcube plot
 
+    def get_hdu(self,primary=False):
+         if primary==True:
+            hdu = fits.PrimaryHDU(self.data.data)
+         else:
+            hdu = fits.ImageHdu(self.data.data)
+         if self.meta is not None:
+            for k, v in self.meta.iteritems():
+               hdu.header[k] = v
+         return hdu
+
+         
     def _get_mesh(self):
          sh=self.shape()
          xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]

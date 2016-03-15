@@ -2,6 +2,8 @@ from astropy.io import fits
 from astropy import log
 import astropy.units as u
 from astropy.wcs import wcs
+from copy import deepcopy
+
 
 import adata as dt
 import atable as at
@@ -53,22 +55,27 @@ class AContainer:
 	   return dt.AData(data,mywcs,meta,bunit)
 
         def save_to_fits(self,filepath):
-              #if self.adata == []:
-              #    primary=self.atable[0]
-              #    self.atable.remove(primary)
-              #else:
-              #    primary=self.adata[0]
-              #    self.adata.remove(primary)
-              # TODO. include meta!
-              phdu=fits.PrimaryHDU(data=self.primary.data.data,meta=self.primary.meta)
+              if self.primary == None:
+                 phdu=fits.PrimaryHDU()
+              else:
+                 phdu=self.primary.get_hdu(True)
               nlist=[phdu]
+              count=0
               for elm in self.adata:
-                  nlist.append(fits.ImageHDU(data=elm.data,meta=elm.meta))
+                  count+=1
+                  hdu=elm.get_hdu()
+                  hdu.header['EXTNAME'] = 'SCI'
+                  hdu.header['EXTVER'] = count
+                  nlist.append(hdu)
+              count=0
               for elm in self.atable:
-                  nlist.append(fits.BinTableHDU.from_columns(np.array(elm)))
+                  count+=1
+                  hdu=elm.get_hdu()
+                  hdu.header['EXTNAME'] = 'TAB'
+                  hdu.header['EXTVER'] = count
+                  nlist.append(hdu)
               hdulist = fits.HDUList(nlist)
-              print hdulist
-              hdulist.writeto(filepath)
+              hdulist.writeto(filepath,clobber=True)
 
 	def load_from_fits(self, filePath):
 		hdulist = fits.open(filePath)
