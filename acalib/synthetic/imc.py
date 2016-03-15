@@ -127,15 +127,15 @@ class GaussianIMC(IMC):
     def get_meta_data(self):
         return {
             # TODO: make the keys constants, NOT HARDCODED!!!
-            'CRVAL1': self.pos[0] +  self.offset[0],
-            'CRVAL2': self.pos[1] +  self.offset[1],
-            '__STD1': self.std[0],
-            '__STD2': self.std[1],
-            '__GRD1': self.gradient[0],
-            '__GRD2': self.gradient[1],
-            '__FWHM': self.fwhm,
-            '__TEMP': self.temp,
-            '__ANGL': self.angle,
+            'CRVAL1': self.pos[0].value +  self.offset[0].value,
+            'CRVAL2': self.pos[1].value +  self.offset[1].value,
+            '__STD1': self.std[0].value,
+            '__STD2': self.std[1].value,
+            '__GRD1': self.gradient[0].value,
+            '__GRD2': self.gradient[1].value,
+            '__FWHM': self.fwhm.value,
+            '__TEMP': self.temp.value,
+            '__ANGL': self.angle.value,
         }
 
 ################ ATTIC #######################

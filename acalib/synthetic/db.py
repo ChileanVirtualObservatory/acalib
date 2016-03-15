@@ -51,6 +51,7 @@ class lineDB:
     def executeSQL(self,sentence):
         #self.log.write("EXECUTING SQL SENTENCE:\n")
         #self.log.write(sentence + '\n')
+        print sentence
         resp = self.pointer.execute(sentence)
         return resp.fetchall()      
 

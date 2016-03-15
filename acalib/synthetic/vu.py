@@ -84,9 +84,9 @@ class Universe:
         #w.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
         data=np.zeros((mm[2],mm[1],mm[0]))
         meta=dict()
-        meta['SIMPLE'] = True
+        meta['SIMPLE'] = "True"
         meta['BITPIX'] = -32
-        meta['NAXIS0'] = 3
+        meta['NAXIS'] = 3
         meta['NAXIS1'] = mm[0]
         meta['NAXIS2'] = mm[1]
         meta['NAXIS3'] = mm[2]
@@ -141,13 +141,12 @@ class Universe:
         #meta['CRPIX4'] = 1.0
         #meta['CUNIT4'] = ""
         meta['PV2_1']= 0.0
-        meta['PV2_2'] = 0.0
+        meta['PV2_2'] =0.0
         meta['RESTFRQ'] = freq.value
         meta['SPECSYS'] = "LSRK"
         #meta['ALTRVAL'] = -5429.74494828
         #meta['ALTRPIX'] = 1.0
         meta['VELREF ']= 257
-
         meta['COMMENT'] = "ACALIB Synthetic Object"
         meta['TELESCOP'] = "ACALB"
         meta['OBSERVER'] = "ACALIB"
