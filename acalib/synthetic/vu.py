@@ -50,7 +50,7 @@ class Universe:
 
         return table
     
-    def gen_cube(self, pos, ang_res, fov, freq, spe_res, bw, noise):
+    def gen_cube(self, pos, ang_res, fov, freq, spe_res, bw, noise, cutlev):
         """
         Returns a Cube object where all the sources within the FOV and BW are projected, and
         a dictionary with a sources astropy Table and all the parameters of the components
@@ -84,7 +84,7 @@ class Universe:
         #w.wcs.ctype = ["RA---SIN", "DEC--SIN","FREQ"]
         data=np.zeros((mm[2],mm[1],mm[0]))
         meta=dict()
-        meta['SIMPLE'] = "True"
+        meta['SIMPLE'] = True
         meta['BITPIX'] = -32
         meta['NAXIS'] = 3
         meta['NAXIS1'] = mm[0]
@@ -167,7 +167,7 @@ class Universe:
 
         for source in self.sources:
             log.info('Projecting source ' + source)
-            gen_tables = self.sources[source].project(cube, noise / 50.0)
+            gen_tables = self.sources[source].project(cube, cutlev)
             #print gen_tables
             #gen_tables = self.sources[source].project(cube, noise)
 

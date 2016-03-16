@@ -3,7 +3,6 @@ sys.path.append('../../')
 
 from mayavi import mlab
 
-import acalib.vo.workspace as ws
 import time
 from scipy import ndimage 
 import numpy as np
@@ -15,34 +14,25 @@ matplotlib.use('WxAgg')
 matplotlib.interactive(True)
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from acalib import acontainer as ac
+
 
 import acalib.clumps.bubbleClumps as bclumps
 import acalib.clumps.gaussClumps as gclumps
 import acalib.clumps.fellWalker as fwalker
 
 
-binpath='../../bindata/fits/cubes/'
-#ws.import_file(binpath+"M100line.image.fits")
-#ws.import_file(binpath+"Orion.methanol.cbc.contsub.image.fits")
-#ws.import_file(binpath+"Boom.cm.cln.fits")
-#ws.import_file(binpath+"Antennae_North.CO3_2Line.Clean.pcal1.image.fits")
-#ws.import_file(binpath+"Antennae_South.CO3_2Line.Clean.pcal1.image.fits")
-ws.import_file(binpath+"calibrated.ms.contsub.bin4.line.fits")
-#ws.import_file(binpath+"calibrated.ms.contsub.bin4.line.image.fits")
+cont=ac.AContainer()
+cont.load(sys.argv[1])
+cube=cont.primary
 
-elm=ws.elements()
-#cube=elm['M100line.image-0']
-#cube=elm['Orion.methanol.cbc.contsub.image-0']
-#cube=elm['Boom.cm.cln-0']
-#cube=elm['Antennae_North.CO3_2Line.Clean.pcal1.image-0']
-#cube=elm['Antennae_South.CO3_2Line.Clean.pcal1.image-0']
-cube=elm['calibrated.ms.contsub.bin4.line-0']
-#cube=elm['calibrated.ms.contsub.bin4.line.image-0']
 spar=cube.standarize()
+
+#cube.meta['BMIN']=3.0*cube.meta['CDELT1']
 
 # use_meta not implemented yet, so compute parameters to use
 pixbsize=cube.meta['BMIN']/abs(cube.meta['CDELT1'])
-snrlimit=1.5
+snrlimit=1.0
 print "[TEST] beam size in pixels =",pixbsize
 
 # Bubble Detection
@@ -50,6 +40,8 @@ def BCProc():
    # Bubble Clump
    bc=bclumps.BubbleClumps()
    bc.par['FWHMBEAM']=pixbsize
+   #rms=cube.estimate_rms()
+   #bc.par['RMS']=0.5*rms
    telem=float(cube.count())
    maxporc=0.01
    samples=maxporc*telem
@@ -70,10 +62,18 @@ def GCProc():
    gc=gclumps.GaussClumps()
    gc.par['FWHMBEAM']=pixbsize
    gc.par['THRESH']=snrlimit
+   gc.par['NSIGMA']=snrlimit
+   #rms=cube.estimate_rms()
+   #gc.par['RMS']=0.5*rms
    clist=gc.fit(cube)
    clist=gc.fit(cube,verbose=True)
+   print clist
    print "GaussClump"
    print "elem/total ",float(len(clist))/float(cube.data.count())
+   ct=ac.AContainer()
+   ct.primary=gc.syn
+   ct.atable.append(clist)
+   ct.save("gc_solution.fits")
    return gc.syn
 
 def GFProc():
@@ -89,6 +89,10 @@ def GFProc():
    newcube.data=ndimage.gaussian_filter(zcube,[ss,sb,sb])
    temp=cube.data[newcube.data>rms +  snrlimit*rms]
    temp2=newcube.data[newcube.data>rms +  snrlimit*rms]
+   #print rms,cube.max()
+   #print rms +  snrlimit*rms
+   #print temp
+   #print temp2
    fact=(temp/temp2).min()
    newcube.data[newcube.data<=rms +  snrlimit*rms]=0
    newcube.data=fact*np.ma.masked_array(newcube.data,mask=cube.data.mask)

@@ -7,7 +7,6 @@ from astropy import log
 
 binpath='../../bindata/fits/'
 
-
 f = []
 for (dirpath, dirnames, filenames) in walk(binpath):
    for filename in filenames:
@@ -16,7 +15,7 @@ cs =[]
 for fn in filter(lambda x: '.fits' in x, f):
    c = AContainer()
    log.info("Loading "+fn)
-   c.load_from_fits(fn)
+   c.load(fn)
    cs.append(c)
 
 

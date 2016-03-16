@@ -1,6 +1,7 @@
 import numpy as np
 from collections import deque
 from scipy.optimize import fmin_bfgs,check_grad,approx_fprime
+from acalib import ATable
 #from scipy.optimize.linesearch import (line_search_BFGS, line_search_wolfe1, line_search_wolfe2, line_search_wolfe2 as line_search)
 #from optimize import fmin_bfgs
 
@@ -12,7 +13,7 @@ from astropy import log
 K=4*np.log(2.0)
 
 
-def syn_from_table(mytab):
+#def syn_from_table(mytab):
      
 
 def jac_chi2(par,gc):
@@ -693,7 +694,7 @@ class GaussClumps:
                # The standard deviation of the new residuals is returned. */
                if clump[0] >= peak_thresh:
                   #record clump
-                  clist+=tuple(clumps)
+                  clist+=tuple(clump)
                   (csum,area)=self.updateResults(clump,lb,ub)
                   sumclumps+=csum
                   # TODO: implement this!

@@ -44,9 +44,6 @@ def interpolate(data, scale_miss):
         data[:,i] = grid
     return data
 
-#def gen_empty_cube(meta):
-#   mywcs=astrowcs.WCS(meta)
-#   cube = AData(data, mywcs, meta, u.Jy / u.beam)
 
 class AData(ndd.NDData):
 
