@@ -48,14 +48,14 @@ fov=np.array([200,200])*u.arcsec
 freq=229.8*u.GHz
 spe_res=0.01*u.GHz
 bw=0.5*u.GHz
-noise=0.01*u.Jy/u.beam
+noise=0.02*u.Jy/u.beam
 
-(cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise)
+(cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise,0.1*noise)
 (sources,components)=tab
 components=components.values()
 components.append(sources)
 cont=aca.AContainer()
 cont.primary=cube
 cont.atable=components
-cont.save_to_fits("methanol.fits")
+cont.save("methanol.fits")
 

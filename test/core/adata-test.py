@@ -14,7 +14,7 @@ fn=binpath+'M100line.image.fits'
 # Load from container
 c = AContainer()
 log.info("Loading "+fn)
-c.load_from_fits(fn)
+c.load(fn)
 
 dt=c.adata[0]
 
