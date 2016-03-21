@@ -5,6 +5,7 @@ from acalib.core import *
 from os import walk
 from astropy import log
 from matplotlib import pyplot as plt
+from acalib.io import graph as gp
 
 
 binpath='../../bindata/fits/cubes/'
@@ -73,7 +74,7 @@ log.info('WCS center= '+str(iw))
 #tflux=dt.flux()
 #log.info('Normalized Total Flux =  '+str(tflux))
 
-dt.stacked_show()
-dt.volume_show()
-dt.contour_show()
-#dt.velocity_show()
+
+gp.stacked(dt)
+gp.volume(dt)
+gp.contour(dt)

@@ -5,8 +5,11 @@ import matplotlib.pyplot as plt
 import acalib.synthetic.imc as imc
 import astropy.units as u
 import acalib.synthetic.vu as vu
+from acalib.io import graph as gp
 import numpy as np
 import math
+
+
 
 #TODO This is not working for near zero positions!!! (it is fault of the wcs i think!)
 univ=vu.Universe()
@@ -69,10 +72,11 @@ spe_res=0.002*u.GHz
 bw=0.2*u.GHz
 noise=0.001*u.Jy/u.beam
 
-cube, tab = univ.gen_cube(center, ang_res, fov, freq, spe_res, bw, noise)
+cube, tab = univ.gen_cube(center, ang_res, fov, freq, spe_res, bw, noise,noise/50.0)
 print tab
 
-cube.stacked_show()
-cube.volume_show()
-cube.contour_show()
+
+gp.stacked(cube)
+gp.volume(cube)
+gp.contour(cube)
 

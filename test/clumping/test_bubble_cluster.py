@@ -9,6 +9,7 @@ import timeit
 import cProfile
 import acalib.clumps.bubbleClumps as cl
 from acalib import acontainer as ac
+from acalib.io import graph as gp
 
 import matplotlib.pyplot as plt
 
@@ -38,10 +39,10 @@ print "SNR = ",snrlimit
 gc.par['SNRLIMIT']=snrlimit
 gc.fit(cube,verbose=True)
 
-cube.volume_show()
-cube.contour_show()
-gc.syn.volume_show()
-gc.syn.contour_show()
+gp.volume(cube)
+gp.countour(cube)
+gp.volume(gc.syn)
+gp.countour(gc.syn)
 
 #gc.test_clustering()
 gc.selected_clusters(5)
