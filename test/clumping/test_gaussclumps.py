@@ -2,6 +2,7 @@ import sys
 sys.path.append('../../')
 
 from acalib import acontainer as ac
+from acalib.io import graph as gp
 import numpy as np
 import matplotlib.pyplot as plt
 import timeit
@@ -23,12 +24,18 @@ gc.par['FWHMBEAM']=pixbsize
 clist=gc.fit(cube,verbose=True)
 print clist
 
-gc.syn.stacked_show()
-gc.syn.volume_show()
-gc.syn.contour_show()
+gp.velocity(cube)
+gp.stacked(cube)
+gp.volume(cube)
+gp.contour(cube)
 
-gc.data.stacked_show()
-gc.data.volume_show()
-gc.data.contour_show()
+gp.stacked(gc.syn)
+gp.volume(gc.syn)
+gp.contour(gc.syn)
+
+gp.stacked(gc.syn)
+gp.volume(gc.syn)
+gp.contour(gc.syn)
+
 
 

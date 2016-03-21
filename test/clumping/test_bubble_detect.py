@@ -15,6 +15,7 @@ matplotlib.interactive(True)
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from acalib import acontainer as ac
+from acalib.io import graph as gp
 
 
 import acalib.clumps.bubbleClumps as bclumps
@@ -135,8 +136,8 @@ for i in range(0,n):
    if remax > max_re:
       max_re=remax
    res.append(re)
-   #cb.volume_show()
-   #cb.contour_show()
+   #gp.volume(cb)
+   #gp.countour(cb)
 fig=plt.figure()
 val=cube.stack().max()
 plt.imshow(cube.stack(),cmap=cmap,vmin=0,vmax=val)

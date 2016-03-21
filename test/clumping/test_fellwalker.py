@@ -9,6 +9,7 @@ import cProfile
 import acalib.clumps.fellWalker as fwalker
 import matplotlib.pyplot as plt
 from acalib import acontainer as ac
+from acalib.io import graph as gp
 
 
 cont=ac.AContainer()
@@ -23,7 +24,8 @@ caa,clump=fw.fit(cube)
 
 newcube=cube.copy()
 newcube.data=caa
-newcube.stacked_show()
-newcube.volume_show()
-newcube.contour_show()
+
+gp.stacked(newcube)
+gp.volume(newcube)
+gp.countour(newcube)
 

@@ -267,12 +267,12 @@ class AData(ndd.NDData):
          return hdu
 
          
-    def _get_mesh(self):
+    def get_mesh(self):
          sh=self.shape()
          xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
          return xi,yi,zi
 
-    def _get_ranges(self):  
+    def get_ranges(self):  
          sh=self.shape()
          lower=self.wcs.wcs_pix2world([[0,0,0]], 0)
          lower=lower[0]
@@ -287,70 +287,4 @@ class AData(ndd.NDData):
          uvel=ufreq.to(u.km/u.s, equivalencies=eq)
          ranges=[lvel.value,uvel.value,lower[1],upper[1],lower[0],upper[0]]      
          return ranges
-
-    def volume_show(self):
-         xi, yi, zi = self._get_mesh()
-         ranges=self._get_ranges()
-         grid = mlab.pipeline.scalar_field(xi, yi, zi, self.data)
-         mmin = self.data.min()
-         mmax = self.data.max()
-         #figure = mlab.figure('Volume Plot')
-         mlab.pipeline.volume(grid)#,vmin=mmin, vmax=mmin)
-         ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
-         ax.axes.label_format='%.3f'
-         mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
-         mlab.show()
-
- 
-    def contour_show(self):
-         xi, yi, zi = self._get_mesh()
-         ranges=self._get_ranges()
-         mmin = self.min()
-         mmax = self.max()
-         figure = mlab.figure('Contour Plot')
-         mlab.contour3d(xi,yi,zi,self.data,transparent=True,contours=10,opacity=0.5)
-         ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
-         ax.axes.label_format='%.3f'
-         mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
-         mlab.show()
-    
-#    def velocity_show(self):
-#         ranges=self._get_ranges()
-#         ranges=[ranges[2],ranges[3],ranges[4],ranges[5],ranges[0],ranges[1]]
-#         figure = mlab.figure('Velocity Plot')
-#         nn=self.data.shape[0]
-#         vect=np.linspace(0.0,1.0,nn)
-#         vfield=np.average(self.data,axis=0,weights=vect)
-#         mlab.surf(vfield,warp_scale="auto")
-#         ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="VEL [km/s] ",ranges=ranges,nb_labels=5)
-#         ax.axes.label_format='%.3f'
-#         mlab.colorbar(title='velocity', orientation='vertical', nb_labels=5)
-#         mlab.show()
-        
-    def stacked_show(self):
-         ranges=self._get_ranges()
-         ranges=[ranges[2],ranges[3],ranges[4],ranges[5],ranges[0],ranges[1]]
-         figure = mlab.figure('Stacked Plot')
-         img=self.stack()
-         mlab.imshow(img)
-         ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="VEL [km/s] ",ranges=ranges,nb_labels=5)
-         ax.axes.label_format='%.3f'
-         mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
-         mlab.show()
-   
-           
-#    def animate(self, inte, rep=True):
-#    		#TODO: this is not ported to the new wcs usage: maybe we must use wcsaxes to plot the wcs information...
-#    		""" Simple animation of the cube.
-#    				- inte       : time interval between frames
-#    				- rep[=True] : boolean to repeat the animation
-#    			"""
-#    		fig = plt.figure()
-#    		self.im = plt.imshow(self.data[0, :, :], cmap=plt.get_cmap('jet'), vmin=self.data.min(), vmax=self.data.max(), \
-#    												 extent=(
-#    														 self.alpha_border[0], self.alpha_border[1], self.delta_border[0],
-#    														 self.delta_border[1]))
-#    		ani = animation.FuncAnimation(fig, self._updatefig, frames=range(len(self.freq_axis)), interval=inte, blit=True,
-#    																	repeat=rep)
-#    		plt.show()
 

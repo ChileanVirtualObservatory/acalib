@@ -14,5 +14,5 @@ class AContainer:
            fmt.load_to_cont(path,self)
 
         def save(self,path):
-           fmt.save_from_cont(path,self)
+           fmt.save_from_cont(path,self) 
 
