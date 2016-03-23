@@ -93,8 +93,8 @@ class Universe:
         #meta['NAXIS4'] = 1
         #meta['BSCALE'] = 1.0
         #meta['BZERO'] = 0.0
-        meta['BMAJ'] = ang_res[0].value
-        meta['BMIN'] = ang_res[0].value
+        meta['BMAJ'] = 3*ang_res[0].value
+        meta['BMIN'] = 3*ang_res[0].value
         #meta['BPAN'] = 164.862686157
         meta['BTYPE'] = "Intensity"
         meta['OBJECT'] = "ACALIB Synthetic Object"

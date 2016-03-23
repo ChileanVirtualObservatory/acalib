@@ -51,7 +51,8 @@ def HDU_to_adata(hdu):
 
 
 def HDU_to_atable(hdu):
-   return ATable(hdu.data,meta=hdu.header)
+   log.warning("FITS Table ---> ATable not implemented Yet")
+   #return atable.ATable(data=hdu.data,meta=hdu.header)
 
 
 def load_fits_to_ws(path,name,ws):

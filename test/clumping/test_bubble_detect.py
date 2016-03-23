@@ -33,7 +33,7 @@ spar=cube.standarize()
 
 # use_meta not implemented yet, so compute parameters to use
 pixbsize=cube.meta['BMIN']/abs(cube.meta['CDELT1'])
-snrlimit=1.0
+snrlimit=0.5
 print "[TEST] beam size in pixels =",pixbsize
 
 # Bubble Detection
@@ -74,7 +74,7 @@ def GCProc():
    ct=ac.AContainer()
    ct.primary=gc.syn
    ct.atable.append(clist)
-   ct.save("gc_solution.fits")
+   #ct.save("gc_solution.fits")
    return gc.syn
 
 def GFProc():
@@ -136,8 +136,8 @@ for i in range(0,n):
    if remax > max_re:
       max_re=remax
    res.append(re)
-   #gp.volume(cb)
-   #gp.countour(cb)
+   gp.volume(cb)
+   gp.contour(cb)
 fig=plt.figure()
 val=cube.stack().max()
 plt.imshow(cube.stack(),cmap=cmap,vmin=0,vmax=val)
