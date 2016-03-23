@@ -22,29 +22,42 @@ cube=cont.primary
 spar=cube.standarize()
 
 spar=cube.standarize()
-gc=cl.BubbleClumps()
+bc=cl.BubbleClumps()
 # use_meta not implemented yet, so compute parameters to use
 pixbsize=cube.meta['BMIN']/abs(cube.meta['CDELT1'])
 print "beam size in pixels =",pixbsize
-gc.par['FWHMBEAM']=pixbsize
+bc.par['FWHMBEAM']=pixbsize
 
 total=cube.flux()
 telem=float(cube.count())
 maxporc=0.01
 samples=maxporc*telem
 print "Maximum Bubbles",int(samples),"= ",maxporc*100,"%" 
-gc.par['MAXBUB']=int(samples)
+bc.par['MAXBUB']=int(samples)
 snrlimit=0.5
 print "SNR = ",snrlimit
-gc.par['SNRLIMIT']=snrlimit
-gc.fit(cube,verbose=True)
+bc.par['SNRLIMIT']=snrlimit
+bc.fit(cube,verbose=True)
 
-gp.volume(cube)
-gp.countour(cube)
-gp.volume(gc.syn)
-gp.countour(gc.syn)
+gp.volume(bc.syn)
+gp.contour(bc.syn)
 
-#gc.test_clustering()
-gc.selected_clusters(5)
-#gc.reasonable_cluster()
+clust=bc.clustering(10.0,method='dbscan')
+fig = plt.figure("DBSCAN")
+bc.draw_cluster(fig,clust)
+
+clust=bc.clustering(0.8,method='affinity_propagation')
+fig = plt.figure("AFFINITY PROPAGATION")
+bc.draw_cluster(fig,clust)
+
+clust=bc.clustering(5,method='kmeans')
+fig = plt.figure("KMEANS")
+bc.draw_cluster(fig,clust)
+
+clust=bc.clustering(5,method='spectral')
+fig = plt.figure("SPECTRAL")
+bc.draw_cluster(fig,clust)
+
+plt.show()
+
 

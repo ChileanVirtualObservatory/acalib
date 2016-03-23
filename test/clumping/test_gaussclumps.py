@@ -24,6 +24,11 @@ gc.par['FWHMBEAM']=pixbsize
 clist=gc.fit(cube,verbose=True)
 print clist
 
+gp.stacked(gc.caa)
+gp.volume(gc.caa)
+gp.contour(gc.caa)
+
+
 gp.velocity(cube)
 gp.stacked(cube)
 gp.volume(cube)
