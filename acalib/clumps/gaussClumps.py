@@ -13,9 +13,6 @@ from astropy import log
 K=4*np.log(2.0)
 
 
-#def syn_from_table(mytab):
-     
-
 def jac_chi2(par,gc):
    # If the background is fixed, include zero background value
    val=np.nan*np.ones_like(par)
@@ -167,7 +164,7 @@ class GaussClumps:
      chi2 += sa*self.pdiff*self.pdiff + 4*sc*off +  sb*self.back_term*self.back_term
      return chi2
    
-   def updateResults(self,clump,lb,ub):
+   def update_results(self,clump,lb,ub):
      self.update_comp(clump)
      ff=self.model - clump[1]
      #print lb,ub
@@ -179,6 +176,13 @@ class GaussClumps:
      ff=ff.reshape(ub[0]-lb[0],ub[1]-lb[1],ub[2]-lb[2])
      ff*=self.par['RMS']
      self.data.add_flux(-ff,lb,ub)
+     ccode=self.caa.data.max() + 1
+     caaff=self.caa.data[slice(lb[0],ub[0]),slice(lb[1],ub[1]),slice(lb[2],ub[2])]
+     synff=self.syn.data[slice(lb[0],ub[0]),slice(lb[1],ub[1]),slice(lb[2],ub[2])]
+     tmpff=ff.copy()
+     tmpff[tmpff<self.par['RMS']]=0
+     caaff[synff<tmpff]=ccode
+     self.caa.replace_flux(caaff,lb,ub)
      self.syn.add_flux(ff,lb,ub)
      #TODO: improve area computation, right now using weigth ub, lb
      area=(ub-lb).sum()
@@ -593,6 +597,7 @@ class GaussClumps:
       # residuals remaining after subtraction of the fitted Gaussians. 
       self.data=cube.copy()
       self.syn=cube.empty_like()
+      self.caa=cube.empty_like()
       # Initialise the number of clumps found so far.
       iclump = 0
 
@@ -695,7 +700,7 @@ class GaussClumps:
                if clump[0] >= peak_thresh:
                   #record clump
                   clist+=tuple(clump)
-                  (csum,area)=self.updateResults(clump,lb,ub)
+                  (csum,area)=self.update_results(clump,lb,ub)
                   sumclumps+=csum
                   # TODO: implement this!
                   # Display the clump parameters on the screen if required. */

@@ -181,8 +181,8 @@ class BubbleClumps:
          - A synthetic cube with the subtracted values (self.syn)
          - A residual cube with the original cube minus the synthetic (self.residual)
          - The positions of the fitted bubbles (self.positions)
-         - The omplitued of the fitted bubbles (self.amplitudes)
-         - The energy cube, which is aneroded version of the residual (self.energy) """
+         - The amplitued of the fitted bubbles (self.amplitudes)
+         - The energy cube, which is an eroded version of the residual (self.energy) """
 
 
       # Set the RMS, or automatically find an estimate for it
@@ -259,30 +259,7 @@ class BubbleClumps:
          self.residual.add_flux(-rem*cb,lb,ub)
          self.syn.add_flux(rem*cb,lb,ub)
          self._update_energies(lb,ub)
-      # Type hack..
       self.positions=np.array(self.positions)
-      # TODO: put this in cube
-#      sh=cube.data.shape
-#      xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
-#      print xi.shape
-#      print cube.data.shape
-#      grid = mlab.pipeline.scalar_field(xi, yi, zi, cube.data)
-#      mmin = cube.data.min()
-#      mmax = cube.data.max()
-#      figure = mlab.figure('Orig')
-#      mlab.pipeline.volume(grid)
-##, vmin=mmin, vmax=mmin + .*(mmax-mmin))
-#      mlab.axes()
-#      #mlab.show()
-#      figure = mlab.figure('Synthetic')
-#      grid = mlab.pipeline.scalar_field(xi, yi, zi, self.syn.data)
-#      mmin = self.syn.data.min()
-#      mmax = self.syn.data.max()
-#      mlab.pipeline.volume(grid)
-##, vmin=mmin, vmax=mmin + .5*(mmax-mmin))
-#      mlab.axes()
-#      mlab.show()
-
       
 
    def linkage(self,verbose=False,show_dendogram=False):
@@ -293,6 +270,23 @@ class BubbleClumps:
       if show_dendogram:
          hier.dendrogram(self.link)
          plt.show()
+
+   def clustering(self,val,method='dbscan'):
+       pos=self.positions
+       if method=='dbscan':
+          clust=DBSCAN(eps=val).fit(pos) # epsilon
+       elif method=='kmeans':
+          clust=KMeans(n_clusters=int(val)).fit(pos) # k-clusters
+       elif method=='agglomerative':
+          clust=self.agglo_clust(val); # inconsistency
+       elif method=='affinity_propagation':
+          clust=AffinityPropagation(damping=val).fit(pos)  # damping
+       elif method=='spectral': 
+          clust=SpectralClustering(n_clusters=int(val)).fit(pos) # n-clusters
+       else:
+          log.warning("The clustering algorithm is not supported yet.")
+       return clust
+
 
    def reasonable_cluster(self):
        two_delta=2*self.db*np.sqrt(3)
@@ -360,22 +354,6 @@ class BubbleClumps:
        plt.show()
 
 
-   def clustering(self,val,method='dbscan'):
-       pos=self.positions
-       if method=='dbscan':
-          clust=DBSCAN(eps=val).fit(pos) # epsilon
-       elif method=='kmeans':
-          clust=KMeans(n_clusters=int(val)).fit(pos) # k-clusters
-       elif method=='agglomerative':
-          clust=self.agglo_clust(val); # inconsistency
-       elif method=='affinity_propagation':
-          clust=AffinityPropagation(damping=val).fit(pos)  # damping
-       elif method=='spectral': 
-          clust=SpectralClustering(n_clusters=int(val)).fit(pos) # n-clusters
-       else:
-          log.warning("The clustering algorithm is not supported yet.")
-       return clust
-
    def agglo_clust(self,val,criterion='inconsistent'):
        lab=hier.fcluster(self.link,val,criterion=criterion)
        return namedtuple('labels_',lab,'linkage_',self.link,'pdist_',self.dist)
@@ -407,7 +385,7 @@ class BubbleClumps:
    def test_clustering(self):
 
        plt.clf()
-       cl=self.clustering(30,'dbscan')
+       cl=self.clustering(3.0,'dbscan')
        fig = plt.figure(1, figsize=(4, 3))
        plt.title('dbscan')
        self.draw_cluster(fig,cl)
