@@ -43,12 +43,12 @@ for i in range(5):
   univ.add_component('methcloud',model)
 
 # Create Cube
-ang_res=np.array([2.0,2.0])*u.arcsec
+ang_res=np.array([1.0,1.0])*u.arcsec
 fov=np.array([200,200])*u.arcsec
 freq=229.8*u.GHz
-spe_res=0.01*u.GHz
+spe_res=0.005*u.GHz
 bw=0.5*u.GHz
-noise=0.02*u.Jy/u.beam
+noise=0.005*u.Jy/u.beam
 
 (cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise,0.1*noise)
 (sources,components)=tab

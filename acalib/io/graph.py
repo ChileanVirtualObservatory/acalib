@@ -7,12 +7,12 @@ from mayavi import mlab
 
 
 def volume(cube):
+     figure = mlab.figure('Volume Plot')
      xi, yi, zi = cube.get_mesh()
      ranges=cube.get_ranges()
      grid = mlab.pipeline.scalar_field(xi, yi, zi, cube.data)
      mmin = cube.data.min()
      mmax = cube.data.max()
-     #figure = mlab.figure('Volume Plot')
      mlab.pipeline.volume(grid)#,vmin=mmin, vmax=mmin)
      ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
      ax.axes.label_format='%.3f'
@@ -21,11 +21,11 @@ def volume(cube):
 
 
 def contour(cube):
+     figure = mlab.figure('Contour Plot')
      xi, yi, zi = cube.get_mesh()
      ranges=cube.get_ranges()
      mmin = cube.min()
      mmax = cube.max()
-     figure = mlab.figure('Contour Plot')
      mlab.contour3d(xi,yi,zi,cube.data,transparent=True,contours=10,opacity=0.5)
      ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
      ax.axes.label_format='%.3f'
@@ -33,9 +33,9 @@ def contour(cube):
      mlab.show()
 
 def stacked(cube):
+     figure = mlab.figure('Stacked Plot')
      ranges=cube.get_ranges()
      ranges=[ranges[2],ranges[3],ranges[4],ranges[5],ranges[0],ranges[1]]
-     figure = mlab.figure('Stacked Plot')
      img=cube.stack()
      mlab.imshow(img)
      ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="VEL [km/s] ",ranges=ranges,nb_labels=5)
@@ -45,10 +45,10 @@ def stacked(cube):
 
 
 def velocity(cube):
+     figure = mlab.figure('Velocity Map')
      ranges=cube.get_ranges()
      nn=cube.data.shape[0]
      ranges=[ranges[2],ranges[3],ranges[4],ranges[5],-nn/2,nn/2]
-     figure = mlab.figure('Velocity Map')
      #nn=cube.data.shape[0]
      #vect=np.linspace(0.0,1.0,nn)
      #vfield=np.average(cube.data,axis=0,weights=vect)
