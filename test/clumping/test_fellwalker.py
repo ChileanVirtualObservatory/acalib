@@ -20,12 +20,12 @@ spar=cube.standarize()
 
 fw = fwalker.FellWalker()
 
-caa,clump=fw.fit(cube)
+caa = fw.fit(cube)
 
 newcube=cube.copy()
 newcube.data=caa
 
 gp.stacked(newcube)
 gp.volume(newcube)
-gp.countour(newcube)
+gp.contour(newcube)
 
