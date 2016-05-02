@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 import copy
 
 from astropy import constants as const
@@ -92,9 +93,9 @@ class AData(ndd.NDData):
         return self.data.shape
    
     def max(self):
-    	        index=np.unravel_index(self.data.argmax(),self.data.shape)
-    		y=self.data[index]
-    		return (y,index)
+        index=np.unravel_index(self.data.argmax(),self.data.shape)
+        y=self.data[index]
+        return (y,index)
     
     def min(self):
     		index=np.unravel_index(self.data.argmin(),self.data.shape)
@@ -154,22 +155,24 @@ class AData(ndd.NDData):
                 #p#rint "fix",lower,upper
     		return [slice(lower[0],upper[0]),slice(lower[1],upper[1]),slice(lower[2],upper[2])]
     			
-#TODO: Only works for integers! (Axel... enjoy politics!)
-    def scale(self, scale):
-        dim = 0
-        start_time = time.time()
-        if (scale == 1):
-            return self.data
-        elif (scale < 1):
-            new_data = self.data[::1/scale, ::1/scale, ::1/scale]
-            return (new_data/np.sum(new_data))*np.sum(self.data)
-        else:
-            new_data = np.zeros((round(len(self.data)*scale),round(len(self.data[0])*scale), round(len(self.data[0][0])*scale)))          
-            #new_data[::scale, ::scale, ::scale] = self.data
-            new_data = interpolate(new_data, scale)          
-
+#now it works for reals! (Axel... enjoy politics!)
+#by default is uses degree 3 splines interpolation
+    def scale(self, factor, order=3):
+        #In case of a single float factor for all dimensions
+        if type(factor)=float:
+            if factor==1.:
+                return self.data
+            new_data = sp.ndimage.zoom(self.data, factor, order)
             return new_data
-
+        #In case if differente scaling for each dimension    
+        elif type(factor)==tuple and len(factor)==3:
+            new_data = sp.ndimage.zoom(self.data, factor, order)
+            return new_data
+        #In other case   
+        else:
+            return None
+        return
+    
     def rotate(self, angle):
         if (angle != 0):
             new_data = self.data.rotate(angle, Image.BICUBIC,1)
