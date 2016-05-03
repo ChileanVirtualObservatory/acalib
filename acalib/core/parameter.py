@@ -7,7 +7,7 @@ FWHM_TO_SIGMA = 1. / (8 * np.log(2))**0.5
 def _check(par,default):
    if not isinstance(par, u.Quantity):
       log.warning("Value '"+str(par)+"' without units, assuming '"+default.name+"'")
-      par=par*defaule
+      par=par*default
    return par
 
 def to_deg(par):
@@ -40,7 +40,6 @@ def fwhm_to_sigma(fwhm):
 
 def sigma_to_fwhm(fwhm):
    return fwhm/FWHM_TO_SIGMA
-
 
 def to_hz_deg(grad,freq,equiv):
    grad=_check(grad,u.Hz/u.deg)

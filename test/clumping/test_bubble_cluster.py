@@ -46,17 +46,17 @@ clust=bc.clustering(10.0,method='dbscan')
 fig = plt.figure("DBSCAN")
 bc.draw_cluster(fig,clust)
 
-#aclust=bc.clustering(0.8,method='affinity_propagation')
-#fig = plt.figure("AFFINITY PROPAGATION")
-#bc.draw_cluster(fig,clust)
+aclust=bc.clustering(0.8,method='affinity_propagation')
+fig = plt.figure("AFFINITY PROPAGATION")
+bc.draw_cluster(fig,clust)
 
-#clust=bc.clustering(5,method='kmeans')
-#fig = plt.figure("KMEANS")
-#bc.draw_cluster(fig,clust)
+clust=bc.clustering(5,method='kmeans')
+fig = plt.figure("KMEANS")
+bc.draw_cluster(fig,clust)
 
-#clust=bc.clustering(5,method='spectral')
-#fig = plt.figure("SPECTRAL")
-#bc.draw_cluster(fig,clust)
+clust=bc.clustering(5,method='spectral')
+fig = plt.figure("SPECTRAL")
+bc.draw_cluster(fig,clust)
 
 plt.show()
 
