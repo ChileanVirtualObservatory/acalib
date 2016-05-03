@@ -33,7 +33,7 @@ spar=cube.standarize()
 
 # use_meta not implemented yet, so compute parameters to use
 pixbsize=cube.meta['BMIN']/abs(cube.meta['CDELT1'])
-snrlimit=0.5
+snrlimit=1.5
 print "[TEST] beam size in pixels =",pixbsize
 
 # Bubble Detection
