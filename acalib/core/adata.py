@@ -211,20 +211,21 @@ class AData(ndd.NDData):
         return (y_min,y_fact)
 
 
-    def unstandarize(self,(y_min,y_fact)):
+    def unstandarize(self, y):
+        y_min = y[0]; y_fact = y_[1]
         self.data=self.data*y_fact + y_min
 
     
     def add_flux(self,flux,lower=None,upper=None):
         sli=self._slice(lower,upper)
-    	fl=np.array([0,0,0])
+        fl=np.array([0,0,0])
         fu=np.array(flux.shape)
         for i in range(0,3):
             if sli[i].start == 0:
                 fl[i]=flux.shape[i] - sli[i].stop
-    	    if sli[i].stop == self.data.shape[i]:
+            if sli[i].stop == self.data.shape[i]:
                 fu[i]=sli[i].stop - sli[i].start
-    	self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
+        self.data[sli]+=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
 
 
     def replace_flux(self,flux,lower=None,upper=None):
@@ -233,9 +234,9 @@ class AData(ndd.NDData):
         fu=np.array(flux.shape)
         for i in range(0,3):
             if sli[i].start == 0:
-                    fl[i]=flux.shape[i] - sli[i].stop
-            if sli[i].stop == self.data.shape[i]:
-    		    fu[i]=sli[i].stop - sli[i].start
+                fl[i]=flux.shape[i] - sli[i].stop
+            if sli[i].stop == self.data.shape[i]:    		    
+                fu[i]=sli[i].stop - sli[i].start
         self.data[sli]=flux[fl[0]:fu[0],fl[1]:fu[1],fl[2]:fu[2]]
 
 
