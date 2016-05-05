@@ -98,12 +98,23 @@ class RoiDetect:
 
 
     def vel_stacking(self,cube,slice_min = None, slice_max = None):
-        #dims = cube.shape()
-        #frec = dims[0]
-        #P_y = dims[1]
-        #P_x = dims[2]
-        #if slice_min:
-        #    slice_min = (slice_min, P_y, P_x)
-        #if slice_max:
-        #    slice_max = (slice_max, P_y, P_x)
-        return cube.stack()
+        dims = cube.shape()
+        frec = dims[0]
+        P_y = dims[1]
+        P_x = dims[2]
+        if slice_min:
+            slice_min = (slice_min, 0, 0)
+        else:
+            slice_min = (0, 0, 0)
+
+        if slice_max:
+            slice_max = (slice_max, P_y, P_x)
+        else:
+            slice_max = (frec, P_y, P_x)
+        
+        stacked = cube.stack(lower=slice_min, upper=slice_max)
+        min_stacked = min(stacked)
+        
+        h = (stacked - min_stacked) / (max(stacked) - min_stacked)
+
+        return h
