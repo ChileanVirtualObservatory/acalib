@@ -5,7 +5,6 @@ import numpy as np
 from astropy.wcs import wcs
 from mayavi import mlab
 
-
 def volume(cube):
      figure = mlab.figure('Volume Plot')
      xi, yi, zi = cube.get_mesh()
