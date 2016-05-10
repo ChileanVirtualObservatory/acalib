@@ -54,7 +54,7 @@ class WavClumps:
         data = cube.stack(axis=(0))
 
         #performing multiresolution analysis
-        mr_data = mr_analysis(data, max_level=10)
+        mr_data = self.mr_analysis(data)
 
         return mr_data
 
