@@ -23,6 +23,7 @@
 
 from astropy.io import fits
 import numpy as np
+import numpy.ma as ma
 import pylab
 import pyfits
 import glob
@@ -64,19 +65,27 @@ def cropAux (originalData):
 
 	minFilter = prom
 	
-	for i in xrange(0,height):
-		for j in xrange(0,width):
-			if originalData[i,j] > minFilter:
-				data[i,j] = originalData[i,j]
-				total+=originalData[i,j]
-				ntotal+=1
-			else:
-				data[i,j] = 0
+	plusFilter = ma.masked_array(originalData, mask= originalData <= minFilter)
+	total+= np.sum(plusFilter.compressed())
+	ntotal+= plusFilter.compressed().shape[0]
+	data = plusFilter.filled(0)
+
+	#for i in xrange(0,height):
+	#	for j in xrange(0,width):
+	#		if originalData[i,j] > minFilter:
+	#			data[i,j] = originalData[i,j]
+	#			total+=originalData[i,j]
+	#			ntotal+=1
+	#		else:
+	#			data[i,j] = 0
 
 	minFilter = total/ntotal
 
 	maxv = -999999999999
 	# se suman al pixel actual los valores de todos los pixeles contiguos y se guarda el maximo valor
+
+
+
 	for i in xrange(0,height):
 		for j in xrange(0,width):
 			if data[i,j] <= minFilter:
@@ -163,11 +172,15 @@ def cropAux (originalData):
 				if j > maxx:
 					maxx = j
 
+	print originalData, miny, maxy, minx, maxx
 	originalData = originalData[miny:maxy, minx:maxx]
 	newHeight, newWidth = originalData.shape
 
+	print originalData
+
 	for i in xrange(0,newHeight):
 		for j in xrange(0,newWidth):
+			print i,j
 			if originalData[i,j] > 0 and i == 0 and j == 0 and originalData[i+1,j] == 0 and originalData[i,j+1] == 0 and originalData[i+1,j+1] == 0:
 				originalData[i,j] = 0
 			elif originalData[i,j] > 0 and i == (newHeight-1) and j == (newWidth-1) and originalData[i-1,j] == 0 and originalData[i,j-1] == 0 and originalData[i-1,j-1] == 0:
@@ -227,9 +240,7 @@ def minValue(data):
 
 def manualCrop(data,E1,E2,E3,E4):
 
-	print data
 	newdata = data[int(E3):int(E4), int(E1):int(E2)]
-	print newdata
 	return newdata
 
 
@@ -240,11 +251,16 @@ def crop(inputDir, outputDir):
 	dir_png = outputDir+'/PNG_Images' 
 	if not os.path.isdir(dir_png):
 		os.makedirs(dir_png)
+	
+	file = open('res/list.txt','w')
+	file.write(str(data))
+	file.close()
+
 	for i in xrange(0,len(data)):
 
 		name = data[i].split('/')[-1]#.split('.')[0]
-		image = fits.getdata(data[i])
 		print name
+		image = fits.open(data[i], ignore_missing_end = True )[0].data
 		if isinstance(image, list):
 			image = image[0]
 
