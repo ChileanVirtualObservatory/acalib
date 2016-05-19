@@ -135,7 +135,7 @@ class RoiDetect:
         rows = dims[0]
         cols = dims[1]
         size = np.min([rows,cols])
-        precision = size * 1/100. 
+        precision = size * 0.2/100. 
         
         image = image.astype('float64')
 
@@ -248,7 +248,7 @@ class RoiDetect:
 
         # Are we normalizing the kernel?
         if norm:
-            k = kern / sum(abs(kern))
+            k = kern / np.sum(abs(kern))
         else:
             k = kern
 
@@ -264,7 +264,7 @@ class RoiDetect:
         # Loop through the data to apply the kernel.
         for col in xrange(x_w):
             for row in xrange(x_h):
-                temp = x_pad[range(row,row+width), range(col,col+width)]
+                temp = x_pad[row:(row+width),col:(col+width)]
                 s[row][col] = np.sum(k*temp)
 
         return s
