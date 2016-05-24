@@ -114,6 +114,8 @@ class SlapClient(object):
             return data
         elif format.lower() == "votable":
             return cls.__to_votable(data)
+        elif format.lower() == "array":
+            return cls.__to_array(data)
         else:
             raise ValueError("The Output value is not Valid")
 
@@ -157,6 +159,10 @@ class SlapClient(object):
         # https://regex101.com/r/xV9yJ4/1
         p = re.compile(ur'<TR>(.*?)<\/TR>', re.UNICODE | re.DOTALL)
         lines = re.findall(p, data)
+        p2 = re.compile(ur'<TD>(.*?)<\/TD>|(.?)<TD\/>', re.UNICODE | re.DOTALL)
+        for line in lines:
+            parsed = re.findall(p2,line)
+            print parsed
 
 
 
@@ -178,7 +184,7 @@ class SlapClient(object):
         :param kwargs:
         :return:
         """
-        return self.query(self.__slap_service, slap_version=self.__slap_version, **kwargs)
+        return self.query(self.__slap_service, output_format=output_format, slap_version=self.__slap_version, **kwargs)
 
     def query_fields(self):
         """
@@ -208,7 +214,7 @@ class SlapClient(object):
 if __name__ == "__main__":
     service = "https://find.nrao.edu/splata-slap/slap"
     client = SlapClient(service)
-    #data = client.query_service(wavelength={"gte": 0.00260075, "lte": 0.00260080})
+    data = client.query_service(output_format="array",wavelength={"gte": 0.00260075, "lte": 0.00260080})
     #print data
 
-    print client.query_fields()
+    #print client.query_fields()
