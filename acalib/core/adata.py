@@ -11,7 +11,6 @@ import numpy.ma as ma
 import astropy.wcs as astrowcs
 import parameter as par
 import traceback
-from mayavi import mlab
 
 
 __all__ = ["AData"]
