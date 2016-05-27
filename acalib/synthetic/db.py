@@ -136,6 +136,7 @@ class lineDB:
             count += 1
 
         command = command + ")"
+
         self.printTableDef(output_command)
         self.connect()
         self.pointer.execute(command)
