@@ -10,7 +10,6 @@ import astropy.nddata as ndd
 import numpy.ma as ma
 import astropy.wcs as astrowcs
 import traceback
-from mayavi import mlab
 
 
 __all__ = ["AData"]

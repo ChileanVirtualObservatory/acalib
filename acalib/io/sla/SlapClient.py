@@ -114,6 +114,8 @@ class SlapClient(object):
             return data
         elif format.lower() == "votable":
             return cls.__to_votable(data)
+        elif format.lower() == "array":
+            return cls.__to_array(data)
         else:
             raise ValueError("The Output value is not Valid")
 
@@ -152,6 +154,19 @@ class SlapClient(object):
         temp = StringIO.StringIO()
         temp.write(data)
         return votable.parse(temp)
+    @staticmethod
+    def __to_array(data):
+        # https://regex101.com/r/xV9yJ4/1
+        p = re.compile(ur'<TR>(.*?)<\/TR>', re.UNICODE | re.DOTALL)
+        lines = re.findall(p, data)
+        p2 = re.compile(ur'<TD>(.*?)<\/TD>|(.?)<TD\/>', re.UNICODE | re.DOTALL)
+        for line in lines:
+            parsed = re.findall(p2,line)
+            print parsed
+
+
+
+
 
     def query_service(self, output_format="txt", **kwargs):
         """
@@ -169,7 +184,7 @@ class SlapClient(object):
         :param kwargs:
         :return:
         """
-        return self.query(self.__slap_service, slap_version=self.__slap_version, **kwargs)
+        return self.query(self.__slap_service, output_format=output_format, slap_version=self.__slap_version, **kwargs)
 
     def query_fields(self):
         """
@@ -177,15 +192,14 @@ class SlapClient(object):
         :return: A list of dictionaries, each one containing the information of one field.
         Common keys of these dictionaries are "name", description, "ID"
         """
-        basic = SlapClient.query(self.__slap_service, self.__slap_version,
-                                 wavelength=1.0)  # Splatalogue can't deal with wavelenght == 0 XD!
+        basic = SlapClient.query(self.__slap_service,output_format="txt", slap_version=self.__slap_version,wavelength=1.0)  # Splatalogue can't deal with wavelenght == 0 XD!
         # Use Regex <FIELD (.*?)>.*?<DESCRIPTION>(.*?)<\/DESCRIPTION>.*?<\/FIELD>
         # https://regex101.com/r/pL7pY1/1
         p = re.compile(ur'<FIELD (.*?)>.*?<DESCRIPTION>(.*?)<\/DESCRIPTION>.*?<\/FIELD>', re.UNICODE | re.DOTALL)
 
-        # Use Regex (.*?)="(.*?)".*?
-        # https://regex101.com/r/qW8iX8/1
-        p2 = re.compile(ur'(.*?)="(.*?)".*?', re.UNICODE | re.DOTALL)
+        # Use Regex \s?(.*?)="(.*?)".*?
+        # https://regex101.com/r/qW8iX8/2
+        p2 = re.compile(ur'\s?(.*?)="(.*?)".*?', re.UNICODE | re.DOTALL)
 
         result = re.findall(p, basic)
         fields = map(lambda s: [re.findall(p2, s[0]), s[1]], result)
@@ -200,5 +214,7 @@ class SlapClient(object):
 if __name__ == "__main__":
     service = "https://find.nrao.edu/splata-slap/slap"
     client = SlapClient(service)
-    data = client.query_service(wavelength={"gte": 0.00260075, "lte": 0.00260080})
-    print data
+    data = client.query_service(output_format="array",wavelength={"gte": 0.00260075, "lte": 0.00260080})
+    #print data
+
+    #print client.query_fields()
