@@ -175,17 +175,24 @@ class BubbleClumps:
          delta=np.array([-1,-1,-1])*d
          self._update_min_energy(mat,ub,lb,delta)
 
-  
-   def fit(self,cube,verbose=False,use_meta=True):
-      """Feed the algorithm with a Cube to bubblelize. This process generates:
-         - A synthetic cube with the subtracted values (self.syn)
-         - A residual cube with the original cube minus the synthetic (self.residual)
-         - The positions of the fitted bubbles (self.positions)
-         - The amplitued of the fitted bubbles (self.amplitudes)
-         - The energy cube, which is an eroded version of the residual (self.energy) """
-
-
-      # Set the RMS, or automatically find an estimate for it
+   def iterate(self,verbose):
+      rms=self.par['RMS']
+      y,xmax=self.energy.max()
+      xmax=np.array(xmax)
+      rem=y - rms
+      self.amplitudes.append(rem)
+      self.positions.append(xmax)
+      if verbose:
+          log.info("Maximum energy E = "+str(y)+" at "+str(xmax))
+          log.info("Remove E = "+str(rem)+" SNR = "+str(y/rms - 1.0))# + " GAP = "+ str(y/rms - 1.0 - snrlimit))
+      ub=xmax + self.delta + 1
+      lb=xmax - self.delta
+      self.residual.add_flux(-rem*self.cb,lb,ub)
+      self.syn.add_flux(rem*self.cb,lb,ub)
+      self._update_energies(lb,ub)
+      return rem
+   
+   def prepare(self,cube,verbose):
       if not self.par.has_key('RMS'):
          rms=cube.estimate_rms()
          self.par['RMS']=rms
@@ -195,8 +202,6 @@ class BubbleClumps:
       velres=self.par['VELORES']
       fwhmbeam=self.par['FWHMBEAM']
       bsize=self.par['BSIZE']
-      snrlimit=self.par['SNRLIMIT']
-      maxbub=self.par['MAXBUB']
       cutlev=self.par['CUTLEV']
       # Copy the supplied cube into a work cube which will hold the
       # residuals remaining after subtraction of the fitted Gaussians. 
@@ -224,12 +229,32 @@ class BubbleClumps:
       lb=(0,0,0)
       ub=self.residual.shape()
       self._update_energies(lb,ub)
-      cb=self._create_bubble()
-      delta=np.array([self.ds,self.db,self.db])
-      iterate = True
-      niter=0
+      self.cb=self._create_bubble()
+      self.delta=np.array([self.ds,self.db,self.db])
       self.amplitudes=[]
       self.positions=[]
+  
+   # Back compatibility function
+   def fit(self,cube,verbose=False,use_meta=True):
+       log.warning("The .fit() interface will be removed soon, please use .run()")
+       return self.run(cube,verbose,use_meta)
+
+   def run(self,cube,verbose=False,use_meta=True):
+      """Feed the algorithm with a Cube to bubblelize. This process generates:
+         - A synthetic cube with the subtracted values (self.syn)
+         - A residual cube with the original cube minus the synthetic (self.residual)
+         - The positions of the fitted bubbles (self.positions)
+         - The amplitued of the fitted bubbles (self.amplitudes)
+         - The energy cube, which is an eroded version of the residual (self.energy) """
+
+
+      # Set the RMS, or automatically find an estimate for it
+      self.prepare(cube,verbose)
+      snrlimit=self.par['SNRLIMIT']
+      maxbub=self.par['MAXBUB']
+      rms=self.par['RMS']
+      iterate = True
+      niter=0
       while True:
          # Report the iteration number to the user if required.
          niter+=1
@@ -237,28 +262,17 @@ class BubbleClumps:
             if verbose:
                log.info("Criterion Met: maximum bubbles = "+str(maxbub))
             break
-         y,xmax=self.energy.max()
-         xmax=np.array(xmax)
-         rem=y - rms
+         if verbose:
+            log.info("Iteration: "+str(niter))
+         rem=self.iterate(verbose)
          if rem <= 0.0:
             if verbose:
                log.info("Criterion Met: Energy == 0 ")
             break
-         self.amplitudes.append(rem)
-         self.positions.append(xmax)
-         if (y/rms - 1.0 < snrlimit):
+         if (rem/rms< snrlimit):
             if verbose:
-               log.info("Criterion Met: SNR="+str(y/rms-1.0)+"<"+str(snrlimit))
+               log.info("Criterion Met: SNR="+str(rem/rms)+"<"+str(snrlimit))
             break
-         if verbose:
-            log.info("Iteration: "+str(niter))
-            log.info("Maximum energy E = "+str(y)+" at "+str(xmax))
-            log.info("Remove E = "+str(rem)+" SNR="+str(y/rms - 1.0))
-         ub=xmax + delta + 1
-         lb=xmax - delta
-         self.residual.add_flux(-rem*cb,lb,ub)
-         self.syn.add_flux(rem*cb,lb,ub)
-         self._update_energies(lb,ub)
       self.positions=np.array(self.positions)
       
 
