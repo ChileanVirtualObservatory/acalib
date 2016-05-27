@@ -17,18 +17,20 @@ spar=cube.standarize()
 pc=pclumps.PixelClumps()
 # use_meta not implemented yet, so compute parameters to use
 pixbsize=cube.meta['BMIN']/abs(cube.meta['CDELT1'])
-print "beam size in pixels =",pixbsize
+#print "beam size in pixels =",pixbsize
 pc.par['FWHMBEAM']=pixbsize
 pc.par['SNRLIMIT']=1.0
 
-# Fitme :S
-clist=pc.fit(cube,verbose=True)
-print clist
-
 #gp.velocity(cube)
 #gp.stacked(cube)
-#gp.volume(cube)
-#gp.contour(cube)
+gp.volume(cube)
+gp.contour(cube)
+
+
+# Fitme :S
+clist=pc.fit(cube,verbose=True)
+#print clist
+
 
 #gp.stacked(gc.syn)
 #gp.volume(gc.syn)

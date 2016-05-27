@@ -9,7 +9,6 @@ from astropy import log
 import astropy.nddata as ndd
 import numpy.ma as ma
 import astropy.wcs as astrowcs
-import parameter as par
 import traceback
 from mayavi import mlab
 
@@ -256,19 +255,23 @@ class AData(ndd.NDData):
         xi, yi, zi = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
         return xi,yi,zi
 
-    def get_ranges(self):  
-        sh=self.shape()
-        lower=self.wcs.wcs_pix2world([[0,0,0]], 0)
-        lower=lower[0]
-        sh=sh[::-1]
-        upper=self.wcs.wcs_pix2world([sh], 1)
-        upper=upper[0]
-        lfreq=lower[2]*u.Hz
-        ufreq=upper[2]*u.Hz
+    def get_ranges(self,lower=None,upper=None):  
+        if lower==None:
+            lower=[0,0,0]
+        if upper==None:
+            upper=self.data.shape
+        lower=lower[::-1]
+        lwcs=self.wcs.wcs_pix2world([lower], 0)
+        lwcs=lwcs[0]
+        upper=upper[::-1]
+        uwcs=self.wcs.wcs_pix2world([sh], 0)
+        uwcs=uwcs[0]
+        lfreq=lwcs[2]*u.Hz
+        ufreq=uwcs[2]*u.Hz
         rfreq=self.wcs.wcs.restfrq*u.Hz
         eq= u.doppler_radio(rfreq)
         lvel=lfreq.to(u.km/u.s, equivalencies=eq)
         uvel=ufreq.to(u.km/u.s, equivalencies=eq)
-        ranges=[lvel.value,uvel.value,lower[1],upper[1],lower[0],upper[0]]      
+        ranges=[lvel.value,uvel.value,lwcs[1],uwcs[1],lwcs[0],uwcs[0]]      
         return ranges
 
