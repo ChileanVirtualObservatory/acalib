@@ -263,7 +263,7 @@ class AData(ndd.NDData):
         lwcs=self.wcs.wcs_pix2world([lower], 0)
         lwcs=lwcs[0]
         upper=upper[::-1]
-        uwcs=self.wcs.wcs_pix2world([sh], 0)
+        uwcs=self.wcs.wcs_pix2world([upper], 0)
         uwcs=uwcs[0]
         lfreq=lwcs[2]*u.Hz
         ufreq=uwcs[2]*u.Hz
