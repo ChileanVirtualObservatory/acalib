@@ -1,5 +1,5 @@
 import numpy as np
-import numba 
+#import numba 
 
 
 """
@@ -20,7 +20,7 @@ import numba
 *     an additional requirement for an output pixel to be set on is that
 *     the corresponding input pixel must be on.
 """
-@numba.jit('float64[:,:,:] (int64[:,:,:], float64, int64, int64, int64)')
+#@numba.jit('float64[:,:,:] (int64[:,:,:], float64, int64, int64, int64)')
 def remove_isolate(inp, thresh, on, off, centre):
    out = np.empty_like(inp)
 
@@ -74,7 +74,7 @@ def remove_isolate(inp, thresh, on, off, centre):
 *     examined, and the output pixel is assigned the most commonly
 *     occurring input value.
 """
-@numba.jit('float64[:,:,:] (float64[:,:,:])')
+#@numba.jit('float64[:,:,:] (float64[:,:,:])')
 def smooth_boundary(inp):
    out = np.copy(inp)
    shape = inp.shape
