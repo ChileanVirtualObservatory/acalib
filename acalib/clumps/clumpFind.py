@@ -30,11 +30,9 @@ class FellWalker:
 
    def create_caa(self, data):
       caa = np.zeros_like(data.data).astype(np.int)
-      #Check invalid pixels (below threshold)
-      rms = self.par["RMS"]
-      threshold = self.par['THRESH']*rms
-      #Aditionally, NaN valued pixels are set as unusable -> filled(1)
-      mask = np.array((data<threshold).filled(1))
+
+      #NaN valued pixels are set as unusable -> filled(1)
+      mask = np.array(data.filled(1))
       caa[mask] = -1
       return caa
 
@@ -65,7 +63,68 @@ class FellWalker:
       ret = ret[::-1]
       return ret
 
+   def neighborhood(self, pos, caa, naxis):
+      #dimensions of caa array
+      dims = caa.shape
+      #actual position
+      (x,y,z) = pos
+      #clump labels of neighbors
+      ret = list()
+
+      #TODO
+      if naxis==1:
+         return ret
+
+      #TODO
+      elif naxis==2:
+         return ret
+
+      elif naxis==3:
+         for i in [-1,0,1]:
+            for j in [-1,0,1]:
+               for k in [-1,0,1]:
+                  if i==j==k==0: continue
+                  neigh = (x+i,y+j,z+k)
+                  #out condition 1
+                  out1 = neigh[0]<0 or neigh[1]<0 or neigh[2]<0
+                  #out condition 2
+                  out2 = neigh[0]>=dims[0] or neigh[1]>=dims[1] or neigh[2]>=dims[2]
+
+                  if out1 or out2: continue
+                  elif caa[neigh]<=0: continue
+                  else: ret.append(caa[neigh])
+      return ret.sort()
+
    def scan(self, data, caa, clevel, naxis):
+      """
+      Note the next available index value. This value is saved now so that
+      we can differentiate later between PixelSets created at the current
+      contour level and those created at higher contour levels (PixelSets
+      created at higher contour levels will have indices less than hindex).
+      """
+      hindex = self.index
+
+      """
+      Scan the data array for good pixels which are above (or at) the supplied
+      contour level and have not yet been assigned to a PixelSet (i.e. have a
+      null index in the caa array). Keep a check on whether the pixel is
+      an edge pixel or not (TODO).
+      """
+      mask = np.logical_and(data>=clevel, caa==0)
+      positions = np.array(np.where(mask)).T
+
+      for pos in positions:
+         """
+         When such a pixel is found, have a look at its immediate neighbours and
+         see if any of them have already been assigned to a PixelSet. If they
+         have, identify which PixelSet they are assigned to. We distinguish two
+         different types of PixelSets; those which were identified at this contour
+         level, and those which were identified at higher contour levels.
+         """
+         neighbors = self.neighborhood(pos, caa, naxis, hindex)
+
+
+
       return
 
 
@@ -110,6 +169,10 @@ class FellWalker:
 
       #Initialise the largest data value in the remaining unassigned pixels.
       self.maxrem = maxv
+
+      #Initialise the index used to identify the next contiguous set of
+      #pixels found
+      self.index = 1
 
       #Loop round all contour levels.
       for clevel in levels:
