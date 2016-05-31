@@ -1,6 +1,6 @@
 import astropy.units as u
 import numpy as np
-import parameter as par
+from . import parameter as par
 
 def clump_to_gauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
    # Parameter sanitization
