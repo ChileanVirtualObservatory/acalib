@@ -193,4 +193,4 @@ class TestJsonImporter(JsonImporter):
 
 if __name__ == "__main__":
     table = ATable.import_from(TestJsonImporter('test.json'))
-    print table
+    print(table)
