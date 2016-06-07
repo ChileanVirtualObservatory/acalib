@@ -42,7 +42,7 @@ class MayaviVisualization(HasTraits):
 			volume = mlab.pipeline.scalar_field(xi*shape[1]/shape[0], yi, zi, updated_cube.data)
 			mlab.pipeline.volume(volume)
 		if(volume_type == 'contour'): 
-			mlab.contour3d(xi*shape[1]/shape[0],yi,zi,cube.data,transparent=True,contours=10,opacity=0.5)
+			mlab.contour3d(xi*shape[1]/shape[0],yi,zi,updated_cube.data,transparent=True,contours=10,opacity=0.5)
 		# Adjust the axes to make it a cube.
 		extent = [0, shape[1], 0, shape[1], 0, shape[2]]
 		ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5, extent=extent)
@@ -56,6 +56,7 @@ class MayaviVisualization(HasTraits):
 		self.mesh_grid.point_data.scalars = mesh_data.ravel()
 		self.mesh_grid.point_data.scalars.name = 'scalars'
 		self.mesh_grid.dimensions = mesh_data.shape
+                print((lower_stack_limit[0]*shape[1]/shape[0], upper_stack_limit[0]*shape[1]/shape[0]))
 		self.mesh_grid.x_coordinates = np.array((lower_stack_limit[0]*shape[1]/shape[0], upper_stack_limit[0]*shape[1]/shape[0]), dtype=np.int32)
 		self.mesh_grid.y_coordinates = np.array((lower_stack_limit[1], upper_stack_limit[1]), dtype=np.int32)
 		self.mesh_grid.z_coordinates = np.array((lower_stack_limit[2], upper_stack_limit[2]), dtype=np.int32)
@@ -63,6 +64,7 @@ class MayaviVisualization(HasTraits):
 		mlab.pipeline.surface(mlab.pipeline.extract_edges(self.wireframe), color=(0, 0, 0))
 		
 	def update_wireframe(self):
+                print((lower_stack_limit[0]*shape[1]/shape[0], upper_stack_limit[0]*shape[1]/shape[0]))
 		self.mesh_grid.x_coordinates = np.array((lower_stack_limit[0]*shape[1]/shape[0], upper_stack_limit[0]*shape[1]/shape[0]), dtype=np.int32)
 		self.mesh_grid.y_coordinates = np.array((lower_stack_limit[1], upper_stack_limit[1]), dtype=np.int32)
 		self.mesh_grid.z_coordinates = np.array((lower_stack_limit[2], upper_stack_limit[2]), dtype=np.int32)
@@ -98,7 +100,7 @@ class MatplotlibVisualization(FigureCanvas):
 			ranges = cube.get_ranges(lower_stack_limit, upper_stack_limit)
 			vel = np.linspace(ranges[0], ranges[1], upper_stack_limit[0]-lower_stack_limit[0])
 			spectre = cube.stack(lower_stack_limit, upper_stack_limit, (1,2))
-			self.axes.plot(vel, spectre)
+			self.axes.plot(vel, spectre,)
 			if(ranges[0] > ranges[1]): self.axes.invert_xaxis()
 		if(type == 'stacked'):
 			# Calculate a new cube adjusted to limits.
@@ -153,7 +155,7 @@ class MatplotlibQWidget(QtGui.QWidget):
 	
 ############### Load the file and the data inside. ############### 
 ##################################################################
-folder = '../../../../fits/'
+folder = '/home/mauricio/Downloads/2011.0.00772.S/sg_ouss_id/group_ouss_id/member_ouss_id/product/'
 #fits_file = folder+'M100line.image.fits'
 #fits_file = folder+'Boom.cm.cln.fits'
 #fits_file = folder+'Orion.methanol.cbc.contsub.image.fits'
@@ -181,7 +183,7 @@ mmax = cube.max()
 # Determine the threshold.
 rms=cube.estimate_rms()
 max_threshold = int(mmax[0]/rms)
-min_threshold_factor = 1
+min_threshold_factor = 8
 max_threshold_factor = max_threshold
 
 # Create the limits for the stacked view.
