@@ -34,7 +34,25 @@ class RoiDetect:
             pixel_masked = self._pixel_processing(pixel)
             spectra += pixel_masked
         spectra = self._pixel_processing(spectra)
-        return spectra
+
+	slices = []
+	min_slice = -1
+	max_slice = -1
+	for i in range(frec-1):
+		if spectra[i] != 0:
+			if min_slice == -1:
+				min_slice = i
+			else:
+				if spectra[i+1] == 0:
+					max_slice = i+1
+					slices.append(slice(min_slice,max_slice))
+					min_slice = -1
+				else:
+					if i == frec-2:
+						max_slice = i+1
+						slices.append(slice(min_slice,max_slice))
+
+        return spectra,slices
 
     def _pixel_processing(self,pixels):
         acum = self._accumulating(pixels)
