@@ -181,7 +181,7 @@ class FellWalker:
    def merge(self, clump, peaks, cols, caa, minDip):
       """
       Enter an iterative loop in which we join clumps that have a small dip
-      between them. Quit when an interation fails to merge any more clumps.
+      between them. Finish when an interation fails to merge any clumps.
       """
       merge=True
       while merge:
