@@ -6,6 +6,7 @@ from copy import deepcopy
 from os.path import isfile
 from astropy.io import fits
 import numpy as np
+from astropy.io import votable
 
 
 class ATable(AstropyTable):
@@ -178,6 +179,24 @@ class JsonImporter(AbstractImporter):
 
         return values
 
+class VoTableImporter(AbstractImporter):
+    def load(self):
+        if isfile(self.source):
+            self.data = votable.parse_single_table(self.source, pedantic=False)
+        else:
+            self.data = self.source
+
+    def read_colnames(self):
+        """
+        Read column names to construct the table.
+        """
+        return map((lambda x: x.name),self.data.fields)
+
+    def read_rows(self):
+        """
+        Read each row. Should return an iterable (ideally a generator).
+        """
+        return self.data.array.data
 
 
 # the client of the ATable importer should extend the AbstractImporter class
