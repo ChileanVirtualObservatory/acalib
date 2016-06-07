@@ -12,11 +12,13 @@ from skimage.measure import label
 import matplotlib.pyplot as plt
 
 
-class RoiDetect:
+
+
+class SpectraSketcher:
     def __init__(self):
         pass
 
-    def cube_spectra(self,adata,samples, replace = False):
+    def cube_spectra(self,adata,samples):
         cube = adata.data
         dims = adata.shape()
         P_x = dims[2]
@@ -27,14 +29,32 @@ class RoiDetect:
 
         spectra = np.zeros(frec)
 
-        x_ = np.random.choice(P_x_range,samples, replace)
-        y_ = np.random.choice(P_y_range,samples, replace)
-        pixels = cube[:,y_,x_].T
-        for pixel in pixels:
+        for i in xrange(samples):
+            x_ = np.random.choice(P_x_range,1)
+            y_ = np.random.choice(P_y_range,1)
+            pixel = cube[:, y_, x_] 
             pixel_masked = self._pixel_processing(pixel)
             spectra += pixel_masked
         spectra = self._pixel_processing(spectra)
-        return spectra
+
+        slices = []
+        min_slice = -1
+        max_slice = -1
+        for i in range(frec-1):
+            if spectra[i] != 0:
+                if min_slice == -1:
+                    min_slice = i
+                else:
+                    if spectra[i+1] == 0:
+                        max_slice = i+1
+                        slices.append(slice(min_slice,max_slice))
+                        min_slice = -1
+                    else:
+                        if i == frec-2:
+                            max_slice = i+1
+                            slices.append(slice(min_slice,max_slice))
+
+        return spectra,slices
 
     def _pixel_processing(self,pixels):
         acum = self._accumulating(pixels)
@@ -129,13 +149,19 @@ class RoiDetect:
 
         return h
 
+
+class GaussianSegmentation:
+    def __init__(self,prob = 0.05, precision = 2./100):
+        self.prob = prob
+        self.precision = precision
+
     def gaussian_mix(self,image):
-        prob = 0.05
+        prob = self.prob
         dims = image.shape
         rows = dims[0]
         cols = dims[1]
         size = np.min([rows,cols])
-        precision = size * 0.2/100. 
+        precision = size * self.precision 
         
         image = image.astype('float64')
 
