@@ -16,7 +16,7 @@ class RoiDetect:
     def __init__(self):
         pass
 
-    def cube_spectra(self,adata,samples, replace = False):
+    def cube_spectra(self,adata,samples):
         cube = adata.data
         dims = adata.shape()
         P_x = dims[2]
@@ -27,10 +27,10 @@ class RoiDetect:
 
         spectra = np.zeros(frec)
 
-        x_ = np.random.choice(P_x_range,samples, replace)
-        y_ = np.random.choice(P_y_range,samples, replace)
-        pixels = cube[:,y_,x_].T
-        for pixel in pixels:
+        for i in xrange(samples):
+            x_ = np.random.choice(P_x_range,1)
+            y_ = np.random.choice(P_y_range,1)
+            pixel = cube[:, y_, x_] 
             pixel_masked = self._pixel_processing(pixel)
             spectra += pixel_masked
         spectra = self._pixel_processing(spectra)
