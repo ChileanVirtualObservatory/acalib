@@ -9,7 +9,7 @@ import cProfile
 import acalib.clumps.wavClumps as wclump
 import matplotlib.pyplot as plt
 from acalib import acontainer as ac
-from acalib.io import graph as gp
+#from acalib.io import graph as gp
 
 
 cont=ac.AContainer()
@@ -21,14 +21,15 @@ spar=cube.standarize()
 wc = wclump.WavClumps()
 
 #multiresolution data
+print(cube.data.shape)
 mr_data = wc.fit(cube)
 levels = mr_data.shape[2]
 
-fig = plt.figure()
 for i in range(levels):
+    fig = plt.figure()
     plt.imshow(mr_data[:,:,i], origin='image', interpolation="nearest", cmap=plt.cm.gray)
-    plt.set_title('Level: {0}'.format(i), fontsize=12)
-plt.show()
+    fig.suptitle('Level: {0}'.format(i), fontsize=12)
+    plt.show()
 
 
 #newcube=cube.copy()

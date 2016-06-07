@@ -17,12 +17,19 @@ import matplotlib.cm as cm
 from scipy import ndimage
 from scipy.spatial.distance import pdist
 import math
-from acalib.io import graph
 from acalib import flux
 from numpy.linalg import inv
 from numpy.linalg import det
 from numpy.linalg import norm
-from compiler.ast import flatten
+
+def flatten(x):
+    result = []
+    for el in x:
+        if hasattr(el, "__iter__") and not isinstance(el, str):
+            result.extend(flatten(el))
+        else:
+            result.append(el)
+    return result
 
 class PixelClumps:
 
@@ -59,16 +66,16 @@ class PixelClumps:
       
       return my_a,my_mu,my_P
  
-   def KL_div(self,pixel_tree,new_mu,new_Prec):
-         # Evaluate
-         elems=flatten(pixel_tree)
-         e_amps=self.orig_amps[elems]
-         e_amps=e_amps/e_amps.sum()
-         feat=self.orig_mu[elems]
-         gauss=flux.create_gauss(new_mu,new_Prec,feat.T,1.0)
-         gauss=gauss/gauss.sum()
-         KL=e_amps.dot(np.log2(e_amps/gauss))
-         return(KL)
+   #def KL_div(self,pixel_tree,new_mu,new_Prec):
+   #      # Evaluate
+   #      elems=flatten(pixel_tree)
+   #      e_amps=self.orig_amps[elems]
+   #      e_amps=e_amps/e_amps.sum()
+   #      feat=self.orig_mu[elems]
+   #      gauss=flux.create_gauss(new_mu,new_Prec,feat.T,1.0)
+   #      gauss=gauss/gauss.sum()
+   #      KL=e_amps.dot(np.log2(e_amps/gauss))
+   #      return(KL)
 
    def ISD(self,i,j):
          pass 
@@ -138,8 +145,6 @@ class PixelClumps:
          mindices[i]=j
          minimals[i]=darr[j]
       while minimals.min() < self.par['AGGLOLIMIT'] and n > 2:
-         print "iter",n
-         print "min",minimals.min()
          i=int(np.argmin(minimals))
          j=int(mindices[i])
          (new_amp,new_mu,new_Prec)=self.join_gauss(self.amps[i],self.amps[j],self.mu[i],self.mu[j],self.Prec[i],self.Prec[j])
@@ -196,9 +201,6 @@ class PixelClumps:
          mask=np.where(darr < minimals)
          minimals[mask]=darr[mask]
          n=n-1
-      #print self.amps
-      #print self.mu
-      #print self.Prec
       i=1
       labels=np.empty_like(self.orig_amps)
       for pix in self.pixel_tree:
@@ -206,9 +208,9 @@ class PixelClumps:
              elems=[pix]
           else:
              elems=flatten(pix)
-          print "cluster",i,"=",len(elems)
+          #print "cluster",i,"=",len(elems)
           if len(elems) < 10:
-             print "ignored!"
+             #print "ignored!"
              labels[elems]=0
           else:
              labels[elems]=i
