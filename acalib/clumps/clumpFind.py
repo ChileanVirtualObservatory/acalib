@@ -35,7 +35,7 @@ class FellWalker:
       caa[mask] = -1
       return caa
 
-   def dist(self, p0, p1):
+   def dist(self,  p0, p1):
       if len(p0)==len(p1)==2:
          return sqrt((p0[0]-p1[0])**2 + (p0[1]-p1[1])**2)
       elif len(p0)==len(p1)==3:
