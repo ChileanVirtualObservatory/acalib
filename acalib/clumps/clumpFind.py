@@ -128,16 +128,26 @@ class FellWalker:
                   if out1 or out2: continue
                   elif nindex <= 0: continue
                   else:
+                     #adjoins a clump at the current level
                      if nindex>=hindex:
                         n1+=1
                         i1.append(nindex)
                         if nindex < i11:
                            i11 = nindex
-                     elif nindex<hindex:
-                        n2+=1
 
+                     #adjoins a clump at the previous level
+                     elif nindex<hindex:
+                        n2 += 1
+                        if i12==None: 
+                           i12 = nindex
+                           peak_dist = dist(pos, self.peaks[nindex])
+                        elif nindex != i12:
+                           _peak_dist = dist(pos, self.peaks[nindex])
+                           if _peak_dist < peak_dist:
+                              i12 = nindex
+                              peak_dist = _peak_dist
       #3D data case
-      if ndim==3:
+      elif ndim==3:
          #actual position
          (x,y,z) = pos
          #clump labels of neighbors
@@ -173,14 +183,24 @@ class FellWalker:
                      if out1 or out2: continue
                      elif nindex<=0: continue
                      else:
+                        #adjoins a clump at the current level
                         if nindex>=hindex:
                            n1 += 1
                            i1.append(nindex)
                            if nindex < i11:
                               i11 = nindex
 
+                        #adjoins a clump at the previous level
                         elif nindex<hindex:
                            n2 += 1
+                           if i12==None: 
+                              i12 = nindex
+                              peak_dist = dist(pos, self.peaks[nindex])
+                           elif nindex != i12:
+                              _peak_dist = dist(pos, self.peaks[nindex])
+                              if _peak_dist < peak_dist:
+                                 i12 = nindex
+                                 peak_dist = _peak_dist
       return (n1, i11, i1, n2, i12)
 
    def scan(self, data, caa, clevel, naxis):
@@ -191,6 +211,15 @@ class FellWalker:
       created at higher contour levels will have indices less than hindex).
       """
       hindex = self.index
+
+      #next available index for the new clumps indentified at this level
+      index = self.index
+
+      """
+      clumps and peaks identified at this level
+      """
+      nclumps = dict()
+      npeaks = dict()
 
       """
       Structure containing the indexes of clumps identified at higher contour
@@ -223,10 +252,10 @@ class FellWalker:
          was identified at this contour level, then we start a new PixelSet.
          """
          if n1==0:
-            self.clumps[self.index] = [pos]
-            self.peaks[self.index] = pos
-            caa[pos] = self.index
-            self.index += 1
+            nclumps[index] = [pos]
+            npeaks[index] = pos
+            caa[pos] = index
+            index += 1
 
          """
          If one or more of the neighbours of this pixel are assigned to PixelSets
@@ -234,8 +263,8 @@ class FellWalker:
          the PixelSet with the lowest index
          """
          else:
-            (self.clumps[i11]).append(pos)
-            if data[pos]>self.peaks[i11]: self.peaks[i11] = pos
+            (nclumps[i11]).append(pos)
+            if data[pos]>npeaks[i11]: npeaks[i11] = pos
             caa[pos] = i11 
             """
             If this pixel touches other PixelSets identified at this contour level,
@@ -249,12 +278,18 @@ class FellWalker:
 
                #updating clumps dict, peaks dict and caa 
                for ind in i1:
-                  positions = self.clumps.pop(ind)
-                  peak_pos = self.peaks.pop(ind)
-                  self.clumps[i11] += positions
-                  if data[peak_pos]>self.peaks[i11]: self.peaks[i11] = peak_pos 
+                  positions = nclumps.pop(ind)
+                  peak_pos = npeaks.pop(ind)
+                  nclumps[i11] += positions
+                  if data[peak_pos]>npeaks[i11]: npeaks[i11] = peak_pos 
                   for pos in positions:
                      caa[pos] = i11
+         """
+         If we are using the IDL ClumpFind algorithm (rather than the algorithm
+         published in ApJ), and if the pixel adjoins a clump defined at a higher
+         contour level, then note that the clump containing the new pixel adjoins
+         this higher level clump
+         """
 
       """
       Now check each of the new PixelSets created above. Ordering
