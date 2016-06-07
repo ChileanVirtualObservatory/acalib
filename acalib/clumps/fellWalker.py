@@ -62,13 +62,6 @@ class FellWalker:
       return caa
 
 
-   def compute_rms(self, data):
-      mask = (data<0).filled(0)
-      res = data[mask]
-      fin = (res*res).sum()/len(res)
-      return np.sqrt(fin)
-
-
    def max_gradient(self, pos, data, caa):
       """
       We will now examine the 3x3x3 cube of neighbouring pixels to determine
@@ -188,7 +181,7 @@ class FellWalker:
    def merge(self, clump, peaks, cols, caa, minDip):
       """
       Enter an iterative loop in which we join clumps that have a small dip
-      between them. Quit when an interation fails to merge any more clumps.
+      between them. Finish when an interation fails to merge any clumps.
       """
       merge=True
       while merge:
