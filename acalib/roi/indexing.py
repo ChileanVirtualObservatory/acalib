@@ -15,12 +15,32 @@ import matplotlib.pyplot as plt
 
 
 class SpectraSketcher:
-    def __init__(self):
-        pass
+    """
+	Create a representation of the cube spectra using pixel samples.
 
-    def cube_spectra(self,adata,samples):
-        cube = adata.data
-        dims = adata.shape()
+    """
+
+    def __init__(self,adata):
+        """
+            Args:
+              adata (AData): Datacube to be analysed
+        """
+        self.cube = adata
+
+    def cube_spectra(self,samples):
+        """
+	Create the spectra.
+ 
+        Args:
+           samples (int): Number of pixel samples used for the sketch.
+
+        Return:
+           spectra (array): An array with the intensity for each frecuency.
+           slices  (list):  A list with the slices where emision exist.
+
+        """
+        cube = self.cube
+        dims = cube.shape()
         P_x = dims[2]
         P_x_range = range(P_x)
         P_y = dims[1]
@@ -128,6 +148,17 @@ class SpectraSketcher:
 
 
     def vel_stacking(self,cube,slice_min = None, slice_max = None):
+        """
+            Create an image stacking the frecuency
+            
+            Args:
+              slice_min (int): Min slice value. 
+              slice_max (int): Max slice value.
+            
+            Return:
+              image (numpy array): 2D-Array with the stacked cube.
+
+        """
         dims = cube.shape()
         frec = dims[0]
         P_y = dims[1]
