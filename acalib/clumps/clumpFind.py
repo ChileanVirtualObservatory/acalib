@@ -35,11 +35,12 @@ class FellWalker:
       caa[mask] = -1
       return caa
 
+   #square distance between p0 and p1
    def dist(self,  p0, p1):
       if len(p0)==len(p1)==2:
-         return sqrt((p0[0]-p1[0])**2 + (p0[1]-p1[1])**2)
+         return (p0[0]-p1[0])**2 + (p0[1]-p1[1])
       elif len(p0)==len(p1)==3:
-         return sqrt((p0[0]-p1[0])**2 + (p0[1]-p1[1])**2 + (p0[2]-p1[2])**2)
+         return (p0[0]-p1[0])**2 + (p0[1]-p1[1])**2 + (p0[2]-p1[2])**2
       else: return None
 
 
@@ -222,7 +223,8 @@ class FellWalker:
          was identified at this contour level, then we start a new PixelSet.
          """
          if n1==0:
-            self.clump[self.index] = [pos]
+            self.clumps[self.index] = [pos]
+            self.peaks[self.index] = pos
             caa[pos] = self.index
             self.index += 1
 
@@ -232,7 +234,8 @@ class FellWalker:
          the PixelSet with the lowest index
          """
          else:
-            (self.clump[i11]).append(pos)
+            (self.clumps[i11]).append(pos)
+            if data[pos]>self.peaks[i11]: self.peaks[i11] = pos
             caa[pos] = i11 
             """
             If this pixel touches other PixelSets identified at this contour level,
@@ -244,11 +247,13 @@ class FellWalker:
                i1 = set(i1)
                i1.remove(i11)
 
-               #updating clump dict and caa 
+               #updating clumps dict, peaks dict and caa 
                for ind in i1:
-                  tmp = self.clump.pop(ind)
-                  self.clump[i11] += tmp
-                  for pos in tmp:
+                  positions = self.clumps.pop(ind)
+                  peak_pos = self.peaks.pop(ind)
+                  self.clumps[i11] += positions
+                  if data[peak_pos]>self.peaks[i11]: self.peaks[i11] = peak_pos 
+                  for pos in positions:
                      caa[pos] = i11
 
       """
@@ -257,7 +262,7 @@ class FellWalker:
       """
       if self.index > hindex:
          seq_ind = hindex
-         for clump.keys()
+         for clumps.keys()
 
       return
 
@@ -291,8 +296,13 @@ class FellWalker:
       caa=self.create_caa(data)
 
    
-      #Initialize dictionary which describe clumps
-      self.clump = dict()
+      """
+      Initialize structures wich describe clumps:
+      clumps : {clump_index:[list of positions]}
+      peaks : {clump_index: position of peak}
+      """
+      self.clumps = dict()
+      self.peaks = dict()
 
       #Find the largest and smallest good data values in the supplied array.
       maxv = np.max(data)
@@ -319,10 +329,10 @@ class FellWalker:
          will find no pixels.
          """
          if clevel < self.maxrem:
-            clumps = self.scan(data, caa, clevel, naxis)
+            self.scan(data, caa, clevel, naxis)
 
          elif:
             log.warning('No pixels found at this contour level.')
 
    #return caa and clump structures
-   return caa,clump
+   return caa,clumps
