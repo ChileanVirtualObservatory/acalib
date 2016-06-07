@@ -17,6 +17,7 @@ class TestSlapClient(TestCase):
                          "lte": 0.5
                      }
                  }
+        
 
         self.fail()
 
