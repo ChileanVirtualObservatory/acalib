@@ -3,6 +3,8 @@ from astropy.io import votable
 from astropy import units as u
 import re
 import StringIO
+import sqlite3 as lite
+from ...core.atable import ATable, VoTableImporter
 
 __author__ = "teohoch"
 
@@ -12,16 +14,41 @@ def _check(par, default):
         par = par * default
     return par
 
+SqlEquivalent = {
+    "char": "TEXT",
+    "double": "DOUBLE",
+    "int": "INT",
+    "boolean": "BOOLEAN"
+}
+
 class SlapClient(object):
-    def __init__(self, slap_service, slap_version=1.0):
+    def __init__(self, slap_service, slap_version=1.0, cache=False, **kwargs):
         """
 
-        :type slap_version: Double
-        :type slap_service: String
-
+        @param slap_service:
+        @param slap_version:
+        @param cache:
+        @param kwargs:
         """
+
         self.__slap_service = slap_service
         self.__slap_version = slap_version
+        self.__cache = cache
+
+        if cache:
+            if kwargs.has_key("source"):
+                clean_query = kwargs
+                if kwargs.has_key("cache_file"):
+                    self.__cache_file = kwargs["cache_file"]
+                    clean_query.pop("cache_file")
+                else:
+                    self.__cache_file = "cache.sql"
+                if kwargs["source"].lower()=="slap":
+                    clean_query.pop("source")
+                    self.__load_from_slap_service(clean_query)
+
+            else:
+                raise ValueError("Must Select source for cache")
 
     @classmethod
     def query(cls, service, output_format="txt", slap_version=1.0, **kwargs):
@@ -100,11 +127,11 @@ class SlapClient(object):
             if constrain_name.lower() == "wavelength":
                 valid = True
             if isinstance(constrain, dict):  # range
-                query_params[constrain_name.upper()] = cls.__range(constrain)
+                query_params[constrain_name.upper()] = cls.__range_slap(constrain)
             elif isinstance(constrain, list):  # list of constrains
-                query_params[constrain_name.upper()] = cls.__list(constrain)
+                query_params[constrain_name.upper()] = cls.__list_slap(constrain)
             else:  # equality
-                query_params[constrain_name.upper()] = cls.__equality(constrain)
+                query_params[constrain_name.upper()] = cls.__equality_slap(constrain)
 
         return query_params if valid else None
 
@@ -120,19 +147,19 @@ class SlapClient(object):
             raise ValueError("The Output value is not Valid")
 
     @classmethod
-    def __list(cls, params):
+    def __list_slap(cls, params):
         output = []
         for constrain in params:
             if isinstance(constrain, dict):  # range
-                output.append(cls.__range(constrain))
+                output.append(cls.__range_slap(constrain))
             elif isinstance(constrain, list):  # list of constrains
                 raise ValueError("Invalid list within list detected")
             else:  # equality
-                output.append(cls.__equality(constrain))
+                output.append(cls.__equality_slap(constrain))
         return ",".join(output)
 
     @staticmethod
-    def __range(params):
+    def __range_slap(params):
         gte = params.has_key("gte")
         lte = params.has_key("lte")
         if gte and lte:
@@ -146,23 +173,80 @@ class SlapClient(object):
                              " 'lte' (lower than equal), or both")
 
     @staticmethod
-    def __equality(params):
+    def __range_sql(name, params):
+        gte = params.has_key("gte")
+        lte = params.has_key("lte")
+        output = []
+        if gte:
+            output.append(name + ">=" + str(params["gte"]))
+        if lte:
+            output.append(name + "<=" + str(params["lte"]))
+        if not (gte or lte):
+            raise ValueError("The Range dictionary must contain eithe 'gte' (greater than equal),"
+                             " 'lte' (lower than equal), or both")
+        return " AND ".join(output)
+
+    @staticmethod
+    def __equality_slap(params):
         return str(params)
+
+    @staticmethod
+    def __equality_sql(name, params):
+        return name + "==" + str(params)
 
     @staticmethod
     def __to_votable(data):
         temp = StringIO.StringIO()
         temp.write(data)
-        return votable.parse(temp)
+        return votable.parse_single_table(temp)
+
+    @staticmethod
+    def __to_atable(data):
+        temp = StringIO.StringIO()
+        temp.write(data)
+        return ATable.import_from(VoTableImporter(votable.parse_single_table(temp)))
+
     @staticmethod
     def __to_array(data):
-        # https://regex101.com/r/xV9yJ4/1
-        p = re.compile(ur'<TR>(.*?)<\/TR>', re.UNICODE | re.DOTALL)
-        lines = re.findall(p, data)
-        p2 = re.compile(ur'<TD>(.*?)<\/TD>|(.?)<TD\/>', re.UNICODE | re.DOTALL)
-        for line in lines:
-            parsed = re.findall(p2,line)
-            print parsed
+        temp = StringIO.StringIO()
+        temp.write(data)
+        return votable.parse_single_table(temp).array.data
+
+    def __load_from_slap_service(self, query):
+        self.__fields = tuple(self.query_fields())
+
+        # Create a table for the lines
+        base_command = "CREATE TABLE IF NOT EXISTS Lines (id INTEGER PRIMARY KEY,"
+        field_insert =[]
+        field_list =[]
+        for field in self.__fields:
+            field_insert.append(" ".join((field["ID"].replace(" ", "_"), SqlEquivalent[field["datatype"]])))
+            field_list.append(field["ID"].replace(" ", "_"))
+        base_command += ", ".join(field_insert) + ")"
+        self.__execute_sql(base_command)
+
+        # insert the Data into the SQL  Database.
+        data = self.query(self.__slap_service,output_format="array",slap_version=self.__slap_version,**query)
+        command_data = "INSERT INTO Lines ("+", ".join(field_list) +") VALUES ("+ ("?,"*(len(self.__fields)-1))+"?)"
+        self.__execute_many_sql(command_data,data)
+
+    def __execute_sql(self, sentence):
+        pointer = lite.connect(self.__cache_file)
+        resp = pointer.execute(sentence)
+        result = resp.fetchall()
+        pointer.commit()
+        pointer.close()
+        return result
+
+
+    def __execute_many_sql(self, sentence, data):
+        raw_data = data.tolist()
+        pointer = lite.connect(self.__cache_file)
+        resp = pointer.executemany(sentence,raw_data)
+        result = resp.fetchall()
+        pointer.commit()
+        pointer.close()
+        return result
 
 
 
@@ -184,7 +268,10 @@ class SlapClient(object):
         :param kwargs:
         :return:
         """
-        return self.query(self.__slap_service, output_format=output_format, slap_version=self.__slap_version, **kwargs)
+        if self.__cache:
+            pass
+        else:
+            return self.query(self.__slap_service, output_format=output_format, slap_version=self.__slap_version, **kwargs)
 
     def query_fields(self):
         """
@@ -213,8 +300,8 @@ class SlapClient(object):
 
 if __name__ == "__main__":
     service = "https://find.nrao.edu/splata-slap/slap"
-    client = SlapClient(service)
-    data = client.query_service(output_format="array",wavelength={"gte": 0.00260075, "lte": 0.00260080})
+    client = SlapClient(service,cache=True, source="slap", wavelength={"gte": 0.00260075, "lte": 0.00260080})
+
     #print data
 
     #print client.query_fields()
