@@ -28,10 +28,12 @@ def HDU_to_adata(hdu):
      bunit=u.Unit(bsu,format="fits")
    except KeyError:
      bunit=u.Unit("u.Jy/u.beam")
-   for k in meta.keys():
-     if k.startswith('PC00'):
-        meta.pop(k)   
-
+   rem_list=[]
+   for i in meta.items():
+      if i[0].startswith('PC00'):
+         rem_list.append(i[0])
+   for e in rem_list:
+      meta.remove(e)
 
    mywcs=wcs.WCS(meta)
    # Create astropy units
