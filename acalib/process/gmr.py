@@ -13,7 +13,30 @@ from astropy.table import Table
 
 
 def gmr_from_pixels(data,threshold,nlevel):
+    """ Obtain a pixel-based Gaussian Mixture Representation (GMR) from data.
+
+    Args:
+       data (ndarray): n-dimensional array containing the data to be processed.
+       threshold (float): the theshold to consider a pixel relevant to be included in the representation.
+       nlevel (float): noise level to be subtracted from the intensities and to compute the shape of each Gaussian.
+
+    Returns:
+       Table. An astropy table of m elements with the columns 
+         * intensity (float)
+         * center (ndarray) of size 
+         * shape
+
+    This function generate a GMR by using only those pixels above the threshold. Each pixel generates a very small
+    Gaussian:
+
+    $ G(x) = a \exp(-0.5 (\mu - x)^\top P (\mu - x)) $
+
+    where $a$ is the instensity of the pixel minus nlevel, the center $\mu$ is the pixel position and $P$ is a diagonal matrix of
+    the form:
     
+    $ $ 
+
+    """    
     ff=np.where(data>threshold)
     if isinstance(data,np.ma.MaskedArray):
         inten=data[ff].filled()
