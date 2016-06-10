@@ -10,7 +10,10 @@
 import numpy as np
 from astropy.table import Table
 from astropy import log
-from acalib.process.utils import *
+#from acalib.process.utils import *
+from utils import *
+import matplotlib.pyplot as plt
+
 
 def gmr_from_pixels(data,threshold,nlevel,upper=None,lower=None):
     """ Obtain a pixel-based Gaussian Mixture Representation (GMR) from data.
@@ -63,91 +66,34 @@ def gmr_from_pixels(data,threshold,nlevel,upper=None,lower=None):
     res=Table([inten,center,struct],names=('intensity','center','structure'))
     return res
 
-   def _update_min_energy(self,mat,ub,lb,delta):
-     """Updates the minimum energies of self.energy from mat defaced by delta. 
-        ub and lb bounds are provided to shrink the mat matrix when required (out of bounds, or partial update)
-     """
-     bord=np.array(self.energy.shape())
-     # TODO: Bad usage of AData, because we want a reference of the data to modify it
-     ene=self.energy.data
-     # Numpyfy everithing
-     ub=np.array(ub)
-     lb=np.array(lb)
-     delta=np.array(delta,dtype=int)
-     # Create energy (e) and mat (m) indices 
-     eub=ub + delta
-     elb=lb + delta
-     mub=ub-lb
-     mlb=np.array([0,0,0])
-     umask=eub > bord
-     lmask=elb < 0
-     mub[umask]-=eub[umask] - bord[umask]
-     mlb[lmask]-=elb[lmask]
-     eub[umask]=bord[umask]
-     elb[lmask]=0
-     # Obtain a reduced view of the matrices
-     eview=ene[elb[0]:eub[0],elb[1]:eub[1],elb[2]:eub[2]]
-     mview=mat[mlb[0]:mub[0],mlb[1]:mub[1],mlb[2]:mub[2]]
-     mview=mview.copy()
-     # Select those that are lower in mat than in energy
-     #print elb, eub, mlb, mub
-     #print eview.shape,eview.shape
-     cmat=mview < eview
-     #print cmat
-     #print eview[cmat]
-     #print mview
-     # Update them in the energy matrix.
-     try:
-        a=mview[cmat]
-     except IndexError:
-        print eview.shape
-        print mview.shape
-        print mat.shape
-        print elb,eub,mlb,mub
-     eview[cmat]=mview[cmat]
+def _update_energies(energy,residual,mould,nlevel,delta,lower=None,upper=None):
+    #def _update_energies(self,lb,ub):
+    """Update the energies, only from the lower to the upper points. 
+    """
+    #TODO: I do now know if slab actually states that we are making a copy...
+    if lower is None:
+       lower=np.zeros(residual.ndim)
+    lower=fix_limits(residual,lower)
+    residual_slab=slab(residual,lower,upper)
+    residual_view=residual[residual_slab]
+    #resi_view=residual[energy_slab]
+    feat=np.array(np.where(residual_view>nlevel))
+    feat=feat.T
+    print feat.shape
+    for idx in feat:
+        base=idx + lower
+        lb=base-delta
+        ub=base+delta + 1
+        #print base,lb,ub
+        #print mould.shape
+        residual_slab,mould_slab=matching_slabs(residual,mould,lb,ub)
+        val=np.min(residual[residual_slab]/mould[mould_slab])
+        #print("Base = "+str(base)+" Value = "+str(val))
+        energy[tuple(base)]=val
+        #energy[tuple(base)]=1000
 
-
-def _update_energies(energy,mould,lower=None,upper=None,dstruct=False):
-      #def _update_energies(self,lb,ub):
-      """Update the energies, only from the lb to the ub points. 
-      """
-      #TODO: I do now know if get_slice actually states that we are making a copy...
-      lb=self.residual.fix_limits(lb)
-      ub=self.residual.fix_limits(ub)
-      mcb=self.residual.cut(lb,ub)
-      #Obtain the reference of the eighth of the bubble.
-      vv=self.eival
-      ff=self.eifeat.T
-      # Iterates for every point in the eighth of the bubble
-      # this starts from one because we do not want to repeat the position (0,0,0)
-      delta=np.array([1,1,1])*0
-      mat=mcb/vv[0]
-      self._update_min_energy(mat,ub,lb,delta)
-      for i in range(1,vv.size):
-         mat=mcb/vv[i]
-         d=ff[i]
-         # update in the eight directions
-         delta=np.array([1,1,1])*d
-         self._update_min_energy(mat,ub,lb,delta)
-         delta=np.array([1,1,-1])*d
-         self._update_min_energy(mat,ub,lb,delta)
-         delta=np.array([1,-1,1])*d
-         self._update_min_energy(mat,ub,lb,delta)
-         delta=np.array([1,-1,-1])*d
-         self._update_min_energy(mat,ub,lb,delta)
-         delta=np.array([-1,1,1])*d
-         self._update_min_energy(mat,ub,lb,delta)
-         delta=np.array([-1,1,-1])*d
-         self._update_min_energy(mat,ub,lb,delta)
-         delta=np.array([-1,-1,1])*d
-         self._update_min_energy(mat,ub,lb,delta)
-         delta=np.array([-1,-1,-1])*d
-         self._update_min_energy(mat,ub,lb,delta)
-
-    
-
-def gmr_from_mould(data,threshold,nlevel,P,verbose=False,upper=None,lower=None,max_iter=None,full_output=False):
-    debug=False
+def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,full_output=False):
+    debug=True
     inten=[]
     center=[]
     struct=[]
@@ -156,59 +102,77 @@ def gmr_from_mould(data,threshold,nlevel,P,verbose=False,upper=None,lower=None,m
 
     #Restrict data to what the corresponding slab
     data=data[slab(data,upper,lower)]
-    if max_iter=None
-        max_iter
-
     if max_iter==None:
+        d=data.ndim
+        #GMRs are useless if we have more data than the original data
+        max_iter=data.size/(1 + d + d*d)
     residual=data.copy()
-    energy=data.copy()
     # Argmax
     max_idx=np.unravel_index(residual.argmax(),residual.shape)
     max_val=residual[max_idx]
     # Compute delta
-    delta=np.sqrt(2*np.log(datamax/nlevel)*P.diagonal())))
+    Sigma=np.linalg.inv(P)
+    delta=np.sqrt(2*np.log(max_val/nlevel)*Sigma.diagonal())
     # Compute mould TODO
     mould=create_mould(P,delta)
+    mould=mould/mould.sum()
+    #discretize delta
+    delta=np.floor(np.array(mould.shape)/2)
     # Create energy matrix
-    mask=np.isnan(energy)
-    energy.data[np.logical_not(mask)]=max_val
+    energy=np.zeros(data.shape)
+    #np.empty_like(data)
+    #mask=np.isnan(energy)
+    #energy.data[np.logical_not(mask)]=max_val
     # check for diagonality
-    dstruct=np.all(a == np.diag(np.diag(P)))
+    #dstruct=np.all(a == np.diag(np.diag(P)))
     # compute 
-    _update_energies(energy,mould,dstruct=dstruct)
+    if debug:
+       log.info("Delta = "+str(delta))
+       log.info("Max Iter = "+str(max_iter))
+       plt.imshow(mould.sum(axis=(0)))
+       plt.show()
+    _update_energies(energy,residual,mould,nlevel,delta)
     
     while True:
        niter+=1
        if (niter > max_iter):
-           message="Maximum iterations reached = "+str(maxbub))
+           message="Maximum iterations reached = "+str(niter)
            break
-       max_idx=np.array(np.unravel_index(residual.argmax(),residual.shape))
-       max_val=residual[max_idx]
-       xmax=np.array(xmax)
+       max_idx=np.array(np.unravel_index(energy.argmax(),energy.shape))
+       max_val=energy[tuple(max_idx)]
        rem=max_val - nlevel
+       
        if rem <= 0.0:
-           if verbose:
-               message="No more signal to extract at iteration "+str(niter)
-           break
+           message="No more signal to extract at iteration "+str(niter)
        if (rem < threshold):
-           if verbose:
-               message="Signal reached the desired threshold of "+str(threshold)+" at iteration "+str(niter)
-           break
+           message="Signal reached the desired threshold of "+str(threshold)+" at iteration "+str(niter)
        inten.append(rem)
-       center.append(xmax)
+       center.append(max_idx)
        struct.append(P)
+       lb=max_idx - delta
+       ub=max_idx + delta +1 
+       add_flux(residual,-rem*mould,lb,ub)
+       _update_energies(energy,residual,mould,nlevel,delta,lower=lb,upper=ub)
        if debug:
            log.info("Iter "+str(niter))
-           log.info("Maximum energy E = "+str(max_val)+" at "+str(xmax))
-           log.info("Remove E = "+str(rem)+" SNR = "+str(rem/nlevel)# + " GAP = "+ str(y/rms - 1.0 - snrlimit))
-       ub=xmax + delta + 1
-       lb=xmax - delta
-       add_flux(residual,-rem*bub,lb,ub,dstruct=dstruct)
-       _update_energies(energy,lb,ub)
+           log.info("Maximum energy E = "+str(max_val)+" at "+str(max_idx))
+           log.info("Remove E = "+str(rem)+" SNR = "+str(rem/nlevel))# + " GAP = "+ str(y/rms - 1.0 - snrlimit))
+           print "max_energy = ",np.max(energy)
+           print "min_energy = ",np.min(energy)
+           print "max_resid = ",np.max(residual)
+           print "min_resid = ",np.min(residual)
+           plt.imshow(residual.sum(axis=(0)))
+           plt.colorbar()
+           plt.show()
+           plt.imshow(energy.sum(axis=(0)))
+           plt.colorbar()
+           plt.show()
     inten=np.array(inten)
     center=np.array(center)
     struct=np.array(struct)
     res=Table([inten,center,struct],names=('intensity','center','struct'))
+    if full_output:
+       return res,message
     return res
   
 def gmr_from_iterfit(data):
@@ -220,6 +184,19 @@ def gmr_from_heuristic(data):
 
 if __name__ == '__main__':
     # SandBox space for testing
-    a=np.random.random((20,20,20))
-    tab=gmr_from_mould(a,0.2,0.01,eye(3))
+    a=np.random.random((200,200,200))
+    P=np.array([[2,0,0],[0,1,0],[0,0,1]])
+    freak=np.array([[2,0.5,0.9],[0.5,1,0.3],[0.9,0.3,1]])
+    delta=np.array([50,50,50])
+    p1=np.array([45,97,143])
+    peak=create_mould(0.01*freak,delta)
+    add_flux(a,10*peak,p1-delta,p1+delta+1)
+    p2=np.array([143,45,97])
+    peak=create_mould(0.05*freak,delta)
+    add_flux(a,30*peak,p2-delta,p2+delta+1)
+    plt.imshow(np.sum(a,axis=(0)))
+    plt.colorbar()
+    plt.show()
+    (tab,message)=gmr_from_mould(a,3.0,1.0,0.5*P,full_output=True)
+    print(message)
     print(tab)
