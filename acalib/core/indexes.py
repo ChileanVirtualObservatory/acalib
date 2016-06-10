@@ -1,23 +1,22 @@
 from astropy.nddata import NDData
 
-# Que es lower y upper?
 def index_of_max(data, lower, upper):
-	pass
+    pass
 
 def index_of_min(data, lower, upper):
-	pass
+    pass
 
 def index_to_world(data, index):
-	pass
+    pass
 
 def index_as_features(data, lower, upper):
-	pass
+    pass
 
 def index_from_window(data, wcs_center, wcs_window):
-	pass
+    pass
 
 def index_fix(data, index):
-	pass
+    pass
 
 def index_mesh(data):
-	pass
+    pass
