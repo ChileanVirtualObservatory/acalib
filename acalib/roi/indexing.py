@@ -20,12 +20,12 @@ class SpectraSketcher:
 
     """
 
-    def __init__(self,adata):
+    def __init__(self,nddata):
         """
             Args:
               adata (AData): Datacube to be analysed
         """
-        self.cube = adata
+        self.cube = nddata
 
     def cube_spectra(self,samples):
         """
@@ -40,7 +40,7 @@ class SpectraSketcher:
 
         """
         cube = self.cube
-        dims = cube.shape()
+        dims = cube.shape
         P_x = dims[2]
         P_x_range = range(P_x)
         P_y = dims[1]
@@ -159,7 +159,7 @@ class SpectraSketcher:
               image (numpy array): 2D-Array with the stacked cube.
 
         """
-        dims = cube.shape()
+        dims = cube.shape
         frec = dims[0]
         P_y = dims[1]
         P_x = dims[2]
