@@ -36,10 +36,7 @@ def slab(data,lower=None,upper=None):
        m_slab.append(slice(lower[i],upper[i]))
     return m_slab
 
-# TODO Throw exceptions...
-def add_flux(data,flux,lower=None,upper=None):
-    #if data.ndim!=flux.ndim:
-    #    log.error("")
+def matching_slabs(data,flux,lower,upper):
     data_slab=slab(data,lower,upper)
     flow=np.zeros(flux.ndim)
     fup=np.array(flux.shape)
@@ -49,6 +46,12 @@ def add_flux(data,flux,lower=None,upper=None):
        if data_slab[i].stop == data.shape[i]:
           fup[i] = data_slab[i].stop - data_slab[i].start
     flux_slab=slab(flux,flow,fup)
+    return data_slab,flux_slab
+
+def add_flux(data,flux,lower=None,upper=None):
+    #if data.ndim!=flux.ndim:
+    #    log.error("")
+    data_slab,flux_slab=matching_slabs(data,flux,lower,upper)
     data[data_slab]+=flux[flux_slab]
 
 
@@ -66,11 +69,12 @@ def create_gauss(mu,P,feat,peak):
 def create_mould(P,delta):
     """This function creates a gaussian mould, using the already computed values of 
     """
+    # TODO Can we use index_features
     n=len(delta)
     ax=[]
     elms=[]
     for i in range(n):
-        lin=np.arange(-delta[i],delta[i]+1)
+        lin=np.arange(-delta[i]-0.5,delta[i]+0.5)
         elms.append(len(lin))
         ax.append(lin)
     grid=np.meshgrid(*ax,indexing='ij')
@@ -79,8 +83,7 @@ def create_mould(P,delta):
         feat[i]=grid[i].ravel()
     mould=create_gauss(np.zeros(n),P,feat,1)
     mould=mould.reshape(*elms)
-    return mould
-
+    return(mould)
 
 if __name__ == '__main__':
     # Slab and AddFlux test
