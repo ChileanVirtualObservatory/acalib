@@ -79,7 +79,8 @@ def _update_energies(energy,residual,mould,nlevel,delta,lower=None,upper=None):
     #resi_view=residual[energy_slab]
     feat=np.array(np.where(residual_view>nlevel))
     feat=feat.T
-    print feat.shape
+    #print mould
+    #print lower,upper
     for idx in feat:
         base=idx + lower
         lb=base-delta
@@ -88,7 +89,9 @@ def _update_energies(energy,residual,mould,nlevel,delta,lower=None,upper=None):
         #print mould.shape
         residual_slab,mould_slab=matching_slabs(residual,mould,lb,ub)
         val=np.min(residual[residual_slab]/mould[mould_slab])
-        #print("Base = "+str(base)+" Value = "+str(val))
+        #if val > 100:
+        #    print("Base = "+str(base)+" Value = "+str(val))
+        #    print residual[residual_slab]
         energy[tuple(base)]=val
         #energy[tuple(base)]=1000
 
@@ -115,7 +118,7 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
     delta=np.sqrt(2*np.log(max_val/nlevel)*Sigma.diagonal())
     # Compute mould TODO
     mould=create_mould(P,delta)
-    mould=mould/mould.sum()
+    mould=mould/mould.max()
     #discretize delta
     delta=np.floor(np.array(mould.shape)/2)
     # Create energy matrix
@@ -152,7 +155,7 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
        lb=max_idx - delta
        ub=max_idx + delta +1 
        add_flux(residual,-rem*mould,lb,ub)
-       _update_energies(energy,residual,mould,nlevel,delta,lower=lb,upper=ub)
+       _update_energies(energy,residual,mould,nlevel,delta,lower=lb-delta,upper=ub+delta)
        if debug:
            log.info("Iter "+str(niter))
            log.info("Maximum energy E = "+str(max_val)+" at "+str(max_idx))
