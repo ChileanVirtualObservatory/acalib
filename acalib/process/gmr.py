@@ -76,6 +76,7 @@ def _update_energies(energy,residual,mould,nlevel,delta,lower=None,upper=None):
     lower=fix_limits(residual,lower)
     residual_slab=slab(residual,lower,upper)
     residual_view=residual[residual_slab]
+    energy[residual_slab]=np.zeros(residual_view.shape)
     #resi_view=residual[energy_slab]
     feat=np.array(np.where(residual_view>nlevel))
     feat=feat.T
@@ -118,7 +119,7 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
     delta=np.sqrt(2*np.log(max_val/nlevel)*Sigma.diagonal())
     # Compute mould TODO
     mould=create_mould(P,delta)
-    mould=mould/mould.max()
+    #mould=mould/mould.max()
     #discretize delta
     delta=np.floor(np.array(mould.shape)/2)
     # Create energy matrix
