@@ -20,12 +20,12 @@ class SpectraSketcher:
 
     """
 
-    def __init__(self,adata):
+    def __init__(self,nddata):
         """
             Args:
               adata (AData): Datacube to be analysed
         """
-        self.cube = adata
+        self.cube = nddata
 
     def cube_spectra(self,samples):
         """
@@ -40,7 +40,7 @@ class SpectraSketcher:
 
         """
         cube = self.cube
-        dims = cube.shape()
+        dims = cube.shape
         P_x = dims[2]
         P_x_range = range(P_x)
         P_y = dims[1]
@@ -147,33 +147,20 @@ class SpectraSketcher:
             return 0
 
 
-    def vel_stacking(self,cube,slice_min = None, slice_max = None):
+    def vel_stacking(self,data_slice):
         """
             Create an image stacking the frecuency
             
             Args:
-              slice_min (int): Min slice value. 
-              slice_max (int): Max slice value.
-            
+           	data_slice: slice object 
             Return:
               image (numpy array): 2D-Array with the stacked cube.
 
         """
-        dims = cube.shape()
-        frec = dims[0]
-        P_y = dims[1]
-        P_x = dims[2]
-        if slice_min:
-            slice_min = (slice_min, 0, 0)
-        else:
-            slice_min = (0, 0, 0)
-
-        if slice_max:
-            slice_max = (slice_max, P_y, P_x)
-        else:
-            slice_max = (frec, P_y, P_x)
+        dims = self.cube.shape
         
-        stacked = cube.stack(lower=slice_min, upper=slice_max)
+	subcube = self.cube[data_slice, :,:]
+        stacked = np.sum(subcube,axis=0)
         min_stacked = np.min(stacked)
         
         h = (stacked - min_stacked) / (np.max(stacked) - min_stacked)
