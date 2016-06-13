@@ -11,12 +11,12 @@ from skimage.measure import label
 
 import matplotlib.pyplot as plt
 
-
+from collections import namedtuple
 
 
 class SpectraSketcher:
     """
-	Create a representation of the cube spectra using pixel samples.
+    Create a representation of the cube spectra using pixel samples.
 
     """
 
@@ -29,7 +29,7 @@ class SpectraSketcher:
 
     def cube_spectra(self,samples):
         """
-	Create the spectra.
+    Create the spectra.
  
         Args:
            samples (int): Number of pixel samples used for the sketch.
@@ -149,23 +149,24 @@ class SpectraSketcher:
 
     def vel_stacking(self,data_slice):
         """
-            Create an image stacking the frecuency
+            Create an image collapsing the frecuency axis
             
             Args:
-           	data_slice: slice object 
+            data_slice: slice object 
             Return:
               image (numpy array): 2D-Array with the stacked cube.
 
         """
         dims = self.cube.shape
-        
-	subcube = self.cube[data_slice, :,:]
+        subcube = self.cube[data_slice, :,:]
         stacked = np.sum(subcube,axis=0)
         min_stacked = np.min(stacked)
         
         h = (stacked - min_stacked) / (np.max(stacked) - min_stacked)
 
-        return h
+        CollapsedCube = namedtuple('CollapsedCube',['data', 'min','max'])
+
+        return CollapsedCube(data=h, min=min_stacked, max=np.max(stacked))
 
 
 class GaussianSegmentation:
