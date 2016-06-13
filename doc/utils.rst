@@ -1,7 +1,5 @@
 Utilities
-======================================
-.. automodule:: process.gmr
-   :members:
+==============================================================
 
-.. automodule:: process.utils
+.. automodule:: acalib.process.utils
    :members:
