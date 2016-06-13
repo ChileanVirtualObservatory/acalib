@@ -1,1 +1,0 @@
-Search.setIndex({envversion:46,filenames:["_static/intro","index"],objects:{},objnames:{},objtypes:{},terms:{acalib:0,content:1,document:0,guid:0,index:1,modul:1,page:1,search:1,welcom:0,your:0},titles:["&lt;no title&gt;","Welcome to ACALIB&#8217;s documentation!"],titleterms:{acalib:1,document:1,indic:1,tabl:1,welcom:1}})
