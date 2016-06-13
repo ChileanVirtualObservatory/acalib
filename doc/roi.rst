@@ -1,5 +1,5 @@
 Automatic Region of Interest Detection
 ======================================
 
-.. automodule:: roi.indexing
+.. automodule:: acalib.roi.indexing
    :members:

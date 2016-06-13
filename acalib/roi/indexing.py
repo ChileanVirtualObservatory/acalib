@@ -18,26 +18,20 @@ class SpectraSketcher:
     """
     Create a representation of the cube spectra using pixel samples.
 
+    :param data: n-dimensional array containing the data to be processed.
+    :type data: numpy.ndarray
     """
 
-    def __init__(self,nddata):
-        """
-            Args:
-              adata (AData): Datacube to be analysed
-        """
+    def __init__(self,data):
         self.cube = nddata
 
     def cube_spectra(self,samples):
         """
-    Create the spectra.
- 
-        Args:
-           samples (int): Number of pixel samples used for the sketch.
-
-        Return:
-           spectra (array): An array with the intensity for each frecuency.
-           slices  (list):  A list with the slices where emision exist.
-
+        Create the spectra usin pixel samples.
+        
+        :param samples: Number of pixel samples used for the sketch.
+        :type samples: int
+        :returns: ( spectra (array), slices  (list)).
         """
         cube = self.cube
         dims = cube.shape
@@ -151,10 +145,9 @@ class SpectraSketcher:
         """
             Create an image collapsing the frecuency axis
             
-            Args:
-            data_slice: slice object 
-            Return:
-              image (numpy array): 2D-Array with the stacked cube.
+            :param data_slice: Sector to be collapsed
+            :type data_slice: slice 
+            :returns: image (numpy array): 2D-Array with the stacked cube.
 
         """
         dims = self.cube.shape
