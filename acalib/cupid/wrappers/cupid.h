@@ -48,6 +48,7 @@
 #if !defined( CUPID_INCLUDED )   /* Include this file only once */
 #define CUPID_INCLUDED
 
+#include <stdio.h>
 #include "ast.h"
 #include "star/grp.h"
 #include "star/hds.h"
