@@ -72,7 +72,6 @@ def _update_energies(energy,residual,mould,nlevel,delta,lower=None,upper=None):
     #resi_view=residual[energy_slab]
     feat=np.array(np.where(residual_view>nlevel))
     feat=feat.T
-    #print mould
     #print lower,upper
     for idx in feat:
         base=idx + lower
@@ -188,14 +187,16 @@ if __name__ == '__main__':
     delta=np.array([50,50,50])
     p1=np.array([45,97,143])
     peak=create_mould(0.01*freak,delta)
-    add_flux(a,10*peak,p1-delta,p1+delta+1)
+    add_flux(a,5*peak,p1-delta,p1+delta+1)
     p2=np.array([143,45,97])
     peak=create_mould(0.02*freak,delta)
-    add_flux(a,30*peak,p2-delta,p2+delta+1)
+    add_flux(a,10*peak,p2-delta,p2+delta+1)
+    rms=estimate_rms(a)
+    print("RMS = "+str(rms))
     plt.imshow(np.sum(a,axis=(0)))
     plt.colorbar()
     plt.show()
-    (tab,message,residual,energy)=gmr_from_mould(a,0.0,1.0,P,full_output=True)
+    (tab,message,residual,energy)=gmr_from_mould(a,0.2*rms,rms,P,full_output=True)
     print(message)
     print(tab)
     plt.imshow(np.sum(residual,axis=(0)))

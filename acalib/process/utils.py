@@ -77,6 +77,15 @@ def create_mould(P,delta):
     mould=mould.reshape(*elms)
     return(mould)
 
+def estimate_rms(data):
+    mm=data * data
+    if isinstance(mm,np.ma.MaskedArray):
+        rms=np.sqrt(mm.sum()*1.0/mm.count())
+    else:
+        rms=np.sqrt(mm.sum()*1.0/mm.size)
+    return rms
+
+
 if __name__ == '__main__':
     # Slab and AddFlux test
     a=np.random.random((20,20,20))
@@ -92,3 +101,7 @@ if __name__ == '__main__':
     mould=create_mould(P,delta)
     plt.imshow(mould.sum(axis=(0)))
     plt.show()
+
+
+
+
