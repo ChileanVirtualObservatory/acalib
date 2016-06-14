@@ -1,11 +1,3 @@
-"""
-.. automodule:: gmr
-   :platform: Unix
-   :synopsis: Functions for ussing Gaussian Mixture Representations of data
-
-.. moduleauthor:: Mauricio Araya <maray@inf.utfsm.cl>
-
-"""
 
 import numpy as np
 from astropy.table import Table

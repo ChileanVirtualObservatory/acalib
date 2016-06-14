@@ -11,33 +11,27 @@ from skimage.measure import label
 
 import matplotlib.pyplot as plt
 
-
+from collections import namedtuple
 
 
 class SpectraSketcher:
     """
-	Create a representation of the cube spectra using pixel samples.
+    Create a representation of the cube spectra using pixel samples.
 
+    :param data: n-dimensional array containing the data to be processed.
+    :type data: numpy.ndarray
     """
 
-    def __init__(self,nddata):
-        """
-            Args:
-              adata (AData): Datacube to be analysed
-        """
+    def __init__(self,data):
         self.cube = nddata
 
     def cube_spectra(self,samples):
         """
-	Create the spectra.
- 
-        Args:
-           samples (int): Number of pixel samples used for the sketch.
-
-        Return:
-           spectra (array): An array with the intensity for each frecuency.
-           slices  (list):  A list with the slices where emision exist.
-
+        Create the spectra usin pixel samples.
+        
+        :param samples: Number of pixel samples used for the sketch.
+        :type samples: int
+        :returns: ( spectra (array), slices  (list)).
         """
         cube = self.cube
         dims = cube.shape
@@ -149,23 +143,23 @@ class SpectraSketcher:
 
     def vel_stacking(self,data_slice):
         """
-            Create an image stacking the frecuency
+            Create an image collapsing the frecuency axis
             
-            Args:
-           	data_slice: slice object 
-            Return:
-              image (numpy array): 2D-Array with the stacked cube.
+            :param data_slice: Sector to be collapsed
+            :type data_slice: slice 
+            :returns: image (numpy array): 2D-Array with the stacked cube.
 
         """
         dims = self.cube.shape
-        
-	subcube = self.cube[data_slice, :,:]
+        subcube = self.cube[data_slice, :,:]
         stacked = np.sum(subcube,axis=0)
         min_stacked = np.min(stacked)
         
         h = (stacked - min_stacked) / (np.max(stacked) - min_stacked)
 
-        return h
+        CollapsedCube = namedtuple('CollapsedCube',['data', 'min','max'])
+
+        return CollapsedCube(data=h, min=min_stacked, max=np.max(stacked))
 
 
 class GaussianSegmentation:

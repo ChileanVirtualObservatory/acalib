@@ -1,11 +1,3 @@
-"""
-.. automodule:: utils
-   :platform: Unix
-   :synopsis: Helper functions for processing data
-
-.. moduleauthor:: Mauricio Araya <maray@inf.utfsm.cl>
-
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
