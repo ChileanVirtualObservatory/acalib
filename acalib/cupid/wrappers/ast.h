@@ -24,5 +24,9 @@ typedef struct AstMapping_t {
 } AstMapping;
 
 
+#define astBegin astBegin_()
+
+void astBegin_( void );
+
 #endif  /* AST_DEFINED */
 
