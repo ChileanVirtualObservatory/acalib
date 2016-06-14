@@ -1,0 +1,69 @@
+
+#  N.B. the previous line should be blank.
+
+#+
+#  Name:
+#     cupid_link_adam
+
+#  Purpose:
+#     Generate linker (ld) arguments for linking against adam cupid.
+
+#  Language:
+#     Bourne Shell
+
+#  Type of Module:
+#     Shell script.
+
+#  Invocation:
+#     The script is normally invoked as part of a makefile command to
+#     create a monolith in Starlink standard makefiles, thus:
+#
+#         $(ALINK) $(MONO_OBJECT) -o $(MONOLITH) $(OBJECT_LIBRARIES) \
+#             -L$(STAR_LIB) `./cupid_link_adam`
+
+#  Description:
+#     This script should be invoked by those building ADAM applications
+#     which use cupid in order to generate the correct arguments for the
+#     compiler (or ld) command. The arguments generated are written to
+#     the standard output.
+
+#  Copyright:
+#     Copyright (C) 2005 Particle Physics & Astronomy Research Council.
+#     All Rights Reserved.
+
+#  Licence:
+#     This program is free software; you can redistribute it and/or
+#     modify it under the terms of the GNU General Public License as
+#     published by the Free Software Foundation; either version 2 of
+#     the License, or (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be
+#     useful, but WITHOUT ANY WARRANTY; without even the implied
+#     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+#     PURPOSE. See the GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program; if not, write to the Free Software
+#     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
+#     02110-1301, USA
+
+#  Authors:
+#     DSB: David S. Berry
+#     {enter_new_authors_here}
+
+#  History:
+#     28-SEP-2005 (DSB):
+#        Original version.
+#     {enter_further_changes_here}
+
+#  Bugs:
+#     {note_any_bugs_here}
+
+#-
+      echo `kaplibs_link_adam -nogrf` `ast_link_adam` `shl_link_adam` \
+           `cvg_link_adam` `thr_link_adam` \
+           | awk 'BEGIN{RS=" ";FS="\n"}
+                  {f[i++]=$1}
+                  END{for(;i--;)if(!w[f[i]]++)l=f[i]" "l;print l}'
+
+#  End of script.
