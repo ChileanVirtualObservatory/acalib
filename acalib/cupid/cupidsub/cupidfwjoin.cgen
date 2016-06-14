@@ -1,0 +1,271 @@
+#include "sae_par.h"
+#include "cupid.h"
+#include "ast.h"
+#include "mers.h"
+#include <string.h>
+#include <math.h>
+
+void CGEN_FUNCTION(cupidFWJoin)( CGEN_TYPE *array, int nel, int ndim,
+                                 int dims[ 3 ], int skip[ 3 ], double rms,
+                                 AstKeyMap *config, int *ipa, int *npeak,
+                                 int perspectrum, int *status ){
+/*
+*+
+*  Name:
+*     cupidFWJoin<X>
+
+*  Purpose:
+*     Assign a clump index to every data pixel.
+
+*  Language:
+*     Starlink C
+
+*  Synopsis:
+*     void cupidFWJoin<X>( CGEN_TYPE *array, int nel, int ndim,
+*                          int dims[ 3 ], int skip[ 3 ], double rms,
+*                          AstKeyMap *config, int *ipa, int *npeak,
+*                          int perspectrum, int *status )
+
+*  Description:
+*     This function identifies groups of adjoining clumps which have no
+*     significant dips between them, and merges them into a single clump.
+*     For instance, if a single clump has a flat plateau, on which are
+*     two small noise spikes separated by more than MaxJump, the basic
+*     FellWalker algorithm would have created two clumps, one centred on
+*     each of the two noise spikes. In reality, these two clumps are not
+*     significantly different and should be considered part of the same
+*     clump. This tendency for noise spikes to be interpreted as clumps is
+*     made worse if pixel-to-pixel noise is correlated over a distance
+*     comporable to or larger than MaxJump.
+*
+*     For each clump, this function finds the height of the "col" between
+*     the clump and each of its neighbours, and identifies the "best"
+*     neighbour - that is, the neighbour with the highest col. If the peak
+*     of the clump being considered is less than "MinDip" above the col, then
+*     we merge the clump into its best neighbour.
+
+*  Parameters:
+*     array
+*        The array containing the data to be scanned. The elements should
+*        be ordered according to Fortran order (first axis varying most
+*        rapidly).
+*     nel
+*        The number of elements in "array".
+*     ndim
+*        The number of significant pixel axes.
+*     dims
+*        The number of pixels on each pixel axis of the array.
+*     skip
+*        The increment in 1D vector index required to move a distance of 1
+*        pixel along each axis. This allows conversion between indexing
+*        the array using a single 1D vector index and using nD coords. This
+*        array should have 3 elements even if "ndim" is less than 3, and
+*        the extra elements should be filled with zero's.
+*     rms
+*        The RMS noise in the data
+*     config
+*        An AstKeyMap contining the configuration parameters for this
+*        algorithm.
+*     ipa
+*        Pointer to the array to receive the index of the clump to which
+*        each data pixel is assigned. The lowest clump index is 0. Pixels
+*        not in a clump are assigned -1.
+*     npeak
+*        The address of an integer holding the highest clump index value
+*        in "ipa". On exit, the supplied value will be reduced if any of
+*        the clumps were merged.
+*     perspectrum
+*        If non-zero, then each spectrum is processed independently of its
+*        neighbours. A clump that extends across several spectra will be
+*        split into multiple clumps, each restricted to a single spectrum.
+*        The non-zero value supplied should be the 1-based axis index of
+*        the spectral pixel axis. Should be supplied as zero if "ndim" is
+*        not 3.
+*     status
+*        Pointer to the inherited status value.
+
+*  Copyright:
+*     Copyright (C) 2006 Particle Physics & Astronomy Research Council.
+*     Copyright (C) 2007-2010 Science & Technology Facilities Council.
+*     All Rights Reserved.
+
+*  Licence:
+*     This program is free software; you can redistribute it and/or
+*     modify it under the terms of the GNU General Public License as
+*     published by the Free Software Foundation; either version 2 of
+*     the License, or (at your option) any later version.
+*
+*     This program is distributed in the hope that it will be
+*     useful, but WITHOUT ANY WARRANTY; without even the implied
+*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+*     PURPOSE. See the GNU General Public License for more details.
+*
+*     You should have received a copy of the GNU General Public License
+*     along with this program; if not, write to the Free Software
+*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
+*     02110-1301, USA
+
+*  Authors:
+*     DSB: David S. Berry
+*     TIMJ: Tim Jenness (JAC, Hawaii)
+*     {enter_new_authors_here}
+
+*  History:
+*     27-MAR-2006 (DSB):
+*        Original version.
+*     21-MAR-2007 (DSB):
+*        Fix bug that prevented merger occuring if only one merger is needed.
+*     23-MAR-2007 (DSB):
+*        Fix bug that caused incorrect clumps to be merged.
+*     17-SEP-2007 (DSB):
+*        Added "perspectrum" parameter.
+*     14-JAN-2009 (TIMJ):
+*        Use MERS for message filtering.
+*     5-OCT-2010 (DSB):
+*        Major re-write of the algorithm.
+*     30-JUN-2014 (DSB):
+*        Changed default for MinDip form 3*RMS to 2*RMS. This value seems
+*        to do better at recovering artificial Gaussians.
+*     {enter_further_changes_here}
+
+*  Bugs:
+*     {note_any_bugs_here}
+
+*-
+*/
+
+/* Local Variables: */
+   CupidPixelSet **pslist; /* Pointer to array of PixelSet pointers */
+   CupidPixelSet *ps1;     /* Describes clump to move */
+   CupidPixelSet *ps2;     /* Describes clump to be exapneded */
+   double mindip;          /* Minimum dip between distinct peaks */
+   double newcol;          /* The col height for the new border */
+   double topcol;          /* Height of highest col between neighbours */
+   int hasnew;             /* Has the new clump index already been found? */
+   int iclump1;            /* Index of clump to move */
+   int iclump2;            /* Index of clump to be expanded */
+   int ineb;               /* Neighbour index */
+   int jneb;               /* Neighbour index */
+   int jnew;               /* Neighbour index at which new border is stored */
+   int nmerged;            /* Number of clumps merged this iteration. */
+   int npeak0;             /* Original number of clumps in "ipa" */
+
+/* Abort if an error has already occurred. */
+   if( *status != SAI__OK ) return;
+
+/* Get the minimum dip between two adjoining peaks necessary for the two
+   peaks to be considered distinct. */
+   mindip = cupidConfigRMS( config, "MINDIP", rms, 2.0*rms, status );
+
+/* Return without action if merging of clumps is not required. */
+   if( mindip <= 0.0 ) return;
+
+/* Note the original number of clumps. */
+   npeak0 = *npeak;
+
+/* Create a set of PixelSet structures describing all the clumps in the
+   supplied ipa array. */
+   pslist = CGEN_FUNCTION(cupidFWPixelSets)( array, nel, ndim, dims, skip, ipa,
+                                             npeak0, perspectrum, status );
+
+/* Enter an iterative loop in which we join clumps that have a small dip
+   between them. Quit when an interation fails to merge any more clumps. */
+   nmerged = 1;
+   while( nmerged && *status == SAI__OK ) {
+
+/* Loop round all clumps. For each one, we consider moving all the clump
+   pixels out of clump "iclump1", into another clump that adjoins iclump1
+   and is separated by a dip of less than MinDip. */
+      nmerged = 0;
+      for( iclump1 = 0; iclump1 <= npeak0; iclump1++ ) {
+
+/* Get a pointer to the PixelSet describing the clump with index "iclump1".
+   Pass on if no clump with this index exists, or if it has no neighbours. */
+         ps1 = pslist[ iclump1 ];
+         if( ps1 && ps1->nneb ) {
+
+/* Check all the clumps that adjoin clump "iclump1", and find the one
+   that is separated from "iclump1" by the smallest dip (i.e. has the
+   highest "col" ). */
+            topcol = VAL__MIND;
+            iclump2 = -1;
+
+            for( ineb = 0; ineb < ps1->nneb; ineb++ ) {
+               if( ps1->nebs[ ineb ] != -1 && ps1->cols[ ineb ] > topcol ) {
+                  topcol = ps1->cols[ ineb ];
+                  iclump2 = ps1->nebs[ ineb ];
+               }
+            }
+
+/* If the peak value in iclump1 is less than "mindip" above the col
+   between iclump1 and iclump2, then we merge the clumps. */
+            if( iclump2 != -1 && ps1->vpeak < topcol + mindip ) {
+               nmerged++;
+               msgSeti( "P0", iclump1 );
+               msgSeti( "P1", iclump2 );
+               msgOutif( MSG__DEBUG, "",
+                         "Moving clump ^P0 into clump ^P1", status );
+
+/* Tell the neighbours of clump1 that they are now neighbours of clump2
+   instead. But only do this if they are not already neighbours of clump2. */
+               for( ineb = 0; ineb < ps1->nneb; ineb++ ) {
+                  jneb = ps1->nebs[ ineb ];
+                  if( jneb != -1 ) {
+                     ps2 = pslist[ jneb ];
+                     if( ps2 ) {
+                        if( jneb != iclump2 ) {
+                           hasnew = 0;
+                           newcol = 0.0;
+                        } else {
+                           hasnew = 1;
+                           newcol = VAL__MAXD;
+                        }
+                        for( jneb = 0; jneb < ps2->nneb; jneb++ ) {
+                           if( ps2->nebs[ jneb ] == iclump1 ||
+                               ps2->nebs[ jneb ] == iclump2 ) {
+                              if( hasnew ) {
+                                 ps2->nebs[ jneb ] = -1;
+                                 if( ps2->cols[ jneb ] > newcol ) {
+                                    newcol = ps2->cols[ jneb ];
+                                    ps2->cols[ jnew ] = newcol;
+                                 }
+                              } else {
+                                 ps2->nebs[ jneb ] = iclump2;
+                                 newcol = ps2->cols[ jneb ];
+                                 jnew = jneb;
+                                 hasnew = 1;
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+
+/* Transfer the "iclump1" pixels into "iclump2". */
+               cupidCFXfer( ps1, pslist[ iclump2 ], ipa, skip, status );
+
+/* Free the old clump PixelSet. */
+               pslist[ iclump1 ] = cupidCFDeletePS( ps1, status );
+            }
+         }
+      }
+   }
+
+/* Find the highest remaining peak index. */
+   *npeak = 0;
+   for( iclump1 = npeak0; iclump1 >= 0; iclump1-- ) {
+      if( pslist[ iclump1 ] ) {
+         *npeak = iclump1;
+         break;
+      }
+   }
+
+/* Free the PixelSets. */
+   if( pslist ) {
+      for( iclump1 = 0; iclump1 <= npeak0; iclump1++ ) {
+         pslist[ iclump1 ] = cupidCFDeletePS( pslist[ iclump1 ], status );
+      }
+      pslist = astFree( pslist );
+   }
+}
+

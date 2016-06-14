@@ -1,0 +1,776 @@
+# -*- Tcl -*-
+
+package cupid {
+   version @PACKAGE_VERSION@
+   prefix scp
+
+   executable cupid_mon {
+
+      action clumpinfo {
+
+         helplib {$CUPID_HELP}
+
+         parameter clumps {
+            position 2
+            type LITERAL
+            access READ
+            ppath CURRENT,DEFAULT
+            prompt {The indices of the clumps to use}
+            default ALL
+            helpkey *
+          }
+
+          parameter flbnd {
+            size *
+            type _DOUBLE
+            access WRITE
+            vpath INTERNAL
+            helpkey *
+          }
+
+          parameter fubnd {
+            size *
+            type _DOUBLE
+            access WRITE
+            vpath INTERNAL
+            helpkey *
+          }
+
+         parameter lbound {
+            size *
+            type _INTEGER
+            access WRITE
+            vpath INTERNAL
+            helpkey *
+          }
+
+          parameter nclumps {
+            type _INTEGER
+            access WRITE
+            vpath DEFAULT
+            default 0
+            helpkey *
+          }
+
+         parameter ndf {
+            position 1
+            type NDF
+            access READ
+            vpath PROMPT
+            ppath GLOBAL
+            association <-GLOBAL.DATA_ARRAY
+            prompt {Input NDF containing clump identifications}
+            helpkey *
+          }
+
+         parameter quiet {
+            position 3
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath DEFAULT
+            prompt {Supress screen output?}
+            default FALSE
+            helpkey *
+          }
+
+          parameter ubound {
+            size *
+            type _INTEGER
+            access WRITE
+            vpath INTERNAL
+            helpkey *
+          }
+
+      }
+
+      action extractclumps {
+
+         helplib {$CUPID_HELP}
+
+         parameter backoff {
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Remove background when finding clump sizes?}
+            default TRUE
+            helpkey *
+          }
+
+         parameter data {
+            position 2
+            type NDF
+            access READ
+            vpath PROMPT
+            ppath CURRENT
+            prompt {Input data NDF}
+            helpkey *
+          }
+
+         parameter deconv {
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Correct clump parameters for beam smoothing?}
+            default TRUE
+            helpkey *
+          }
+
+         parameter fwhmbeam {
+            type _DOUBLE
+            access READ
+            ppath DYNAMIC
+            vpath DYNAMIC
+            prompt {Spatial beam width in pixels}
+            helpkey *
+          }
+
+         parameter jsacat {
+            type LITERAL
+            access WRITE
+            vpath DEFAULT
+            ppath CURRENT DEFAULT
+            prompt {Output JSA-style catalogue}
+            default !
+            helpkey *
+          }
+
+         parameter logfile {
+            type LITERAL
+            ppath CURRENT DEFAULT
+            vpath DEFAULT
+            prompt {Name of output log file}
+            helpkey *
+            default !
+         }
+
+         parameter mask {
+            position 1
+            type NDF
+            access READ
+            vpath PROMPT
+            ppath GLOBAL
+            association <-GLOBAL.DATA_ARRAY
+            prompt {Input mask NDF}
+            helpkey *
+          }
+
+         parameter out {
+            position 3
+            type NDF
+            access WRITE
+            vpath PROMPT
+            association ->GLOBAL.DATA_ARRAY
+            prompt {Output mask NDF}
+            helpkey *
+          }
+
+         parameter outcat {
+            position 4
+            type LITERAL
+            access WRITE
+            prompt {Output catalogue}
+            association ->GLOBAL.CATALOGUE
+            helpkey *
+          }
+
+         parameter velores {
+            type _DOUBLE
+            access READ
+            ppath DYNAMIC
+            vpath DYNAMIC
+            prompt {Velocity resolution in channels}
+            helpkey *
+          }
+
+         parameter wcspar {
+            type _LOGICAL
+            access READ
+            vpath DYNAMIC,DEFAULT
+            ppath DYNAMIC,DEFAULT
+            prompt {Use WCS units in the output catalogue?}
+            default FALSE
+            helpkey *
+          }
+
+         parameter shape {
+            type LITERAL
+            access READ
+            vpath DYNAMIC
+            ppath DYNAMIC
+            prompt {Spatial clump shape in output catalogue}
+            helpkey *
+	 }
+
+          parameter nclumps {
+            type _INTEGER
+            access WRITE
+            vpath DEFAULT
+            default 0
+            helpkey *
+	  }
+      }
+
+      action findback {
+         alias {findb(ack)}
+
+         helplib {$CUPID_HELP}
+
+         parameter box {
+            position 3
+            size *
+            type _INTEGER
+            ppath CURRENT DEFAULT
+            default 9
+            prompt {Filter dimensions, in pixels}
+            helpkey *
+          }
+
+         parameter msg_filter {
+            position 4
+            access READ
+            type _CHAR
+            prompt {Information level}
+            default !
+            vpath DEFAULT
+            ppath CURRENT DEFAULT
+            helpkey *
+          }
+
+         parameter newalg {
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Use experimental algorithm variations?}
+            default FALSE
+            helpkey *
+          }
+         parameter sub {
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Subtract background from input data?}
+            default FALSE
+            helpkey *
+          }
+
+         parameter in {
+            position 1
+            type NDF
+            access READ
+            vpath PROMPT
+            ppath GLOBAL CURRENT
+            association <-GLOBAL.DATA_ARRAY
+            prompt {Input NDF}
+            helpkey *
+          }
+
+         parameter out {
+            position 2
+            type NDF
+            access WRITE
+            vpath PROMPT
+            association ->GLOBAL.DATA_ARRAY
+            prompt {Output NDF}
+            helpkey *
+          }
+
+         parameter rms {
+            type _DOUBLE
+            access READ
+            ppath DYNAMIC
+            prompt {RMS noise level}
+            helpkey *
+          }
+
+         parameter wlim {
+            type _REAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT DEFAULT
+            default 0.3
+            prompt {Weight limit for good output pixels}
+            helpkey *
+         }
+
+      }
+
+      action findclumps {
+         alias {clumps}
+
+         helplib {$CUPID_HELP}
+
+         parameter backoff {
+            type _LOGICAL
+            access READ
+            vpath DYNAMIC,DEFAULT
+            ppath DYNAMIC,DEFAULT
+            prompt {Remove background when finding clump sizes?}
+            default TRUE
+            helpkey *
+          }
+
+         parameter config {
+            type LITERAL
+            ppath CURRENT DEFAULT
+            vpath CURRENT DEFAULT
+            prompt {Algorithm tuning parameters}
+            helpkey *
+            default !
+         }
+
+         parameter deconv {
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Correct clump parameters for beam smoothing?}
+            default TRUE
+            helpkey *
+          }
+
+         parameter msg_filter {
+            type _CHAR
+            prompt {Information level}
+            default !
+            vpath DEFAULT
+            ppath CURRENT DEFAULT
+            access READ
+            helpkey *
+         }
+
+         parameter in {
+            position 1
+            type NDF
+            access READ
+            vpath PROMPT
+            ppath GLOBAL
+            association <-GLOBAL.DATA_ARRAY
+            prompt {Input NDF}
+            helpkey *
+          }
+
+         parameter jsacat {
+            type LITERAL
+            access WRITE
+            vpath DEFAULT
+            ppath CURRENT DEFAULT
+            prompt {Output JSA-style catalogue}
+            default !
+            helpkey *
+          }
+
+         parameter logfile {
+            type LITERAL
+            ppath CURRENT DEFAULT
+            vpath DEFAULT
+            prompt {Name of output log file}
+            helpkey *
+            default !
+         }
+
+          parameter nclumps {
+            type _INTEGER
+            access WRITE
+            vpath DEFAULT
+            default 0
+            helpkey *
+          }
+
+         parameter out {
+            position 2
+            type NDF
+            access WRITE
+            vpath PROMPT
+            association ->GLOBAL.DATA_ARRAY
+            prompt {Output NDF}
+            helpkey *
+          }
+
+         parameter outcat {
+            position 3
+            type LITERAL
+            access WRITE
+            prompt {Output KAPPA-style catalogue}
+            association ->GLOBAL.CATALOGUE
+            helpkey *
+          }
+
+         parameter method {
+            position 4
+            type LITERAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Clump identification algorithm}
+            default ClumpFind
+            helpkey *
+          }
+
+         parameter perspectrum {
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Process spectra independently of neighbouring spectra?}
+            default FALSE
+            helpkey *
+          }
+
+         parameter qout {
+            type NDF
+            access WRITE
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Copy of input NDF with Quality mask}
+            default !
+            helpkey *
+          }
+
+         parameter repconf {
+            type _LOGICAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Report supplied configuration?}
+            default TRUE
+            helpkey *
+          }
+
+         parameter rms {
+            type _DOUBLE
+            access READ
+            ppath DYNAMIC
+            prompt {RMS noise level}
+            helpkey *
+          }
+
+         parameter wcspar {
+            type _LOGICAL
+            access READ
+            vpath DYNAMIC,DEFAULT
+            ppath DYNAMIC,DEFAULT
+            prompt {Use WCS units in the output catalogue?}
+            default FALSE
+            helpkey *
+          }
+
+         parameter shape {
+            type LITERAL
+            access READ
+            vpath DYNAMIC
+            ppath DYNAMIC
+            prompt {Spatial clump shape in output catalogue}
+            helpkey *
+          }
+      }
+
+      icl {defstring cupidh(elp) !$CUPID_DIR/cupidhelp}
+      icl {defstring kap_cupidh(elp) !$CUPID_DIR/cupidhelp}
+      action cupidhelp {
+         alias {cupidh(elp)}
+
+         helplib {$CUPID_HELP}
+
+         parameter topic {
+            position 1
+            type LITERAL
+            access READ
+            vpath DEFAULT
+            prompt {Help topic}
+            default {         }
+            helpkey *
+          }
+
+         parameter subtopic {
+            position 2
+            type LITERAL
+            access READ
+            vpath DEFAULT
+            prompt {Help subtopic}
+            default {         }
+            helpkey *
+          }
+
+         parameter subsubtopic {
+            position 3
+            type LITERAL
+            access READ
+            vpath DEFAULT
+            prompt {Help subsubtopic}
+            default {         }
+            helpkey *
+          }
+
+         parameter subsubsubtopic {
+            position 4
+            type LITERAL
+            access READ
+            vpath DEFAULT
+            prompt {Help subsubsubtopic}
+            default {         }
+            helpkey *
+          }
+
+      }
+
+      action makeclumps {
+
+         helplib {$CUPID_HELP}
+
+         parameter angle {
+            size 2
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Mean and width of spatial position angles in degs}
+            default 0.0 180.0
+            helpkey *
+          }
+
+         parameter beamfwhm {
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Spatial FWHM of instrument beam in pixels}
+            default 2.0
+            helpkey *
+          }
+
+         parameter deconv {
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Correct clump parameters for beam smoothing?}
+            default TRUE
+            helpkey *
+          }
+
+         parameter fwhm1 {
+            size 2
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Mean and width of FWHMs on pixel axis 1 in pixels}
+            default 10.0 2.0
+            helpkey *
+          }
+
+         parameter fwhm2 {
+            size 2
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Mean and width of FWHMs on pixel axis 2 in pixels}
+            default 10.0 2.0
+            helpkey *
+          }
+
+         parameter fwhm3 {
+            size 2
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Mean and width of FWHMs on pixel axis 3 in pixels}
+            default 10.0 2.0
+            helpkey *
+          }
+
+         parameter grid {
+            type _INTEGER
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Margin to place round outside of regular grid}
+            default !
+            helpkey *
+          }
+
+         parameter lbnd {
+            size *
+            type _INTEGER
+            access READ
+            ppath DYNAMIC,CURRENT,DEFAULT
+            prompt {Lower pixel bounds of output array}
+            default 1 1
+            helpkey *
+          }
+
+         parameter like {
+            type NDF
+            access READ
+            vpath DEFAULT
+            ppath GLOBAL
+            association <-GLOBAL.DATA_ARRAY
+            prompt {An NDF to define the output WCS}
+            default !
+            helpkey *
+          }
+
+         parameter model {
+            type NDF
+            access WRITE
+            prompt {Output NDF without noise}
+            helpkey *
+          }
+
+         parameter nclump {
+            type _INTEGER
+            access READ
+            ppath CURRENT,DEFAULT
+            prompt {Number of clumps to create}
+            default 50
+            helpkey *
+          }
+
+         parameter out {
+            type NDF
+            position 1
+            access WRITE
+            prompt {Output NDF}
+            association ->GLOBAL.DATA_ARRAY
+            helpkey *
+          }
+
+         parameter outcat {
+            position 2
+            type LITERAL
+            access WRITE
+            prompt {Output catalogue}
+            association ->GLOBAL.CATALOGUE
+            helpkey *
+          }
+
+         parameter pardist {
+            type LITERAL
+            access READ
+            prompt {Parameter distribution}
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            default Normal
+            helpkey *
+          }
+
+         parameter peak {
+            size 2
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Mean and width of clump peak values}
+            default 20.0 3.0
+            helpkey *
+          }
+
+         parameter precat {
+            type _LOGICAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Create catalogue before instrumental smoothing is applied?}
+            default FALSE
+            helpkey *
+          }
+
+         parameter rms {
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {RMS noise to add to data}
+            default 0.2
+            helpkey *
+          }
+
+         parameter shape {
+            type LITERAL
+            access READ
+            vpath DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Spatial clump shape in output catalogue}
+            default None
+            helpkey *
+          }
+
+         parameter trunc {
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Truncation level for clumps}
+            default 0.2
+            helpkey *
+          }
+
+         parameter ubnd {
+            size *
+            type _INTEGER
+            access READ
+            ppath DYNAMIC,CURRENT,DEFAULT
+            prompt {Upper pixel bounds of output array}
+            default 200 200
+            helpkey *
+          }
+
+         parameter velfwhm {
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {FWHM of velocity resolution in pixels}
+            default 1.0
+            helpkey *
+          }
+
+         parameter vgrad1 {
+            size 2
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Mean and width of vel. gradient on axis 1}
+            default 0.0 0.1
+            helpkey *
+          }
+
+         parameter vgrad2 {
+            size 2
+            type _REAL
+            access READ
+            vpath CURRENT,DEFAULT
+            ppath CURRENT,DEFAULT
+            prompt {Mean and width of vel. gradient on axis 2}
+            default 0.0 0.1
+            helpkey *
+          }
+
+      }
+
+   }
+
+   command outlineclump {
+      obey {$CUPID_DIR/outlineclump.csh}
+   }
+
+   icl {defhelp cupid $CUPID_HELP 0}
+
+   display {
+
+     CUPID commands are now available -- (Version @PACKAGE_VERSION@)
+
+     Type cupidhelp for help on CUPID commands.
+     Type "showme sun255" to browse the hypertext documentation.
+
+   }
+
+}
