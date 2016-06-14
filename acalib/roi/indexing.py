@@ -163,11 +163,25 @@ class SpectraSketcher:
 
 
 class GaussianSegmentation:
+    """
+    Collapsed Image segmentation using Multiscale Morphological Operators and Gaussian Mixtures.
+    
+    :param prob: Foreground probability
+    :param precision: How detail is the segmentation (Smaller precision, smaller objects detected)
+    :type prob: float
+    :type precision: float
+    """
     def __init__(self,prob = 0.05, precision = 2./100):
         self.prob = prob
         self.precision = precision
 
     def gaussian_mix(self,image):
+        """
+        Run the algorithm to detect objects.
+        
+        :param image: Velocity collapsed image
+        :returns: list of skimage.measure.regionprops Objects, with detected regions properties
+        """
         prob = self.prob
         dims = image.shape
         rows = dims[0]
