@@ -3,10 +3,11 @@ sys.path.append('../../')
 
 import acalib.io.workspace as ws
 import numpy as np
-#import timeit
-#import cProfile
-import acalib.clumps.fellWalker as fwalker
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import timeit
+import cProfile
+import acalib.clumps.clumpFind as cfind
+import matplotlib.pyplot as plt
 from acalib import acontainer as ac
 #from acalib.io import graph as gp
 
@@ -17,9 +18,9 @@ cube=cont.primary
 
 spar=cube.standarize()
 
-fw = fwalker.FellWalker()
+cf = cfind.ClumpFind()
 
-caa,clumps = fw.run(cube, verbose=True)
+caa,clumps = cf.fit(cube)
 
 #newcube=cube.copy()
 #newcube.data=caa

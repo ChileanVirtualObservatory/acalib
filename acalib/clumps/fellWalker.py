@@ -3,6 +3,7 @@ import sys
 import ca
 import numpy as np
 import matplotlib.pyplot as plt
+from astropy import log
 
 
 class FellWalker:
@@ -25,15 +26,15 @@ class FellWalker:
 
       """ Specific FellWalker parameters """
       #Longest jump to a higher neighbouring pixel
-      self.par['MAXJUMP'] = 5
-      #Minimum dip between distinct peaks
+      self.par['MAXJUMP'] = 6
+      #The minimum dip parameter is specified as a multiple of the noise level in the data
       self.par['MINDIP'] = 3
       #Minimum size (in pixels) of clumps
-      self.par['MINSIZE'] = 15
+      self.par['MINSIZE'] = 20
       #Lowest gradient which marks the start of the walk
-      self.par['FLATSLOPE'] = 0.001
+      self.par['FLATSLOPE'] = 1.
       #Data values less than this are at "sea level"
-      self.par['SEALEVEL'] = 0.
+      self.par['SEALEVEL'] = 1.
 
       """ cellulars automaton parameters """
       #Min fraction of neighbouring good pixels
@@ -51,14 +52,15 @@ class FellWalker:
 
 
    def create_caa(self, data):
-      caa = np.zeros_like(data.data).astype(np.int)
+      caa = np.zeros(data.shape, dtype=np.int)
       #Check invalid pixels (below threshold)
-      rms = self.par["RMS"]
-      threshold = self.par['THRESH']*rms
+      threshold = self.par['THRESH']*self.par["RMS"]
       #Aditionally, NaN valued pixels are set as unusable -> filled(1)
-      mask = np.array((data<threshold).filled(1))
+      if type(data)==np.ma.MaskedArray:
+         mask = np.array((data<threshold).filled(1))
+      else:
+         mask = data<threshold
       caa[mask] = -1
-      print "CAA initialized successfully"
       return caa
 
 
@@ -178,6 +180,7 @@ class FellWalker:
                if isBorder: break
       return peaks,cols
 
+
    def merge(self, clump, peaks, cols, caa, minDip):
       """
       Enter an iterative loop in which we join clumps that have a small dip
@@ -225,7 +228,7 @@ class FellWalker:
 
             #delete clumpId from peaks and update new peak of merged clumps
             tmpPeak=peaks.pop(clumpId)
-            peaks[neighId]=np.max(tmpPeak,peaks[neighId])
+            peaks[neighId]=max(tmpPeak,peaks[neighId])
 
             #Update caa
             for pos in clump[clumpId]:
@@ -233,8 +236,6 @@ class FellWalker:
 
             #Merge pixels in clump dictionary
             clump[neighId]+=(clump.pop(clumpId))
-            print "Merged clumps {0} and {1}".format(clumpId,neighId)
-
       return clump,peaks,cols,caa
 
 
@@ -330,15 +331,17 @@ class FellWalker:
 
       return path,pathv,flat,flatv
 
+   # Back compatibility function
+   def fit(self, cube, verbose=False):
+       log.warning("The .fit() interface will be removed soon, please use .run()")
+       return self.run(cube, verbose=verbose)
 
-   def fit(self, orig_cube):
-      cube = orig_cube.copy()
-      syn = orig_cube.empty_like()
+   def run(self, cube, verbose=False):
+      cube = cube.copy()
 
       # Set the RMS, or automatically find an estimate for it
-      if not self.par.has_key('RMS'):
-         rms = cube.estimate_rms()
-         self.par['RMS'] = rms
+      rms = cube.estimate_rms()
+      self.par['RMS'] = rms
 
       #cube.data is masked array
       data = cube.data
@@ -348,15 +351,15 @@ class FellWalker:
       threshold, or are bad. Fill all other pixels with zero to indicate that
       the pixel is "usable but not yet checked".
       """
-      print "Creating CAA"
       caa=self.create_caa(data)
+      if verbose: log.info("CAA initialized successfully")
 
       """
       Use a cellular automata to remove small isolated groups of usable
       pixels from the above "ipa" array. This allocates new memory for the
       cleaned up array.
       """
-      print "Removing isolate regions\n"
+      if verbose: log.info("[Stage 1] Removing small isolated regions")
       frac = self.par['FRAC']
       on = self.par['ON']
       off = self.par['OFF']
@@ -364,10 +367,9 @@ class FellWalker:
       caa = ca.remove_isolate(caa, frac, on, off, centre)
 
       #Some constants
-      rms = self.par['RMS']
       noise = self.par['THRESH']*rms
-      flatSlope = self.par['FLATSLOPE']
-      seaLevel = self.par['SEALEVEL']
+      flatSlope = self.par['FLATSLOPE']*rms
+      seaLevel = self.par['SEALEVEL']*rms
 
 
       clump=dict()
@@ -378,7 +380,7 @@ class FellWalker:
       Scan through the caa array, looking for usable pixels which have not
       yet been assigned to a clump (i.e. have a value of zero in caa).
       """
-      print "Scaning pixel!"
+      if verbose: log.info("[Stage 2] Walking up!")
       for i in range(shape[0]):
          for j in range(shape[1]):
             for k in range(shape[2]):
@@ -442,13 +444,11 @@ class FellWalker:
                   for pos in path:
                      caa[pos]=path_id
                      clump[path_id].append(pos)
-
-               #Print some info
-               print "id={0}, path: {1}".format(top_id,path)
+      if verbose: log.info('Number of clumps found: {0}'.format(len(clump)))
 
 
       ###refine 1, removing small clumps
-      print "\n Removing small clumps stage"
+      if verbose: log.info("[Stage 3] Removing small clumps")
       minSize = self.par['MINSIZE']
       #deleted=list() #deleted id's
 
@@ -459,20 +459,20 @@ class FellWalker:
                caa[pos]=-1
             del clump[clumpId]
             #deleted.append(clumpId)
-            print "removed clump {0}".format(clumpId)
+      if verbose: log.info('Number of remaining clumps: {0}'.format(len(clump)))
 
       ####refine 2, merging clumps
       """
       Amalgamate adjoining clumps if there is no significant dip between the
       clumps.
       """
-      print "\n Merge Stage"
+      if verbose: log.info("[Stage 4] Merging clumps with low dip")
 
       """
       Get the minimum dip between two adjoining peaks necessary for the two
       peaks to be considered distinct.
       """
-      minDip = self.par['MINDIP']
+      minDip = self.par['MINDIP']*rms
 
       """
       Create a dictionary structure describing all the clumps boundaries in the
@@ -491,6 +491,7 @@ class FellWalker:
             for pos in clump[seqId]:
                caa[pos]=seqId
          seqId+=1
+      if verbose: log.info('Number of remaining clumps: {0}'.format(len(clump)))
 
 
       """
@@ -499,16 +500,20 @@ class FellWalker:
       cube of input pixels centred on the output pixel. Repeat this process
       a number of times as given by configuration parameter CleanIter.
       """
-      print "Smoothing boundaries\n"
+      if verbose: log.info("[Stage 5] Smoothing boundaries")
       cleanIter = self.par['CLEANITER']
       for i in range(cleanIter):
-         caa = ca.smooth_boundary(caa)
+         _caa = ca.smooth_boundary(caa)
 
-      ####some info
-      #nclump=len(clump)
-      #print "\n SOME USEFUL INFO"
-      #print "Number of clumps:",nclump
-      #for clumpId,pixels in clump.items():
-      #   print "Clump {0} has {1} pixels".format(clumpId,len(pixels))
+         #positions where they were changes
+         diff = caa!=_caa
+         if not np.any(diff): del _caa; continue
+         positions = map(tuple,np.array(np.where(diff)).T)
 
-      return caa
+         #update clump struct
+         for pos in positions:
+            clump[caa[pos]].remove(pos)
+            clump[_caa[pos]].append(pos)
+         del caa
+         caa = _caa
+      return (caa,clump)
