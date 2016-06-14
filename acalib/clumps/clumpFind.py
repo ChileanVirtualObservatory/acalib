@@ -4,8 +4,9 @@ import ca
 import numpy as np
 import matplotlib.pyplot as plt
 from math import sqrt
+from astropy import log
 
-class FellWalker:
+class ClumpFind:
 
    def __init__(self):
       self.defaultParams()
@@ -29,10 +30,9 @@ class FellWalker:
 
 
    def create_caa(self, data):
-      caa = np.zeros_like(data.data).astype(np.int)
-      #NaN valued pixels are set as unusable -> filled(1)
-      mask = np.array(data.filled(1))
-      caa[mask] = -1
+      caa = np.zeros(data.shape, dtype=np.int)
+      #NaN valued pixels are set as unusable
+      caa[data.mask] = -1
       return caa
 
    #square distance between p0 and p1
@@ -350,7 +350,7 @@ class FellWalker:
    # Back compatibility function
    def fit(self, orig_cube, verbose=False):
        log.warning("The .fit() interface will be removed soon, please use .run()")
-       return self.run(cube, verbose)
+       return self.run(orig_cube, verbose=verbose)
 
    def run(self, orig_cube, verbose=False):
       cube = orig_cube.copy()
