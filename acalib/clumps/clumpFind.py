@@ -107,14 +107,14 @@ class FellWalker:
          ret = list()
 
          #variating one dimension
-         if naxis=1:
+         if naxis==1:
             for i in [-1,1]:
                neigh = (x+i,y)
             for j in [-1,1]:
                neigh = (x,y+j)
 
          #variating two dimensions
-         elif naxis=2:
+         elif naxis==2:
             for i in [-1,0,1]:
                for j in [-1,0,1]:
                   if i==j==0: continue
@@ -256,7 +256,6 @@ class FellWalker:
             npeaks[index] = pos
             caa[pos] = index
             index += 1
-
          """
          If one or more of the neighbours of this pixel are assigned to PixelSets
          which were identified at this contour level, then add this pixel into
@@ -276,30 +275,77 @@ class FellWalker:
                i1 = set(i1)
                i1.remove(i11)
 
-               #updating clumps dict, peaks dict and caa 
+               #updating clumps dict, peaks dict, adjoins dict and caa
                for ind in i1:
-                  positions = nclumps.pop(ind)
+                  tmp_positions = nclumps.pop(ind)
                   peak_pos = npeaks.pop(ind)
-                  nclumps[i11] += positions
+                  nclumps[i11] += tmp_positions
                   if data[peak_pos]>npeaks[i11]: npeaks[i11] = peak_pos 
-                  for pos in positions:
+                  for pos in tmp_positions:
                      caa[pos] = i11
+                  #update adjoins
+                  adjoins[i11].append(adjoins.pop(ind))   
+
          """
          If we are using the IDL ClumpFind algorithm (rather than the algorithm
          published in ApJ), and if the pixel adjoins a clump defined at a higher
          contour level, then note that the clump containing the new pixel adjoins
          this higher level clump
          """
+         if n2!=0 and n1==0:
+            adjoins[index-1].append(i12)
+         elif n2!=0:
+            adjoins[i11].append(i12)
+
+      """
+      If we are using the "friends-of-friends" algorithm (as described in
+      the 1994 ApJ Williams et al paper) to carve up merged contours, then we
+      attempt to erode the new PixelSet by transferring pixels from the PixelSet
+      into adjoining PixelSets defined at a higher contour level. The loop
+      continues until all pixels that adjoin another PixelSet have been
+      transferred out of the new PixelSet (TODO)
+      """
+
+      """
+      Otherwise, we use the simpler algorithm implemented in later IDL
+      versions of ClumpFind. This assigns each pixel in the PixelSet to the
+      adjoining clump that has the closest peak pixel
+      """
+      for ind in nclumps.keys():
+         #ignore clumps which dont adjoin a clump at previous level
+         if not adjoins.has_key(ind): continue
+         #otherwise transfer pixels from this clump to adjoining clumps at previous level
+         del npeaks[ind]
+         nebs = adjoins[ind]
+         neb_pks = [self.peaks[nb] for nb in nebs]
+         pixp = nclumps.pop(ind)
+         #iterating through each pixel
+         for pos in pixp:
+            #nearest neighbor clump at previous level
+            min_dist = float('inf')
+            for pk in neb_pks:
+               if dist(pos,pk)>min_dist: continue
+               win_nb = pk
+               min_dist = dist(pos,pk)
+            #now update struct with the winner
+            win_ind = caa[win_nb]
+            caa[pos] = win_ind
+            self.clumps[win_ind].append(pos)
 
       """
       Now check each of the new PixelSets created above. Ordering
       indexes of new clumps, in a sequential way
       """
-      if self.index > hindex:
-         seq_ind = hindex
-         for clumps.keys()
+      seq_ind = hindex:
+      for ind in nclumps.keys():
+         if ind != seq_ind:
+            #update clumps dicts
+            nclumps[seq_ind] = nclumps.pop(ind)
+            #update peaks
+            npeaks[seq_ind] = npeaks.pop(ind)
+            seq_ind += 1
 
-      return
+      return nclumps,npeaks
 
 
    # Back compatibility function
