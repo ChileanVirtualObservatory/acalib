@@ -256,11 +256,10 @@ class FellWalker:
             npeaks[index] = pos
             caa[pos] = index
             index += 1
-         """
-         If one or more of the neighbours of this pixel are assigned to PixelSets
-         which were identified at this contour level, then add this pixel into
-         the PixelSet with the lowest index
-         """
+
+         #If one or more of the neighbours of this pixel are assigned to PixelSets
+         #which were identified at this contour level, then add this pixel into
+         #the PixelSet with the lowest index.         
          else:
             (nclumps[i11]).append(pos)
             if data[pos]>npeaks[i11]: npeaks[i11] = pos
@@ -336,7 +335,7 @@ class FellWalker:
       Now check each of the new PixelSets created above. Ordering
       indexes of new clumps, in a sequential way
       """
-      seq_ind = hindex:
+      seq_ind = hindex
       for ind in nclumps.keys():
          if ind != seq_ind:
             #update clumps dicts
@@ -355,7 +354,6 @@ class FellWalker:
 
    def run(self, orig_cube, verbose=False):
       cube = orig_cube.copy()
-      syn = orig_cube.empty_like()
 
       # Set the RMS, or automatically find an estimate for it
       if not self.par.has_key('RMS'):
@@ -410,10 +408,14 @@ class FellWalker:
          will find no pixels.
          """
          if clevel < self.maxrem:
-            self.scan(data, caa, clevel, naxis)
-
-         elif:
+            nclumps, npeaks = self.scan(data, caa, clevel, naxis)
+            #updating structs
+            self.clumps.update(nclumps)
+            self.peaks.update(npeaks)
+            #updating last available index
+            self.index += len(nclumps)
+         else:
             log.warning('No pixels found at this contour level.')
 
-   #return caa and clump structures
-   return caa,clumps
+      #return caa and clump structures
+      return caa,clumps
