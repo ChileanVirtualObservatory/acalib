@@ -133,8 +133,8 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
     if debug:
        log.info("Delta = "+str(delta))
        log.info("Max Iter = "+str(max_iter))
-       plt.imshow(mould.sum(axis=(0)))
-       plt.show()
+       #plt.imshow(mould.sum(axis=(0)))
+       #plt.show()
     _update_energies(energy,residual,mould,nlevel,delta)
     
     while True:
@@ -148,8 +148,10 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
        
        if rem <= 0.0:
            message="No more signal to extract at iteration "+str(niter)
+           break
        if (rem < threshold):
            message="Signal reached the desired threshold of "+str(threshold)+" at iteration "+str(niter)
+           break
        inten.append(rem)
        center.append(max_idx)
        struct.append(P)
@@ -165,18 +167,18 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
            print "min_energy = ",np.min(energy)
            print "max_resid = ",np.max(residual)
            print "min_resid = ",np.min(residual)
-           plt.imshow(residual.sum(axis=(0)))
-           plt.colorbar()
-           plt.show()
-           plt.imshow(energy.sum(axis=(0)))
-           plt.colorbar()
-           plt.show()
+           #plt.imshow(residual.sum(axis=(0)))
+           #plt.colorbar()
+           #plt.show()
+           #plt.imshow(energy.sum(axis=(0)))
+           #plt.colorbar()
+           #plt.show()
     inten=np.array(inten)
     center=np.array(center)
     struct=np.array(struct)
     res=Table([inten,center,struct],names=('intensity','center','struct'))
     if full_output:
-       return res,message
+       return res,message,residual,energy
     return res
   
 def gmr_from_iterfit(data):
@@ -189,18 +191,24 @@ def gmr_from_heuristic(data):
 if __name__ == '__main__':
     # SandBox space for testing
     a=np.random.random((200,200,200))
-    P=np.array([[2,0,0],[0,1,0],[0,0,1]])
+    P=np.array([[2,0,0],[0,2,0],[0,0,2]])
     freak=np.array([[2,0.5,0.9],[0.5,1,0.3],[0.9,0.3,1]])
     delta=np.array([50,50,50])
     p1=np.array([45,97,143])
     peak=create_mould(0.01*freak,delta)
     add_flux(a,10*peak,p1-delta,p1+delta+1)
     p2=np.array([143,45,97])
-    peak=create_mould(0.05*freak,delta)
+    peak=create_mould(0.02*freak,delta)
     add_flux(a,30*peak,p2-delta,p2+delta+1)
     plt.imshow(np.sum(a,axis=(0)))
     plt.colorbar()
     plt.show()
-    (tab,message)=gmr_from_mould(a,3.0,1.0,0.5*P,full_output=True)
+    (tab,message,residual,energy)=gmr_from_mould(a,0.0,1.0,P,full_output=True)
     print(message)
     print(tab)
+    plt.imshow(np.sum(residual,axis=(0)))
+    plt.colorbar()
+    plt.show()
+    plt.imshow(np.sum(energy,axis=(0)))
+    plt.colorbar()
+    plt.show()
