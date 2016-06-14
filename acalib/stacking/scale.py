@@ -36,18 +36,17 @@ def scale_aux(image, maxSize):
 
     h, w = image.shape
     r = float(maxSize[1])/float(w)     
-    aux =0
-    r2 =int(round(r))
     if (r == 1):
         return h, w, image
 
     else:
 
         image_final = np.zeros((round(r*h),round(r*w)))
+        image_final = image
 
-        for i in range(0,h):
-            for j in range(0,w):
-                    image_final[i][j] = image[i][j]
+        #for i in range(0,h):
+        #    for j in range(0,w):
+        #            image_final[i][j] = image[i][j]
     
     return round(r*h), round(r*w), image_final
 
