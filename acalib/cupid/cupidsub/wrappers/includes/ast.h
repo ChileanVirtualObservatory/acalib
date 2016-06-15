@@ -2,6 +2,13 @@
 #define AST_INCLUDED
 
 #include <stdlib.h>
+#include <stdarg.h>
+#include <float.h>
+#include <stdio.h>
+
+#define AST__BAD (-(DBL_MAX))
+
+#define astOK 1
 
 typedef struct AstObject_t{
 
@@ -37,8 +44,11 @@ void astMapPut0D( AstKeyMap *map, const char *key, double value, const char *com
 int astMapGet0C( AstKeyMap *map, const char *key, const char **value);
 AstObject *astAnnul( AstObject *obj);
 void astMapRemove( AstKeyMap *this, const char *key);
+void astMapPut0I( AstKeyMap *map, const char *key, int value, const char *comment);
 int astMapGet0I( AstKeyMap *map, const char *key, int *value);
-
-
+void *astGrow( void *ptr, int n, size_t size);
+int astSscanf( const char *str, const char *fmt, ...);                            
+int astMapSize( AstKeyMap *map);
+const char *astMapKey( AstKeyMap *map, int key);
 
 #endif

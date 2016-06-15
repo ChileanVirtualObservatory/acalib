@@ -1,9 +1,7 @@
 #ifndef HDS_DEFINED
 #define HDS_DEFINED
 
-typedef struct HDSLoc_t {
-
-} HDSLoc;
+#include "star/hds_types.h"
 
 int
 datFind( const HDSLoc   *locator1,
