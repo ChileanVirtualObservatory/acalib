@@ -42,3 +42,7 @@ void errRep( const char *param,
     printf("ERROR: %s\n",text);
 }
 
+void errAnnul( int * status ){
+
+}
+
