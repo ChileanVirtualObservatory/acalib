@@ -1,5 +1,5 @@
-#ifndef MERS_DEFINED
-#define MERS_DEFINED
+#ifndef MSG_PAR_DEFINED
+#define MSG_PAR_DEFINED
 
 typedef enum msglev_t {
   MSG__NONE  = 0, /*   No messages at all */
@@ -30,32 +30,5 @@ typedef enum msglev_t {
   MSG__ALL     = 25 /* All messages */
 } msglev_t;
 
-void msgSeti( const char *token,
-              int ivalue );
-void msgSetc( const char *token,
-              const char *cvalue );
-void msgOutif( msglev_t prior,
-               const char *param,
-               const char *text,
-               int *status );
-void msgBlankif( msglev_t prior, int *status );
-
-
-
-void errRep( const char *param,
-             const char *text,
-             int *status );
-
-void errAnnul( int *status );
-
-void errRepf( const char *param,
-              const char *text,
-              int *status,
-              ... ) __attribute__((format (printf, 2, 4 )));
-
-
-void errBegin( int *status );
-void errEnd( int *status );
-
-#endif  /* MERS_DEFINED */
+#endif  /* MSG_PAR_DEFINED */
 

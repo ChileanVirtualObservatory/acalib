@@ -19,26 +19,26 @@ BUILT_SOURCES = $(BUILT_C_ROUTINES)
 # All the .c files which are put into the libcupidsub library. This
 # includes the type-specific files which are created from the above
 # generic .cgen files.
-C_ROUTINES = cupidclumpfind.c cupidgaussclumps.c cupidconfigD.c \
-cupidconfigrms.c cupidellipsedesc.c cupidpolygondesc.c \
-cupidconfigI.c cupidgclistclump.c cupidgcmodel.c cupidgcchisq.c \
-cupidgccalcf.c cupidgccalcg.c cupidranval.c cupiddumpd.c cupiddumpf.c \
-cupidcferode.c cupidstoreconfig.c cupidstoreclumps.c cupiddatcopy.c \
-cupidcfdeleteps.c cupidcffreeps.c cupidcfxfer.c cupidcfaddpixel.c \
-cupidcflevels.c cupiddumpi.c cupidclumpdesc.c cupidcfnebs.c cupidedges.c \
-cupidcfidl.c cupidcfmakeps.c cupidreinhold.c cupidredges.c cupidrca.c \
-cupidrfillline.c cupidrfillclumps.c cupidrca2.c cupidfellwalker.c \
-cupidgcndfclump.c cupiddefminpix.c cupidretrieveconfig.c \
-cupidboxiterator.c cupidnextit.c cupidclumpinfo1.c cupidfindback0.c \
-$(BUILT_C_ROUTINES)
+#C_ROUTINES = cupidclumpfind.c cupidgaussclumps.c cupidconfigD.c \
+#cupidconfigrms.c cupidellipsedesc.c cupidpolygondesc.c \
+#cupidconfigI.c cupidgclistclump.c cupidgcmodel.c cupidgcchisq.c \
+#cupidgccalcf.c cupidgccalcg.c cupidranval.c cupiddumpd.c cupiddumpf.c \
+#cupidcferode.c cupidstoreconfig.c cupidstoreclumps.c cupiddatcopy.c \
+#cupidcfdeleteps.c cupidcffreeps.c cupidcfxfer.c cupidcfaddpixel.c \
+#cupidcflevels.c cupiddumpi.c cupidclumpdesc.c cupidcfnebs.c cupidedges.c \
+#cupidcfidl.c cupidcfmakeps.c cupidreinhold.c cupidredges.c cupidrca.c \
+#cupidrfillline.c cupidrfillclumps.c cupidrca2.c cupidfellwalker.c \
+#cupidgcndfclump.c cupiddefminpix.c cupidretrieveconfig.c \
+#cupidboxiterator.c cupidnextit.c cupidclumpinfo1.c cupidfindback0.c \
+#$(BUILT_C_ROUTINES)
 
-noinst_LTLIBRARIES = libcupidsub.la
+#noinst_LTLIBRARIES = libcupidsub.la
 
-libcupidsub_la_SOURCES = $(C_ROUTINES) $(CGENERIC_ROUTINES)
+#libcupidsub_la_SOURCES = $(C_ROUTINES) $(CGENERIC_ROUTINES)
 
 AM_CFLAGS = -I.. -std=c99
 
-$(C_ROUTINES:.c=.o): ../cupid.h
+#$(C_ROUTINES:.c=.o): ../cupid.h
 
 # Create the .c file which defines type-specific code generated from each
 # .cgen file.
