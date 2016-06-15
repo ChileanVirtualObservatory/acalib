@@ -5,28 +5,24 @@
 #include <stdarg.h>
 #include <float.h>
 #include <stdio.h>
+#include "Python.h"
 
 #define AST__BAD (-(DBL_MAX))
 
 #define astOK 1
 
-typedef struct AstObject_t{
-
-} AstObject;
+typedef PyObject AstObject;
 
 typedef struct AstFrameSet_t {
 
 } AstFrameSet;
 
-typedef struct AstKeyMap_t {
-
-} AstKeyMap;
+typedef PyDictObject AstKeyMap;
 
 
 typedef struct AstRegion_t {
 
 } AstRegion;
-
 
 typedef struct AstFrame_t {
 
