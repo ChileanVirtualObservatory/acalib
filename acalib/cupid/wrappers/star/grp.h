@@ -1,6 +1,7 @@
 #ifndef GRP_DEFINED
 #define GRP_DEFINED
 
+#include <stdio.h>
 /* Note that GRP__NOIDs role in C is to use a NULL pointer. */
 
 /* Maximum length of a group expression. */
@@ -23,5 +24,11 @@ typedef struct Grp_t{
 
 } Grp;
 
-#endif  /* GRP_DEFINED */
+void grpDelet( Grp **, int * );
+void grpGet( const Grp *, size_t, size_t, char *const *, size_t, int * );
+Grp *grpNew( const char *, int * );
+void grpPut1( Grp *, const char *, size_t, int * );
+size_t grpGrpsz( const Grp *, int * );
 
+
+#endif  /* GRP_DEFINED */
