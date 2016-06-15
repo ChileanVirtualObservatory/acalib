@@ -52,6 +52,8 @@
 #include "star/grp.h"
 #include "star/hds.h"
 #include "msg_par.h"
+#include <string.h>
+#include <math.h>
 
 /* Constants */
 /* --------- */

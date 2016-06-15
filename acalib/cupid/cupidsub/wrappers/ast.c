@@ -45,24 +45,28 @@ int astMapGet0I(AstKeyMap *map, const char *key, int *value){
 }
 
 void astMapPut0I( AstKeyMap *map, const char *key, int value, const char *comment){
-   
+    
 }
 
-//int *astGetStatusPtr_(){
-   // No Status of AST (no AST at all!)
-//   return NULL;
-//}
+void *astGrow( void *ptr, int n, size_t size){
+    return NULL;
+}
 
-//void astAt_( const char *routine, const char *file, int line, int forn,
-//             int *status) {
-   //Do not care for where the problem is (maybe can be used later for logging)
-//}
-//
-//
-//AstObject *astMakePointer_( AstObject *this_id, int *status ) {
-//   return this_id;
-//}
 
-//AstObject *astCheckLock( AstObject *this) {
-//   return this;
-//}
+int astSscanf( const char *str, const char *fmt, ...){
+   /* Initialise the variable argument list pointer. */
+   va_list args;  
+   va_start( args, fmt );
+   return vsscanf(str,fmt,args);
+}
+
+int astMapSize( AstKeyMap *map){
+    return -1;
+
+}
+
+const char *astMapKey( AstKeyMap *map, int key){
+    return NULL;
+}
+
+
