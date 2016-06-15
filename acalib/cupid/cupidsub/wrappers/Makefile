@@ -1,5 +1,6 @@
 CC        = gcc
-CFLAGS    = -Wall -g -O3 -Iincludes
+PYINCLUDE = /usr/include/python3.5m/
+CFLAGS    = -Wall -g -O3 -Iincludes -I$(PYINCLUDE)
 OBJS      = hds.o mers.o ast.o ndf.o
 
 all : $(OBJS) 

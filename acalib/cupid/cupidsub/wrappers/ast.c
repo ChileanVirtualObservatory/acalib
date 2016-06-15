@@ -13,6 +13,23 @@ void *astFree( void *ptr){
     return ptr;
 }
 
+AstObject *astAnnul( AstObject *obj){
+   return NULL;
+}
+
+void *astGrow( void *ptr, int n, size_t size){
+    return NULL;
+}
+
+
+int astSscanf( const char *str, const char *fmt, ...){
+   /* Initialise the variable argument list pointer. */
+   va_list args;  
+   va_start( args, fmt );
+   return vsscanf(str,fmt,args);
+}
+
+// KEYMAP
 
 int astMapGet0D( AstKeyMap *map, const char *key, double *value){
    // Not implemented
@@ -32,9 +49,6 @@ int astMapGet0C( AstKeyMap *map, const char *key, const char **value){
     return -1;
 }
 
-AstObject *astAnnul( AstObject *obj){
-   return NULL;
-}
 
 void astMapRemove( AstKeyMap *this, const char *key){
 
@@ -48,17 +62,6 @@ void astMapPut0I( AstKeyMap *map, const char *key, int value, const char *commen
     
 }
 
-void *astGrow( void *ptr, int n, size_t size){
-    return NULL;
-}
-
-
-int astSscanf( const char *str, const char *fmt, ...){
-   /* Initialise the variable argument list pointer. */
-   va_list args;  
-   va_start( args, fmt );
-   return vsscanf(str,fmt,args);
-}
 
 int astMapSize( AstKeyMap *map){
     return -1;
