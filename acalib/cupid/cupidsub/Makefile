@@ -1,8 +1,8 @@
 CC        = gcc
 CFLAGS    = -Wall -g -O3 -Iwrappers/
 LFLAGS    = -Wall -g -O3 
-OBJS      = cupidclumpfind.o test.o
-EXE       = test
+OBJS      = cupidconfigD.o cupidclumpfind.o test.o 
+EXE       = test wrappers/mers.o wrappers/ast.o
 
 all : $(OBJS) 
 	$(CC) $(LFLAGS) $(OBJS) -o $(EXE)
