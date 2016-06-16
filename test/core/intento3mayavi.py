@@ -42,7 +42,7 @@ class MayaviVisualization(HasTraits):
 			volume = mlab.pipeline.scalar_field(xi*shape[1]/shape[0], yi, zi, updated_cube.data)
 			mlab.pipeline.volume(volume)
 		if(volume_type == 'contour'): 
-			mlab.contour3d(xi*shape[1]/shape[0],yi,zi,cube.data,transparent=True,contours=10,opacity=0.5)
+			mlab.contour3d(xi*shape[1]/shape[0], yi, zi, updated_cube.data, transparent=True, contours=10, opacity=0.5)
 		# Adjust the axes to make it a cube.
 		extent = [0, shape[1], 0, shape[1], 0, shape[2]]
 		ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5, extent=extent)
@@ -99,6 +99,8 @@ class MatplotlibVisualization(FigureCanvas):
 			vel = np.linspace(ranges[0], ranges[1], upper_stack_limit[0]-lower_stack_limit[0])
 			spectre = cube.stack(lower_stack_limit, upper_stack_limit, (1,2))
 			self.axes.plot(vel, spectre)
+			self.axes.set_xlabel("VEL [km/s]")
+			plt.subplots_adjust(bottom=0.15)
 			if(ranges[0] > ranges[1]): self.axes.invert_xaxis()
 		if(type == 'stacked'):
 			# Calculate a new cube adjusted to limits.
@@ -123,6 +125,7 @@ class MatplotlibVisualization(FigureCanvas):
 		vel = np.linspace(ranges[0], ranges[1], upper_stack_limit[0]-lower_stack_limit[0])
 		spectre = cube.stack(lower_stack_limit, upper_stack_limit, (1,2))
 		self.axes.plot(vel, spectre)
+		self.axes.set_xlabel("VEL [km/s]")
 		self.fig.canvas.draw()
 		
 	def update_stacked(self):
@@ -154,10 +157,10 @@ class MatplotlibQWidget(QtGui.QWidget):
 ############### Load the file and the data inside. ############### 
 ##################################################################
 folder = '../../../../fits/'
-#fits_file = folder+'M100line.image.fits'
+fits_file = folder+'M100line.image.fits'
 #fits_file = folder+'Boom.cm.cln.fits'
 #fits_file = folder+'Orion.methanol.cbc.contsub.image.fits'
-fits_file = folder+'calibrated.ms.contsub.bin4.line.fits'
+#fits_file = '~/calibrated.ms.contsub.bin4.line.fits'
 
 # Load from container.
 c = AContainer()
@@ -168,7 +171,7 @@ cube=c.adata[0]
 header = cube.meta
 
 # This variable toggles between a volume and a contour surface in the mayavi visualization.
-volume_type = 'contour'
+volume_type = 'volume'
 
 # Simple Checks.
 shape=cube.shape()
@@ -181,7 +184,7 @@ mmax = cube.max()
 # Determine the threshold.
 rms=cube.estimate_rms()
 max_threshold = int(mmax[0]/rms)
-min_threshold_factor = 1
+min_threshold_factor = 5
 max_threshold_factor = max_threshold
 
 # Create the limits for the stacked view.
@@ -214,14 +217,14 @@ label.setText("Espectro de VEL")
 label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
 layout.addWidget(label, 3, 0)
 matplotlib_spectre = MatplotlibQWidget('spectre')
-layout.addWidget(matplotlib_spectre, 5, 0, 7, 5)
+layout.addWidget(matplotlib_spectre, 4, 0, 7, 5)
 
 label = QtGui.QLabel(container)
 label.setText("Vista acumulada")
 label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
 layout.addWidget(label, 0, 6)
 matplotlib_stacked = MatplotlibQWidget('stacked')
-layout.addWidget(matplotlib_stacked, 1, 5, 4, 3)
+layout.addWidget(matplotlib_stacked, 1, 5, 3, 3)
 
 container.show()
 window = QtGui.QMainWindow()
@@ -236,12 +239,12 @@ window.show()
 # Functions to update the view when the threshold is changed.
 def threshold_slider_change(extreme_changed):
 	global min_threshold_factor, max_threshold_factor	
-	if(extreme_changed == 'start' and min_threshold_factor != threshold_slider.start()):
+	if(extreme_changed == 'start' and int(min_threshold_factor) != threshold_slider.start()):
 		min_threshold_factor = threshold_slider.start()
 		min_threshold_text.setText(str(min_threshold_factor))
 		mayavi_widget.visualization.update_volume()
 		mayavi_widget.visualization.create_wireframe()
-	if(extreme_changed == 'end' and max_threshold_factor != threshold_slider.end()):
+	if(extreme_changed == 'end' and int(max_threshold_factor) != threshold_slider.end()):
 		max_threshold_factor = threshold_slider.end()
 		max_threshold_text.setText(str(threshold_slider.end()))
 		mayavi_widget.visualization.update_volume()
@@ -250,15 +253,19 @@ def threshold_slider_change(extreme_changed):
 def threshold_text_change(extreme_changed):
 	global min_threshold_factor, max_threshold_factor	
 	if(extreme_changed == 'start'):
-		if(int(min_threshold_text.text()) >= threshold_slider.end()):
-			min_threshold_text.setText(str(threshold_slider.end()-1))
-		min_threshold_factor = int(min_threshold_text.text())
-		threshold_slider.setStart(int(min_threshold_text.text()))
+		if(float(min_threshold_text.text()) < 1):
+			min_threshold_text.setText('1')
+		if(float(min_threshold_text.text()) >= float(max_threshold_text.text())):
+			min_threshold_text.setText(str(float(max_threshold_text.text())-0.01))
+		min_threshold_factor = float(min_threshold_text.text())
+		threshold_slider.setStart(int(float(min_threshold_text.text())))
 	if(extreme_changed == 'end'):
-		if(int(max_threshold_text.text()) <= threshold_slider.start()):
-			max_threshold_text.setText(str(threshold_slider.start()+1))
-		max_threshold_factor = int(max_threshold_text.text())
-		threshold_slider.setEnd(int(max_threshold_text.text()))
+		if(float(max_threshold_text.text()) > max_threshold):
+			max_threshold_text.setText(str(max_threshold))
+		if(float(max_threshold_text.text()) <= float(min_threshold_text.text())):
+			max_threshold_text.setText(str(float(min_threshold_text.text())+0.01))
+		max_threshold_factor = float(max_threshold_text.text())
+		threshold_slider.setEnd(int(float(max_threshold_text.text())))
 	mayavi_widget.visualization.update_volume()
 	mayavi_widget.visualization.create_wireframe()
 		
@@ -271,35 +278,38 @@ layout.addWidget(label, 2, 3)
 threshold_slider = QRangeSlider(window)
 threshold_slider.setMin(1)
 threshold_slider.setMax(max_threshold)
-threshold_slider.setRange(1,max_threshold)
+threshold_slider.setRange(min_threshold_factor, max_threshold)
 threshold_slider.startValueChanged.connect(lambda: threshold_slider_change('start'))
 threshold_slider.endValueChanged.connect(lambda: threshold_slider_change('end'))
 layout.addWidget(threshold_slider, 3, 3)
 # Textbox for display and change directly the start limit value.
 min_threshold_text = QtGui.QLineEdit(window)
 min_threshold_text.setFixedWidth(50)
-min_threshold_text.setValidator(QtGui.QIntValidator(1,max_threshold, min_threshold_text))
+min_threshold_text.setValidator(QtGui.QDoubleValidator(0., float(max_threshold), 2, min_threshold_text))
+min_threshold_text.validator().setNotation(0)
 min_threshold_text.returnPressed.connect(lambda: threshold_text_change('start'))
-min_threshold_text.setText('1')
+min_threshold_text.setText(str(min_threshold_factor))
 layout.addWidget(min_threshold_text, 3, 2)
 # Textbox for display and change directly the end limit value.
 max_threshold_text = QtGui.QLineEdit(window)
 max_threshold_text.setFixedWidth(50)
-max_threshold_text.setValidator(QtGui.QIntValidator(1,max_threshold, max_threshold_text))
+max_threshold_text.setValidator(QtGui.QDoubleValidator(0., 99., 2, max_threshold_text))
+max_threshold_text.validator().setNotation(0)
 max_threshold_text.returnPressed.connect(lambda: threshold_text_change('end'))
 max_threshold_text.setText(str(max_threshold))
 layout.addWidget(max_threshold_text, 3, 4)
 
 # Functions to update the view when the stack range is changed.
+user_control = True
 def stack_slider_change(slider, textbox, extreme_changed):
 	global lower_stack_limit, upper_stack_limit
-	if(extreme_changed == 'start' and (vel_slider.start(), dec_slider.start(), ra_slider.start()) != lower_stack_limit):
+	if(user_control and extreme_changed == 'start' and (vel_slider.start(), dec_slider.start(), ra_slider.start()) != lower_stack_limit):
 		lower_stack_limit = (vel_slider.start(), dec_slider.start(), ra_slider.start())
 		textbox.setText(str(slider.start()))
 		matplotlib_stacked.visualization.update_stacked()
 		matplotlib_spectre.visualization.update_spectre()
 		mayavi_widget.visualization.update_wireframe()
-	if(extreme_changed == 'end' and (vel_slider.end(), dec_slider.end(), ra_slider.end()) != upper_stack_limit):
+	if(user_control and extreme_changed == 'end' and (vel_slider.end(), dec_slider.end(), ra_slider.end()) != upper_stack_limit):
 		upper_stack_limit = (vel_slider.end(), dec_slider.end(), ra_slider.end())
 		textbox.setText(str(slider.end()))
 		matplotlib_stacked.visualization.update_stacked()
@@ -326,82 +336,82 @@ def stack_text_change(slider, textbox, extreme_changed):
 label = QtGui.QLabel(container)
 label.setText("Rango de RA")
 label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
-layout.addWidget(label, 5, 6)
+layout.addWidget(label, 4, 6)
 # Slider used to change the ra range of the stacked view.
 ra_slider = QRangeSlider(window)
 ra_slider.setMax(shape[2])
 ra_slider.setRange(0, shape[2])
 ra_slider.startValueChanged.connect(lambda: stack_slider_change(ra_slider, min_ra_text, 'start'))
 ra_slider.endValueChanged.connect(lambda: stack_slider_change(ra_slider, max_ra_text, 'end'))
-layout.addWidget(ra_slider, 6, 6)
+layout.addWidget(ra_slider, 5, 6)
 # Textbox for display and change directly the start limit value.
 min_ra_text = QtGui.QLineEdit(window)
 min_ra_text.setFixedWidth(50)
 min_ra_text.setValidator(QtGui.QIntValidator(0, shape[2], min_ra_text))
 min_ra_text.returnPressed.connect(lambda: stack_text_change(ra_slider, min_ra_text, 'start'))
 min_ra_text.setText('0')
-layout.addWidget(min_ra_text, 6, 5)
+layout.addWidget(min_ra_text, 5, 5)
 # Textbox for display and change directly the end limit value.
 max_ra_text = QtGui.QLineEdit(window)
 max_ra_text.setFixedWidth(50)
 max_ra_text.setValidator(QtGui.QIntValidator(0, shape[2], max_ra_text))
 max_ra_text.returnPressed.connect(lambda: stack_text_change(ra_slider, max_ra_text, 'end'))
 max_ra_text.setText(str(shape[2]))
-layout.addWidget(max_ra_text, 6, 7)
+layout.addWidget(max_ra_text, 5, 7)
 	
 # Label for the dec range slider.
 label = QtGui.QLabel(container)
 label.setText("Rango de DEC")
 label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
-layout.addWidget(label, 7, 6)
+layout.addWidget(label, 6, 6)
 # Slider used to change the dec range of the stacked view.
 dec_slider = QRangeSlider(window)
 dec_slider.setMax(shape[1])
 dec_slider.setRange(0, shape[1])
 dec_slider.startValueChanged.connect(lambda: stack_slider_change(dec_slider, min_dec_text, 'start'))
 dec_slider.endValueChanged.connect(lambda: stack_slider_change(dec_slider, max_dec_text, 'end'))
-layout.addWidget(dec_slider, 8, 6)
+layout.addWidget(dec_slider, 7, 6)
 # Textbox for display and change directly the start limit value.
 min_dec_text = QtGui.QLineEdit(window)
 min_dec_text.setFixedWidth(50)
 min_dec_text.setValidator(QtGui.QIntValidator(0, shape[1], min_dec_text))
 min_dec_text.returnPressed.connect(lambda: stack_text_change(dec_slider, min_dec_text, 'start'))
 min_dec_text.setText('0')
-layout.addWidget(min_dec_text, 8, 5)
+layout.addWidget(min_dec_text, 7, 5)
 # Textbox for display and change directly the end limit value.
 max_dec_text = QtGui.QLineEdit(window)
 max_dec_text.setFixedWidth(50)
 max_dec_text.setValidator(QtGui.QIntValidator(0, shape[1], max_dec_text))
 max_dec_text.returnPressed.connect(lambda: stack_text_change(dec_slider, max_dec_text, 'end'))
 max_dec_text.setText(str(shape[1]))
-layout.addWidget(max_dec_text, 8, 7)
+layout.addWidget(max_dec_text, 7, 7)
 
 # Label for the vel range slider.
 label = QtGui.QLabel(container)
 label.setText("Rango de VEL")
 label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
-layout.addWidget(label, 9, 6)
+layout.addWidget(label, 8, 6)
 # Slider used to change the vel range of the stacked view.
 vel_slider = QRangeSlider(window)
 vel_slider.setMax(shape[0])
 vel_slider.setRange(0, shape[0])
 vel_slider.startValueChanged.connect(lambda: stack_slider_change(vel_slider, min_vel_text, 'start'))
 vel_slider.endValueChanged.connect(lambda: stack_slider_change(vel_slider, max_vel_text, 'end'))
-layout.addWidget(vel_slider, 10, 6)
+layout.addWidget(vel_slider, 9, 6)
 # Textbox for display and change directly the start limit value.
 min_vel_text = QtGui.QLineEdit(window)
 min_vel_text.setFixedWidth(50)
 min_vel_text.setValidator(QtGui.QIntValidator(0, shape[0], min_vel_text))
 min_vel_text.returnPressed.connect(lambda: stack_text_change(vel_slider, min_vel_text, 'start'))
 min_vel_text.setText('0')
-layout.addWidget(min_vel_text, 10, 5)
+layout.addWidget(min_vel_text, 9, 5)
 # Textbox for display and change directly the end limit value.
 max_vel_text = QtGui.QLineEdit(window)
 max_vel_text.setFixedWidth(50)
 max_vel_text.setValidator(QtGui.QIntValidator(0, shape[0], max_vel_text))
 max_vel_text.returnPressed.connect(lambda: stack_text_change(vel_slider, max_vel_text, 'end'))
 max_vel_text.setText(str(shape[0]))
-layout.addWidget(max_vel_text, 10, 7)
+layout.addWidget(max_vel_text, 9, 7)
 
 # Label for the header data.
 label = QtGui.QLabel(container)
@@ -428,6 +438,30 @@ layout.addWidget(volume_button, 2, 1)
 contour_button = QtGui.QPushButton("Contorno", window)
 contour_button.clicked.connect(lambda: change_volume_type('contour'))
 layout.addWidget(contour_button, 3, 1)
+
+# Button to reset the wireframe to its original boundaries.
+def reset_stack():
+	global user_control, lower_stack_limit, upper_stack_limit
+	user_control = False
+	lower_stack_limit = (0,0,0)
+	upper_stack_limit = shape
+	ra_slider.setRange(0, shape[2])
+	min_ra_text.setText('0')
+	max_ra_text.setText(str(shape[2]))
+	dec_slider.setRange(0, shape[1])
+	min_dec_text.setText('0')
+	max_dec_text.setText(str(shape[1]))
+	vel_slider.setRange(0, shape[0])
+	min_vel_text.setText('0')
+	max_vel_text.setText(str(shape[0]))
+	matplotlib_stacked.visualization.update_stacked()
+	matplotlib_spectre.visualization.update_spectre()
+	mayavi_widget.visualization.update_wireframe()
+	user_control = True
+	
+reset_button = QtGui.QPushButton("Restaurar los valores originales de los rangos", window)
+reset_button.clicked.connect(reset_stack)
+layout.addWidget(reset_button, 10, 6)
 
 # Start the main event loop.
 app.exec_()
