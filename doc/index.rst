@@ -9,8 +9,11 @@ Welcome to ACALIB's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
+   roi
+   utils
+   gmr
 
 Indices and tables
 ==================

@@ -1,0 +1,558 @@
+/* -*- C -*- */
+
+#include "sae_par.h"
+#include "cupid.h"
+#include "mers.h"
+#include "ast.h"
+#include "ndf.h"
+#include <math.h>
+#include <stdio.h>
+
+/* Global Variables: */
+/* ================= */
+/* A structure holding the global parameters of the GaussClump algorithm
+   needed by the service functions cupidGCcalcf and cupidGCcalcg called
+   by the PDA minimisation function. This structure is declared in
+   cupidGaussClumps, and its contents are initialised by this function. */
+extern CupidGC cupidGC;
+
+void CGEN_FUNCTION(cupidGCUpdateArrays)( CGEN_TYPE *res, CGEN_TYPE *ipd, int nel,
+                                         int ndim, int *dims, double *par, double rms,
+                                         double mlim, int imax, double thresh,
+                                         int *lbnd, HDSLoc **ndfs, int iclump,
+                                         int excols, double mean_peak,
+                                         double maxbad, int *area, double *sumclumps,
+                                         int *status ){
+/*
+*+
+*  Name:
+*     cupidGCUpdateArrays<X>
+
+*  Purpose:
+*     Remove the fit from the residuals array.
+
+*  Language:
+*     Starlink C
+
+*  Synopsis:
+*     void cupidGCUpdateArrays<X>( CGEN_TYPE *res, CGEN_TYPE *ipd, int nel,
+*                                  int ndim, int *dims, double *par,
+*                                  double rms, double mlim, int imax,
+*                                  double thresh, int *lbnd, HDSLoc **ndfs,
+*                                  int iclump, int excols, double mean_peak,
+*                                  double maxbad, int *area, double *sumclumps,
+*                                  int *status )
+
+*  Description:
+*     This function removes the supplied Gaussian from the residuals array
+*     (it does not remove the backgroudd level). It also creates an NDF
+*     holding the data values associated with the clump.
+
+*  Parameters:
+*     res
+*        Pointer to the start of the residuals array. May be NULL.
+*     ipd
+*        Pointer to the start of the supplied data array. May be NULL.
+*     nel
+*        The number of elements in the supplied array.
+*     ndim
+*        The number of pixel axes in the array.
+*     dims
+*        The number of pixels on each pixel axis of the array, using
+*        external axis ordering (i.e. the axis ordering within the data file).
+*     par
+*        Pointer to an array holding the parameters describing thw Gaussian
+*        clump to be removed from the residuals array.
+*     rms
+*        The RMS noise level.
+*     mlim
+*        The lowest value (normalised to the RMS noise level) at which
+*        model Gaussian should be evaluated.
+*     imax
+*        Index within "res" of highest value (only used if "res" is not
+*        NULL).
+*     thresh
+*        Peaks lower than "thresh" are not include din the output
+*        catalogue or NDF. Note, "thresh" is given in units of the RMS
+*        noise.
+*     lbnd
+*        Pointer to array holding the pixel indices of the first pixel in
+*        the user-supplied NDF.
+*     ndfs
+*        Pointer to a location containing an HDS locator for an array of
+*        NDF structures. If the HDS locator is NULL on entry a new HDS
+*        object is created and its locator stored in place of the NULL
+*        pointer. The array of NDF structures is extended by one, and the
+*        new NDF in the array describes the supplied clump. If the
+*        supplied pointer is NULL, no HDS array or NDF is created. No NDF
+*        is created for clumps which touch the edge of the data array.
+*        The new NDF will have a Unit value of "BAD" if the clump touches
+*        too many areas of bad pixels in the supplied data array.
+*     iclump
+*        Clump index.
+*     excols
+*        Include extra columns in the output catalogue holding GaussClumps
+*        specific values? Zero produces no extra info. One causes the
+*        gaussian FWHMs and spatial position angle to be included. Two
+*        causes more info to be included.
+*     mean_peak
+*        The mean value of the most recent fitted peak values.
+*     maxbad
+*        Largest allowed fraction of bad pixels in a clump.
+*     area
+*        Pointer to an int in which to store the number of pixels
+*        contributing to the clump.
+*     sumclumps
+*        The supplied value is incremented by the sum of the data values
+*        in the fitted Gaussian.
+*     status
+*        Pointer to the inherited status value.
+
+*  Notes:
+*     - This function can be invoked using the generic cupidGCUpdateArrays macro
+*     defined in cupid.h. This macro has the same parameter list as
+*     cupidGCUpdateArrays<X> except that an extra parameter is added to the start
+*     of the parameter list indicating the data type of the specific
+*     cupidGCUpdateArrays... function to be invoked. This extra parameter should
+*     be an integer and should be one of CUPID__DOUBLE, CUPID__FLOAT, etc.
+
+*  Copyright:
+*     Copyright (C) 2007, 2009 Science and Technology Facilities Council.
+*     Copyright (C) 2005 Particle Physics & Astronomy Research Council.
+*     All Rights Reserved.
+
+*  Licence:
+*     This program is free software; you can redistribute it and/or
+*     modify it under the terms of the GNU General Public License as
+*     published by the Free Software Foundation; either version 2 of
+*     the License, or (at your option) any later version.
+*
+*     This program is distributed in the hope that it will be
+*     useful, but WITHOUT ANY WARRANTY; without even the implied
+*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+*     PURPOSE. See the GNU General Public License for more details.
+*
+*     You should have received a copy of the GNU General Public License
+*     along with this program; if not, write to the Free Software
+*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
+*     02110-1301, USA
+
+*  Authors:
+*     DSB: David S. Berry
+*     TIMJ: Tim Jenness (JAC, Hawaii)
+*     {enter_new_authors_here}
+
+*  History:
+*     5-OCT-2005 (DSB):
+*        Original version.
+*     17-AUG-2007 (DSB):
+*        Add velocity gradient to "extracols" information.
+*     14-JAN-2008 (TIMJ):
+*        Use msgOutif instead of ilevel
+*     26-JAN-2011 (DSB):
+*        Add spatial position angle to "extracols" information.
+*     7-FEB-2011 (DSB):
+*        Continue checking all faces to see if any need to be extended,
+*        until none need to be extended. Previously, faces were no longer
+*        checked when the one face itself did not rise above mlim. But
+*        extending other faces may cause such faces to include higher
+*        values, so all faces should continue to be checked.
+*     26-SEP-2011 (DSB):
+*        Add argument "thresh".
+*     {enter_further_changes_here}
+
+*  Bugs:
+*     {note_any_bugs_here}
+
+*-
+*/
+
+/* Local Variables: */
+   AstKeyMap *extra;      /* Keymap holding extra diagnostic information */
+   CGEN_TYPE r0;          /* Supplied residual at initial peak */
+   CGEN_TYPE r;           /* Current residual value */
+   char name[ 40 ];       /* Buffer for NDF name to receive dumped residuals */
+   double *mlist;         /* Pointer to list holding model valus */
+   double bg;             /* Background for model */
+   double d;              /* Displacement from initial peak position */
+   double m;              /* Model value */
+   double maxr;           /* Maximum remaining residual value */
+   double meanr;          /* Mean of remaining residual values */
+   double minr;           /* Minimum remaining residual value */
+   double shiftsq;        /* Square of displacement from initial peak position */
+   double sigr;           /* Std dev of remaining residual values */
+   double sum;            /* Integrated clump intensity */
+   double sumr2;          /* Sum of squares of remaining residual values */
+   double sumr;           /* Sum of remaining residual values */
+   double xx[ 3 ];        /* Internal coords of current pixel */
+   double yy[ 3 ];        /* External coords of current pixel */
+   int *plist;            /* Pointer to list holding pixel indices */
+   int *pnext;            /* Pointer to next element in plist */
+   int area_off;          /* Area of clump outside the data array, in pixels */
+   int bad;               /* No of pixels that touch areas of bad pixels */
+   int extend[ 3 ][ 2 ];  /* Flags indicating which box faces to extend */
+   int face_done;         /* Has the face been evaluated? */
+   int first;             /* Is this is the first model evaluation? */
+   int i;                 /* Element index */
+   int iax;               /* Axis index */
+   int iedge;             /* Consider the upper limit on current axis? */
+   int ilist;             /* Index into the plist and mlist arrays */
+   int j;                 /* Vector index within input array */
+   int jax;               /* Axis index */
+   int lbox[ 3 ];         /* Lower bounds of model evaluation box */
+   int lface[ 3 ];        /* Lower bounds of face being evaluated */
+   int list_size;         /* Number of values stored in plist and mlist */
+   int lowpeak;           /* If the peak value below the supplied threshold? */
+   int more;              /* Does the evaluation box need to be extended? */
+   int nr;                /* Number of remaining residual values */
+   int ok;                /* Is the pixel within the bounds of the NDF? */
+   int peakok;            /* Is some of the peak usable? */
+   int ubox[ 3 ];         /* Upper bounds of model evaluation box */
+   int uface[ 3 ];        /* Upper bounds of face being evaluated */
+   size_t psize;          /* Bytes required for one pixel position */
+
+/* Abort if an error has already occurred. */
+   if( *status != SAI__OK ) return;
+
+/* Note the original value at the initial peak position. */
+   r0 = res ? res[ imax ] : 1.0;
+
+/* Temporaily set the backgound of the model clump to zero. */
+   bg = par[ 1 ];
+   par[ 1 ] = 0.0;
+
+/* Initialise the GRID bounds of the box over which the model Gaussian is to
+   be evaluated so that it covers only the pixel containing the peak of
+   the model. */
+   ubox[ 0 ] = lbox[ 0 ] = (int)( par[ 2 ] + 0.5 );
+   if( ndim > 1 ) {
+      ubox[ 1 ] = lbox[ 1 ] = (int)( par[ 4 ] + 0.5 );
+      if( ndim > 2 ) {
+         ubox[ 2 ] = lbox[ 2 ] = (int)( par[ 7 ] + 0.5 );
+      }
+   }
+
+/* Reduce the upper bound on the first axis by one so that the central
+   pixel is evaluated on the first pass through the following algorithm. */
+   ubox[ 0 ]--;
+
+/* We evaluate the model at increasing radii, like the layers of an onion,
+   until a "layer" is found for which the model Gaussian does not exceed
+   a given user-supplied value at any point on the layer. This particular
+   onion is cuboid rather than spherical. That is, each "layer" is actually
+   a box, with faces parallel to the pixel axes. The "extend" array is
+   used to hold flags saying whether we need to extend each individual face
+   to a larger radius. Initially, assume all faces need to be extended. */
+   for( jax = 0; jax < ndim; jax++ ) {
+      for( iedge = 0; iedge < 2; iedge++ ) extend[ jax ][ iedge ] = 1;
+   }
+
+/* Reserve memory for a list of model values and associated pixel indices.
+   These arrays will be extended as necessary.  */
+   mlist = astMalloc( sizeof( double )*cupidGC.nel );
+   psize = sizeof( int )*ndim;
+   plist = astMalloc( psize*cupidGC.nel );
+   list_size = 0;
+
+/* Scale the supplied threshold to be in data units rather than in units
+   of RMS */
+   thresh *= rms;
+
+/* Now loop over increasingly larger layers until a layer is found over which
+   the model Gaussian does not exceed the user-supplied limit. */
+   bad = 0;
+   more = 1;
+   first = 1;
+   peakok = 0;
+   lowpeak = 1;
+   sum = 0.0;
+   *area = 0;
+   area_off = 0;
+   while( more ){
+      more = 0;
+
+/* Consider each surface of the box forming the current layer. */
+      for( iax = 0; iax < ndim; iax++ ) {
+         for( iedge = 0; iedge < 2; iedge++ ) {
+
+/* If this face needs to be extended, we extend it by 1 pixel now. Assume
+   to begin with that it will not need to be extended any further. Faces
+   that do not need to be extended are not extended, but they are checked
+   again to see if extending the current face has caused any higher values
+   to appear on the face. */
+            if( extend[ iax ][ iedge ] ) {
+               more = 1;
+               extend[ iax ][ iedge ] = 0;
+
+               if( iedge ) {
+                  lbox[ iax ]--;
+               } else {
+                  ubox[ iax ]++;
+               }
+            }
+
+/* Set up the GRID bounds of the section representing this face. Also set
+   the GRID coords of the first point to test. Also, get the corresponding
+   N-dimensional GRID indices in the input array. This allows for any
+   permutation of the pixels axes necessary to make the velocity axis the
+   third axis. */
+            for( jax = 0; jax < ndim; jax++ ) {
+               yy[ cupidGC.dax[ jax ] ] = xx[ jax ] = lface[ jax ] = lbox[ jax ];
+               uface[ jax ] = ubox[ jax ];
+            }
+
+            if( iedge ) {
+               uface[ iax ] = lface[ iax ];
+            } else {
+               yy[ cupidGC.dax[ iax ] ] = xx[ iax ] = lface[ iax ] = uface[ iax ];
+            }
+
+/* Now loop round all the pixels on the face. */
+            face_done = 0;
+            while( !face_done ){
+
+/* Get the corresponding 1-dimensional index into the input array. Also check
+   it is within the bounds of the array. */
+               ok = 1;
+               j = 0;
+               for( jax = ndim - 1; jax >= 0; jax-- ) {
+                  if( yy[ jax ] < 1 || yy[ jax ] > dims[ jax ] ) {
+                     ok = 0;
+                     break;
+                  } else {
+                     j = yy[ jax ] + j*dims[ jax ] - 1;
+                  }
+               }
+
+/* Find the Gaussian model value at the current pixel. This excludes any
+   background level because the background value in "par" was set to zero
+   before entring this loop. */
+               m = cupidGCModel( ndim, xx, par, -1, 1, first, status );
+               first = 0;
+
+/* If the model value is higher than the supplied limit, indicate that the
+   face needs to be extended further. */
+               if( m > mlim ) {
+                  extend[ iax ][ iedge ] = 1;
+
+/* Scale the model using the RMS noise so that it has the same normalisation
+   as the residuals and input data, and then add it to the total clump sum. */
+                  m *= rms;
+                  sum += m;
+
+/* Count the total number of pixels contributing to the peak. */
+                  (*area)++;
+
+/* If this pixel is within the data array, update the residuals array. */
+                  if( ok ) {
+
+/* Indicate the peak is usable */
+                     peakok = 1;
+
+/* Subtract the model value from the residuals (if good). */
+                     if( res && res[ j ] != CGEN_BAD ) res[ j ] -= (CGEN_TYPE) m;
+
+/* Increment the count of bad pixels in the clump. */
+                     if( ipd && ipd[ j ] == CGEN_BAD ) bad++;
+
+/* Add this model value and its associated pixel indices into the lists */
+                     ilist = list_size++;
+                     mlist = astGrow( mlist, list_size, sizeof( double ) );
+                     plist = astGrow( plist, list_size, psize );
+                     mlist[ ilist ] = m;
+                     pnext = plist + ilist*ndim;
+                     for( jax = 0; jax < ndim; jax ++ ) {
+                        pnext[ jax ] = (int) ( yy[ jax ] + 0.5 );
+                     }
+
+/* Set a flag indicating if the max value in the sampled gaussian is
+   greater than the supplied lower limit. Note, the sampled peak value
+   will be less than par[0] because it is unlikely that a pixel centre
+   will fall on the peak. */
+                     if( m > thresh ) lowpeak = 0;
+
+/* If this pixel is not within the data array, count the number of
+   off-image pixels encountered. */
+                  } else {
+                     area_off++;
+                  }
+               }
+
+/* Get the grid coords of the next pixel in the section currently being
+   fitted. This assumes fortran ordering of the elements in the arrays, and
+   assumes the velocity axis (if any) is axis 3. */
+               jax = 0;
+               xx[ jax ] += 1.0;
+               yy[ cupidGC.dax[ jax ] ] = xx[ jax ];
+               while( xx[ jax ] > uface[ jax ] ) {
+                  xx[ jax ] = lface[ jax ];
+                  yy[ cupidGC.dax[ jax ] ] = xx[ jax ];
+
+                  if( ++jax == ndim ) {
+                     face_done = 1;
+                     break;
+                  }
+                  xx[ jax ] += 1.0;
+                  yy[ cupidGC.dax[ jax ] ] = xx[ jax ];
+               }
+            }
+         }
+      }
+   }
+
+/* Update the supplied "sumclumps" value, which holds the total
+   integrated intensity in the fitted clumps. */
+   *sumclumps += sum;
+
+/* Set the specified element of the residuals array bad if the fit was
+   unusable.  This prevents the any subsequent attempt to fit a Gaussian
+   to the same peak value.*/
+   if( res && ( !peakok || res[ imax ] == r0  ) ) res[ imax ] = CGEN_BAD;
+
+/* Re-instate the original backgound value. */
+   par[ 1 ] = bg;
+
+/* Get the statistics of the modified residuals. */
+   minr = VAL__MAXD;
+   maxr = -VAL__MAXD;
+   sumr = 0.0;
+   sumr2 = 0.0;
+   nr = 0;
+
+   if( res && ipd ) {
+      for( i = 0; i < nel; i++ ) {
+         if( res[ i ] != CGEN_BAD ) {
+            r = res[ i ];
+            if( r < minr ) minr = r;
+            if( r > maxr ) maxr = r;
+            sumr += r;
+            sumr2 += r*r;
+            nr++;
+
+         }
+      }
+
+      meanr = sumr/nr;
+      sigr = sqrt( sumr2/nr - meanr*meanr );
+
+   } else {
+      meanr = 0.0;
+      sigr = 0.0;
+   }
+
+/* Display info */
+   msgSetd( "V", sum );
+   msgSeti( "N", *area );
+   msgOutif( MSG__DEBUG1, "",
+             "   Integrated clump intensity: ^V (in ^N pixels)", status );
+
+   if( area_off ) {
+     msgOutif( MSG__DEBUG1, "",
+               "   (the clump overlaps the edge of the data array)", status );
+   } else if( bad > maxbad*( *area ) ) {
+     msgOutif( MSG__DEBUG1, "",
+               "   (the clump contains too many bad pixels)", status );
+   } else if( lowpeak ) {
+     msgOutif( MSG__DEBUG1, "",
+               "   (the clump peak is too low)", status );
+   }
+
+   msgSetd( "M", meanr );
+   msgOutif( MSG__DEBUG1, "", "   Mean residual: ^M", status );
+   msgSetd( "M", maxr );
+   msgOutif( MSG__DEBUG1, "", "   Max residual: ^M", status );
+   msgSetd( "M", minr );
+   msgOutif( MSG__DEBUG1, "", "   Min residual: ^M", status );
+   msgSetd( "M", sigr );
+   msgOutif( MSG__DEBUG1, "", "   Residual sigma: ^M", status );
+
+/* Dump the residuals to disk if required. */
+   sprintf( name, "clump_residuals%d", iclump );
+   CGEN_FUNCTION(cupidGCDump)( MSG__DEBUG2, res, ndim, dims, name, status );
+
+/* If required, create an NDF holding the clump data values so long as
+   the clump does not touch the edge of the data array. */
+   if( ndfs && area_off == 0 && ! lowpeak ) {
+
+/* Modify the box to exclude the border of bad pixels. */
+      for( jax = 0; jax < ndim; jax++ ) {
+         if( ubox[ jax ] - lbox[ jax ] > 1 ) {
+            lbox[ jax ]++;
+            ubox[ jax ]--;
+         }
+      }
+
+/* Create extra diagnostic info if required (meant for debugging). */
+      if( excols ) {
+         extra = astKeyMap( " " );
+
+/* Total FWHM on axis 0, 1 & 2, in pixels. */
+         astMapPut0D( extra, "GCFWHM1",
+                      sqrt( cupidGC.beam_sq + par[ 3 ]*par[ 3 ] ), NULL );
+         if( ndim > 1 ) {
+            astMapPut0D( extra, "GCFWHM2",
+                         sqrt( cupidGC.beam_sq + par[ 5 ]*par[ 5 ] ), NULL );
+            if( ndim > 2 ) {
+               astMapPut0D( extra, "GCFWHM3",
+                            sqrt( cupidGC.velres_sq + par[ 8 ]*par[ 8 ] ), NULL );
+            }
+         }
+
+/* Spatial orientation angle. In degrees, positive from +ve GRID1 axis to +ve
+   GRID2 axis. */
+         if( ndim > 1 ) astMapPut0D( extra, "GCANGLE", par[ 6 ]*AST__DR2D,
+                                     NULL );
+
+/* The remaining extra information is only added to the output catalogue
+   if verbose mode. */
+         if( excols > 1 ) {
+            astMapPut0D( extra, "GCNITFIT", (double) cupidGC.nf, NULL );
+            astMapPut0D( extra, "GCCHISQ", cupidGC.chisq, NULL );
+            astMapPut0D( extra, "GCINITPEAK", cupidGC.initpars[0]*rms, NULL );
+            astMapPut0D( extra, "GCINITBACK", cupidGC.initpars[1]*rms, NULL );
+
+            d = par[ 2 ] - cupidGC.initpars[ 2 ];
+            shiftsq = d*d;
+
+            astMapPut0D( extra, "GCINITFWHM1", cupidGC.initpars[3], NULL );
+            if( ndim > 1 ) {
+               d = par[ 5 ] - cupidGC.initpars[ 5 ];
+               shiftsq += d*d;
+               astMapPut0D( extra, "GCINITFWHM2", cupidGC.initpars[5], NULL );
+               if( ndim > 2 ) {
+                  d = par[ 7 ] - cupidGC.initpars[ 7 ];
+                  shiftsq += d*d;
+                  astMapPut0D( extra, "GCINITFWHM3", cupidGC.initpars[8], NULL );
+
+                  astMapPut0D( extra, "GCVELGRAD1", par[ 9 ], NULL );
+                  astMapPut0D( extra, "GCVELGRAD2", par[ 10 ], NULL );
+
+               }
+            }
+
+            astMapPut0D( extra, "GCSHIFT", sqrt(shiftsq), NULL );
+            astMapPut0D( extra, "GCBG", bg, NULL );
+            astMapPut0D( extra, "GCMAXR", maxr, NULL );
+            astMapPut0D( extra, "GCSUMR", sumr, NULL );
+            astMapPut0D( extra, "GCMEANR", meanr, NULL );
+            astMapPut0D( extra, "GCSIGMAR", sigr, NULL );
+            astMapPut0D( extra, "GCMEANPEAK", mean_peak, NULL );
+         }
+
+      } else {
+         extra = NULL;
+      }
+
+/* Create the NDF. */
+      cupidGCNdfClump( ndfs, sum, excols ? par : NULL, rms, ndim, lbox, ubox,
+                       list_size, mlist, plist, lbnd, iclump, cupidGC.dax,
+                       extra, ( bad > maxbad*( *area ) ), status );
+
+/* Free resources */
+      if( extra ) extra = astAnnul( extra );
+   }
+
+   mlist = astFree( mlist );
+   plist = astFree( plist );
+
+}

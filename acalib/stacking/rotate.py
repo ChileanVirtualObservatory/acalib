@@ -65,8 +65,8 @@ def rotate_image(src, theta, fill=0):
 
 def fartestPoints(border):
 	dist = []
-	for i in xrange(0,len(border)):
-		for j in xrange(0,len(border)):
+	for i in xrange(len(border)):
+		for j in xrange(len(border)):
 			y1,x1 = border[i]
 			y2,x2 = border[j]
 			d = (x1-x2)**2 + (y1-y2)**2
@@ -74,7 +74,7 @@ def fartestPoints(border):
 			dist.append((d,border[i],border[j]))
 	maxd = 0
 	points = 0
-	for i in xrange(0,len(dist)):
+	for i in xrange(len(dist)):
 		if dist[i][0] > maxd:
 			points = (dist[i][1],dist[i][2])
 			maxd = dist[i][0]
@@ -82,7 +82,6 @@ def fartestPoints(border):
 	return points
 
 def theta(points):
-	print points
 	y1,x1 = points[0]
 	y2,x2 = points[1]
 	theta = (y2-y1+.0)/(x2-x1+.0)

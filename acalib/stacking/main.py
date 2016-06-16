@@ -47,10 +47,10 @@ def stack(inputDir,outputDir,E1,E2,E3,E4):
 	if (E1 or E2 or E3 or E4) == None:
 		print 'A'
 		border = cr.crop(inputDir, outputDir)
-		maxSize = rt.rotate(outputDir, border)
-		maxSize = sc.scale(outputDir, maxSize)
-		al.align(outputDir, maxSize)
-		st.stacking(outputDir, maxSize)
+		maxSize1 = rt.rotate(outputDir, border)
+		maxSize = sc.scale(outputDir, maxSize1)
+		al.align(outputDir, maxSize1)
+		st.stacking(outputDir, maxSize1)
 	elif(E1 and E2 and E3 and E4) != None:
 		print 'B'
 		cr.cropManual(inputDir,outputDir,E1,E2,E3,E4)
