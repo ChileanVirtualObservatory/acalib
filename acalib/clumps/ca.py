@@ -1,7 +1,6 @@
 import numpy as np
 #import numba 
 
-
 """
 *  Description:
 *     This function contracts (erodes) or expands (dilates) the pixels

@@ -56,6 +56,7 @@ class MayaviVisualization(HasTraits):
 		self.mesh_grid.point_data.scalars = mesh_data.ravel()
 		self.mesh_grid.point_data.scalars.name = 'scalars'
 		self.mesh_grid.dimensions = mesh_data.shape
+                print((lower_stack_limit[0]*shape[1]/shape[0], upper_stack_limit[0]*shape[1]/shape[0]))
 		self.mesh_grid.x_coordinates = np.array((lower_stack_limit[0]*shape[1]/shape[0], upper_stack_limit[0]*shape[1]/shape[0]), dtype=np.int32)
 		self.mesh_grid.y_coordinates = np.array((lower_stack_limit[1], upper_stack_limit[1]), dtype=np.int32)
 		self.mesh_grid.z_coordinates = np.array((lower_stack_limit[2], upper_stack_limit[2]), dtype=np.int32)
@@ -63,6 +64,7 @@ class MayaviVisualization(HasTraits):
 		mlab.pipeline.surface(mlab.pipeline.extract_edges(self.wireframe), color=(0, 0, 0))
 		
 	def update_wireframe(self):
+                print((lower_stack_limit[0]*shape[1]/shape[0], upper_stack_limit[0]*shape[1]/shape[0]))
 		self.mesh_grid.x_coordinates = np.array((lower_stack_limit[0]*shape[1]/shape[0], upper_stack_limit[0]*shape[1]/shape[0]), dtype=np.int32)
 		self.mesh_grid.y_coordinates = np.array((lower_stack_limit[1], upper_stack_limit[1]), dtype=np.int32)
 		self.mesh_grid.z_coordinates = np.array((lower_stack_limit[2], upper_stack_limit[2]), dtype=np.int32)
@@ -158,6 +160,8 @@ class MatplotlibQWidget(QtGui.QWidget):
 ##################################################################
 folder = '../../../../fits/'
 fits_file = folder+'M100line.image.fits'
+#folder = '/home/mauricio/Downloads/2011.0.00772.S/sg_ouss_id/group_ouss_id/member_ouss_id/product/'
+#fits_file = folder+'M100line.image.fits'
 #fits_file = folder+'Boom.cm.cln.fits'
 #fits_file = folder+'Orion.methanol.cbc.contsub.image.fits'
 #fits_file = '~/calibrated.ms.contsub.bin4.line.fits'

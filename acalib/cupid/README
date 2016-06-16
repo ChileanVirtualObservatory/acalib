@@ -1,0 +1,4 @@
+to compile
+
+gcc -c -Iwrappers findclumps.c
+
