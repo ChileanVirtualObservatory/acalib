@@ -1,0 +1,43 @@
+3/7/2007:
+   - G.Fuller requests "Do not prompt for RMS in FINDCLUMPS if RMS is 
+   provided in the config file".
+
+25/9/06:
+   - Provide an option to re-apply the beam width smoothing to the
+   results returned in the catalogue. [Done]
+
+   - Option to include extra method-specific columns in the output
+   catalogue. [Done]
+
+
+19/5/06:
+
+   - Provide spatial filtering to remove all spatial structure with scale
+   length greater than a user-specified value (do not apply filtering in
+   spectral axis). [done]
+
+   - A command to outline a specified clump on a 2D displayed image. [Done]
+   
+   - Add some sort of clump orientation column
+
+   - Include output columns that give clump positions and sizes in WCS
+   units. [Done]
+
+   - Have an option to apply the cellular automata to clean up clumps found
+   by clumpfind.
+   
+   - Include used parameter values in the output catalogue (as catalogue
+   parameters). [Done]
+   
+   - Create a textual log file including a table of clump parameters. [Done]
+
+
+
+(22/6/06): Have a second output NDF that contains a copy of the input
+   data with a quality mask. Provide an additional quality bit to represent
+   "on boundary". [done]
+
+
+24/11/06: Copy AXIS arrays to clump cut-outs stored in output array CUPID
+   extension.
+

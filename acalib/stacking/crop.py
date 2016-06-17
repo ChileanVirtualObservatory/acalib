@@ -38,7 +38,6 @@ import img_scale
 def normalizeAux(x,x1,x2,y1,y2):
 
     y = ( (x-x1)*(y2-y1)/(x2-x1) ) + y1
-            
     return y
 
 def normalize(data):
@@ -55,6 +54,7 @@ def cropAux (originalData):
 	shape = originalData.shape
 	if len(shape) == 4:
 		originalData = originalData[0,0]
+
 	height = len(originalData)
 	width = len(originalData[0])
 	data = np.ndarray(shape=(height,width), dtype=float)
@@ -83,8 +83,7 @@ def cropAux (originalData):
 
 	maxv = -999999999999
 	# se suman al pixel actual los valores de todos los pixeles contiguos y se guarda el maximo valor
-
-
+	
 
 	for i in xrange(0,height):
 		for j in xrange(0,width):
@@ -172,15 +171,12 @@ def cropAux (originalData):
 				if j > maxx:
 					maxx = j
 
-	print originalData, miny, maxy, minx, maxx
+	
 	originalData = originalData[miny:maxy, minx:maxx]
 	newHeight, newWidth = originalData.shape
 
-	print originalData
-
 	for i in xrange(0,newHeight):
 		for j in xrange(0,newWidth):
-			print i,j
 			if originalData[i,j] > 0 and i == 0 and j == 0 and originalData[i+1,j] == 0 and originalData[i,j+1] == 0 and originalData[i+1,j+1] == 0:
 				originalData[i,j] = 0
 			elif originalData[i,j] > 0 and i == (newHeight-1) and j == (newWidth-1) and originalData[i-1,j] == 0 and originalData[i,j-1] == 0 and originalData[i-1,j-1] == 0:
@@ -232,10 +228,17 @@ def minValue(data):
 
 	x,y = data.shape
 	minvalue = -99999999 
-	for i in xrange(0,x):
-		for j in xrange(0,y):
-			if data[i][j] < minvalue:
-				minvalue = data[i][j]
+
+	mindata = data.min()
+
+	if mindata < minvalue:
+		minvalue = mindata
+	
+	#for i in xrange(0,x):
+	#	for j in xrange(0,y):
+	#		if data[i][j] < minvalue:
+	#			minvalue = data[i][j]
+
 	return minvalue
 
 def manualCrop(data,E1,E2,E3,E4):
@@ -252,14 +255,10 @@ def crop(inputDir, outputDir):
 	if not os.path.isdir(dir_png):
 		os.makedirs(dir_png)
 	
-	file = open('res/list.txt','w')
-	file.write(str(data))
-	file.close()
 
 	for i in xrange(0,len(data)):
 
 		name = data[i].split('/')[-1]#.split('.')[0]
-		print name
 		image = fits.open(data[i], ignore_missing_end = True )[0].data
 		if isinstance(image, list):
 			image = image[0]
