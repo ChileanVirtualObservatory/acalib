@@ -4,7 +4,7 @@ from utils import ndslice, adjust_index
 def index_of_max(ndd, lower=None, upper=None):
     """ 
     Index of maximum value in an m-dimensional subarray from 
-    an n-dimensional array.
+    an n-dimensional array, specified by lower and upper.
     
     Arguments:
         ndd   -- an astropy.nddata.NDDataArray object.
@@ -13,7 +13,7 @@ def index_of_max(ndd, lower=None, upper=None):
     
     Returns:
         A tuple with the maximum value found in the m-dimensional
-        subarray and .
+        subarray and its index in the n-dimensional superarray.
         
     """
     ndd = ndslice(ndd, lower, upper)
@@ -23,8 +23,8 @@ def index_of_max(ndd, lower=None, upper=None):
 
 def index_of_min(ndd, lower=None, upper=None):
     """ 
-    Index of maximum value in an m-dimensional subarray from 
-    an n-dimensional array.
+    Index of minimum value in an m-dimensional subarray from 
+    an n-dimensional array, specified by lower and upper.
     
     Arguments:
         ndd   -- an astropy.nddata.NDDataArray object.
@@ -32,8 +32,8 @@ def index_of_min(ndd, lower=None, upper=None):
         upper -- n-dimensional point as an n-tuple.
     
     Returns:
-        A tuple with the maximum value found in the m-dimensional
-        subarray and .
+        A tuple with the minimum value found in the m-dimensional
+        subarray and its index in the n-dimensional superarray.
         
     """
     ndd = ndslice(ndd, lower, upper)
