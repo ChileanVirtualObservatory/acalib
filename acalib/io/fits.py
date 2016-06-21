@@ -1,14 +1,11 @@
-from ..core import adata
-from ..core import atable
 from astropy.io import fits
 from astropy import log
 import numpy as np
-import os
 import astropy.units as u
 from astropy.wcs import wcs
+import astropy.nddata as ndd
 
-
-def HDU_to_adata(hdu):
+def HDU_to_NDData(hdu):
    data=hdu.data
    meta=hdu.header
    mask=np.isnan(data)
@@ -49,87 +46,12 @@ def HDU_to_adata(hdu):
    else:
        log.error("Only 3D data allowed (or 4D in case of polarization)")
        raise TypeError
+   return ndd.NDData(data, uncertainty=None, mask=mask,wcs=wcs, meta=meta, unit=unit)
 
-   # META Fixing
-   #TODO..
-
-   return adata.AData(data,mywcs,meta,bunit)
-
-
-def HDU_to_atable(hdu):
-   log.warning("FITS Table ---> ATable not implemented Yet")
+def HDU_to_Table(hdu):
+   log.warning("FITS Table ---> AstroPy Table not implemented Yet")
    #return atable.ATable(data=hdu.data,meta=hdu.header)
 
-
-def load_fits_to_ws(path,name,ws):
-   log.info("Loading "+name+".fits")
-   hdulist = fits.open(path)
-   counter=0
-   for hdu in hdulist:
-      if isinstance(hdu,fits.PrimaryHDU) or isinstance(hdu,fits.ImageHDU):
-         log.info("Processing HDU "+str(counter)+" (Image)")
-         ndd=HDU_to_adata(hdu)
-         ide=name+"-"+str(counter)
-         ws[ide]=ndd
-         counter+=1
-
-      elif isinstance(hdu,fits.BinTableHDU) or isinstance(hdu,fits.TableHDU):
-         log.info("Processing HDU "+str(counter)+" (Table)")
-         ntt=HDU_to_atable(hdu.data,meta=hdu.header)
-         ide=name+"-"+str(counter)
-         ws[ide]=ntt
-      else:
-         log.warning("HDU type not recognized, ignoring "+hdu.name+" ("+counter+")")
-      counter+=1
-
-#TODO: support more filetypes
-def load_hdf5_to_ws(path,name,ws):
-   log.warning("HDF5 format not supported yet. Ignoring file "+name+".hdf5")
-def load_votable_to_ws(path,name,ws):
-   log.warning("VOTable format not supported yet. Ignoring file "+name+".xml")
-def load_ascii_to_ws(path,name,ws):
-   log.warning("ASCII format not supported yet. Ignoring file "+name)
-
-def load_to_ws(path,ws):
-   filename=os.path.basename(path)
-   name,ext=os.path.splitext(filename)
-   if ext == '.fits':
-      load_fits_to_ws(path,name,ws)
-   elif ext == '.hdf5':
-      load_hdf5_to_ws(path,name,ws)
-   elif ext == '.xml':
-      load_votable_to_ws(path,name,ws)
-   else:
-      load_ascii_to_ws(path,name,ws)
-
-def load_to_cont(path,cont):
-   filename=os.path.basename(path)
-   name,ext=os.path.splitext(filename)
-   if ext == '.fits':
-      load_fits_to_cont(path,name,cont)
-   elif ext == '.hdf5':
-      (path,name,cont)
-   elif ext == '.xml':
-      votable_consumer(path,name,cont)
-   else:
-      ascii_consumer(path,name,cont)
-
-def save_from_cont(path,cont):
-   filename=os.path.basename(path)
-   name,ext=os.path.splitext(filename)
-   if ext == '.fits':
-      save_fits_from_cont(path,cont)
-   else:
-      log.warning("We only support saving in fits format for the moment")
-
-
-#TODO: support more filetypes
-def load_hdf5_to_cont(path,name,cont):
-   log.warning("HDF5 format not supported yet. Ignoring file "+name+".hdf5")
-def load_votable_to_cont(path,name,cont):
-   log.warning("VOTable format not supported yet. Ignoring file "+name+".xml")
-def load_ascii_to_cont(path,name,cont):
-   log.warning("ASCII format not supported yet. Ignoring file "+name)
 
 def save_fits_from_cont(filepath,acont):
    if acont.primary == None:
