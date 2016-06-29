@@ -31,14 +31,27 @@ int astSscanf( const char *str, const char *fmt, ...){
 
 // KEYMAP
 
+PyObject *dictGet(AstKeyMap *map, const char *key){
+   PyObject *pvalue;
+   PyString *pkey=PyString_FromString(key);
+   pvalue=PyDict_GetItem(map,pkey);
+   Py_DECREF(pkey);
+   return pvalue
+}
+
 int astMapGet0D( AstKeyMap *map, const char *key, double *value){
-   // Not implemented
-   return -1;
+   PyObject *pvalue;
+   pvalue=dictGet(map,key);
+   if (pvalue==NULL) return 0;
+   *value=PyFloat_AsDouble(pvalue);
+   Py_DECREF(pvalue);
+   return 1;
 }
 
 int astMapGet0A( AstKeyMap *map, const char *key, AstObject **obj){
-   // Not implemented
-   return -1;
+   *obj=dictGet(map,key);
+   if (obj==NULL) return 0;
+   return 1;
 }
 
 void astMapPut0D( AstKeyMap *map, const char *key, double value, const char *comment){
@@ -46,7 +59,12 @@ void astMapPut0D( AstKeyMap *map, const char *key, double value, const char *com
 }
 
 int astMapGet0C( AstKeyMap *map, const char *key, const char **value){
-    return -1;
+   PyObject *pvalue;
+   pvalue=dictGet(map,key);
+   if (pvalue==NULL) return 0;
+   *value=PyUnicode_AsUTF8(pvalue);
+   Py_DECREF(pvalue);
+   return 1;
 }
 
 
@@ -55,11 +73,16 @@ void astMapRemove( AstKeyMap *this, const char *key){
 }
 
 int astMapGet0I(AstKeyMap *map, const char *key, int *value){
-    return -1;
+   PyObject *pvalue;
+   pvalue=dictGet(map,key);
+   if (pvalue==NULL) return 0;
+   *value=PyLong_AsLong(pvalue);
+   Py_DECREF(pvalue);
+   return 1;
 }
 
 void astMapPut0I( AstKeyMap *map, const char *key, int value, const char *comment){
-    
+   return 1;
 }
 
 
