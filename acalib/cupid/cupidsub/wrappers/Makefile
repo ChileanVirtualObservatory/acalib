@@ -1,6 +1,6 @@
 CC        = gcc
-PYINCLUDE = /usr/include/python3.5m/
-CFLAGS    = -Wall -g -O3 -Iincludes -I$(PYINCLUDE)
+PYINCLUDE = /home/martin/miniconda2/include/python2.7
+CFLAGS    = -Wall -g -fPIC -O3 -Iincludes -I$(PYINCLUDE)
 #OBJS      = hds.o mers.o ast.o ndf.o
 OBJS      = mers.o ast.o 
 
