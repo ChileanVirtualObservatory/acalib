@@ -9,7 +9,7 @@
 #include <math.h>
 
 
-HDSLoc *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
+int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
                         double *ipv, double rms, AstKeyMap *config, int velax,
                         int perspectrum, double beamcorr[ 3 ],
                         int *backoff, int *status ){
@@ -132,7 +132,7 @@ HDSLoc *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
 
    CupidPixelSet **clumps;/* Pointer to list of PixelSet pointers */
    CupidPixelSet *ps;   /* Pointer to PixelSet */
-   HDSLoc *ret;         /* Locator for the returned array of NDFs */
+   int *ret;         /* Locator for the returned array of NDFs */
    double *levels;      /* Pointer to array of contour levels */
    double amaxd;        /* Largest absolute data value */
    double clevel;       /* Current data level */
@@ -458,14 +458,14 @@ HDSLoc *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
    }
 
 /* Free resources */
-   ipa = astFree( ipa );
-
+   //ipa = astFree( ipa );
+   
    for( i = 0; i < cupid_ps_cache_size; i++ ) {
       cupid_ps_cache[ i ] = cupidCFDeletePS( cupid_ps_cache[ i ], status );
    }
    cupid_ps_cache = astFree( cupid_ps_cache );
    cupid_ps_cache_size = 0;
-
+   ret=ipa;
 /* Return the list of clump NDFs. */
    return ret;
 
