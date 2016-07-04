@@ -49,7 +49,7 @@
 #define CUPID_INCLUDED
 
 #include "ast.h"
-#include "star/grp.h"
+//#include "star/grp.h"
 #include "star/hds.h"
 #include "msg_par.h"
 #include <string.h>
@@ -301,7 +301,7 @@ void cupidGCcalcf( int, double *, int *, double * );
 void cupidGCcalcg( int, double *, int *, double * );
 void cupidREdges( int, double *, int *, int *, int, double, double, double, double, int * );
 void cupidRFillLine( int *, int *, int, int, int[ 3 ], int[ 3 ], int[ 3 ], int, int, int, int, int *[3], int * );
-void cupidStoreClumps( const char *, const char *, int, HDSLoc *, HDSLoc *, int, int, int, int, int, double[ 3 ], const char *, int, AstFrameSet *, const char *, Grp *, FILE *, int *, int * );
+//void cupidStoreClumps( const char *, const char *, int, HDSLoc *, HDSLoc *, int, int, int, int, int, double[ 3 ], const char *, int, AstFrameSet *, const char *, Grp *, FILE *, int *, int * );
 void cupidStoreConfig( HDSLoc *, AstKeyMap *, int * );
 
 void findback( int * );
