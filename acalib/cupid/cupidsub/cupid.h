@@ -48,7 +48,7 @@
 #if !defined( CUPID_INCLUDED )   /* Include this file only once */
 #define CUPID_INCLUDED
 
-#include "ast.h"
+#include "wrappers/includes/ast.h"
 //#include "star/grp.h"
 #include "star/hds.h"
 #include "msg_par.h"

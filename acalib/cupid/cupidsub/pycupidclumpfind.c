@@ -9,6 +9,10 @@
 #include <math.h>
 
 
+CupidPixelSet **cupid_ps_cache = NULL;
+int cupid_ps_cache_size = 0;
+
+
 int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
                         double *ipv, double rms, AstKeyMap *config, int velax,
                         int perspectrum, double beamcorr[ 3 ],
