@@ -14,11 +14,13 @@ void *astFree( void *ptr){
 }
 
 AstObject *astAnnul( AstObject *obj){
-   return NULL;
+    Py_DECREF((PyObject *)obj);
+    return NULL;
 }
 
 void *astGrow( void *ptr, int n, size_t size){
-    return NULL;
+    ptr=realloc(ptr, size*n);
+    return ptr;
 }
 
 
@@ -33,10 +35,11 @@ int astSscanf( const char *str, const char *fmt, ...){
 
 PyObject *dictGet(AstKeyMap *map, const char *key){
    PyObject *pvalue;
-   PyString *pkey=PyString_FromString(key);
-   pvalue=PyDict_GetItem(map,pkey);
+   PyObject *pkey=PyBytes_FromString(key);
+   PyObject *pmap=(PyObject *)map;
+   pvalue=PyDict_GetItem(pmap,pkey);
    Py_DECREF(pkey);
-   return pvalue
+   return pvalue;
 }
 
 int astMapGet0D( AstKeyMap *map, const char *key, double *value){
@@ -48,28 +51,44 @@ int astMapGet0D( AstKeyMap *map, const char *key, double *value){
    return 1;
 }
 
+
+
 int astMapGet0A( AstKeyMap *map, const char *key, AstObject **obj){
    *obj=dictGet(map,key);
    if (obj==NULL) return 0;
    return 1;
 }
 
+void dictPut(AstKeyMap *map, const char *key,PyObject *pvalue){
+   PyObject *pkey=PyBytes_FromString(key);
+   PyObject *pmap=(PyObject *)map;
+   PyDict_SetItem(pmap,pkey,pvalue);
+   Py_DECREF(pkey);
+}
+
+
 void astMapPut0D( AstKeyMap *map, const char *key, double value, const char *comment){
-   
+   // Comment is neglected 
+   PyObject *pvalue=PyFloat_FromDouble(value);
+   dictPut(map,key,pvalue);
+   Py_DECREF(pvalue);
 }
 
 int astMapGet0C( AstKeyMap *map, const char *key, const char **value){
    PyObject *pvalue;
    pvalue=dictGet(map,key);
    if (pvalue==NULL) return 0;
-   *value=PyUnicode_AsUTF8(pvalue);
+   *value=PyBytes_AsString(pvalue);
    Py_DECREF(pvalue);
    return 1;
 }
 
 
-void astMapRemove( AstKeyMap *this, const char *key){
-
+void astMapRemove(AstKeyMap *map, const char *key){
+   PyObject *pkey=PyBytes_FromString(key);
+   PyObject *pmap=(PyObject *)map;
+   PyDict_DelItem(pmap,pkey);
+   Py_DECREF(pkey);
 }
 
 int astMapGet0I(AstKeyMap *map, const char *key, int *value){
@@ -82,17 +101,24 @@ int astMapGet0I(AstKeyMap *map, const char *key, int *value){
 }
 
 void astMapPut0I( AstKeyMap *map, const char *key, int value, const char *comment){
-   return 1;
+    PyObject *pvalue=PyLong_FromLong(value);
+    dictPut(map,key,pvalue);
+    Py_DECREF(pvalue);
 }
 
 
 int astMapSize( AstKeyMap *map){
-    return -1;
-
+    return map->ma_used;
 }
 
 const char *astMapKey( AstKeyMap *map, int key){
-    return NULL;
+    PyObject *pmap=(PyObject *)map;
+    PyObject *plist=PyDict_Keys(pmap);
+    PyObject *pitem=PyList_GetItem(plist,key);
+    Py_DECREF(plist);
+    const char *retval=PyBytes_AsString(pitem);
+    Py_DECREF(pitem);
+    return retval;
 }
 
 
