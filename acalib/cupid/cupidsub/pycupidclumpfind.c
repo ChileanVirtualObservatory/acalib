@@ -14,7 +14,7 @@ int cupid_ps_cache_size = 0;
 
 
 int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
-                        double *ipv, double rms, AstKeyMap *config, int velax,
+                        double *ipv, double rms, PyDictObject *pyconfig, int velax,
                         int perspectrum, double beamcorr[ 3 ],
                         int *backoff, int *status ){
 
@@ -164,9 +164,11 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
    int nlevels;         /* Number of values in "levels" */
    int nminpix;         /* Number of clumps with < MinPix pixels */
    int skip[3];         /* Pointer to array of axis skips */
-
+   AstKeyMap *config;
+   
 /* Initialise */
    ret = NULL;
+   config=(AstKeyMap *)pyconfig;
 
 /* Abort if an error has already occurred. */
    if( *status != SAI__OK ) return ret;
