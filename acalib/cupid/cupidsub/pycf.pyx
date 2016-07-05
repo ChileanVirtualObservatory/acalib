@@ -2,14 +2,15 @@
 
 import numpy as np
 cimport numpy as cnp
-from clumpfind cimport AstKeyMap, cupidClumpFind
+from pycf cimport AstKeyMap, cupidClumpFind
+#from clumpfind cimport AstKeyMap, cupidClumpFind
 
 
 ctypedef cnp.int_t int_t
 ctypedef cnp.float64_t float64_t
 ctypedef cnp.ndarray ndarray
 
-cdef float64_t[::1] _test():
+cdef int_t[::1] _test():
 	#clumpf( int type, int ndim, int *slbnd, int *subnd, 
 	#void *ipd, double *ipv, double rms, AstKeyMap *config, int velax, 
 	#int perspectrum, double beamcorr[ 3 ], int *backoff, int *status )
@@ -19,15 +20,15 @@ cdef float64_t[::1] _test():
 		double *beamcorr
 		int backoff = 0
 		int status = 1
-		ndarray[float64_t, ndim=3, mode='fortran'] arr
-		AstKeyMap kmap 
+		ndarray[float64_t, ndim=1, mode='fortran'] inp_arr
+		int *out_arr
+		AstKeyMap *kmap 
 	#slbnd[:] = [0,0,0]
 	#subnd[:] = [10,10,10]
 	#beamcorr = [0.,0.,0.]
-	arr = np.random.random((10,10,10)).flatten(order='F')
-	beamcorr = <double*> arr.data
-	arr2 = cupidClumpFind(1, 3, slbnd, subnd, <double*> arr.data, NULL, 1., &kmap, 0, 0, beamcorr, &backoff, &status)
-	return arr
+	inp_arr = np.random.random((10,10,10)).flatten(order='F')
+	out_arr = cupidClumpFind(1, 3, slbnd, subnd, <double*> inp_arr.data, NULL, 1., kmap, 0, 0, beamcorr, &backoff, &status)
+	return out_arr
 
 def sum(a,b):
 	return a+b
