@@ -2,6 +2,40 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def ndslice(ndd, lower, upper):
+    """ 
+    N-Dimensional slicing.
+    
+    Arguments:
+        ndd   -- an astropy.nddata.NDDataArray object.
+        lower -- n-dimensional point as an n-tuple.
+        upper -- n-dimensional point as an n-tuple.
+    
+    Returns:
+        A sliced astropy.nddata.NDDataArray object.
+        
+    """
+    lower = lower if lower is not None else np.zeros(ndd.ndim)
+    upper = upper if upper is not None else ndd.shape
+    return ndd[[slice(min(a,b), max(a,b)+1) for a,b in zip(lower, upper)]]
+
+def adjust_index(relative, origin):
+    """
+    Adjusts an index relative to a subarray to an absolute
+    index in the superarray.
+    
+    Arguments:
+        origin   -- an n-dimensional index of a point as an n-tuple.
+                    It should be the origin from which the relative
+                    index was computed.
+        relative -- an n-dimensional index of a point as an n-tuple.
+                    The index to be adjusted.
+    
+    Returns:
+        The relative index adjusted to the superarray as an n-tuple.
+    """
+    return tuple(np.array(origin) + np.array(relative))
+
 
 def fix_limits(data,vect):
     if isinstance(vect,tuple):
