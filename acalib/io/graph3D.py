@@ -4,7 +4,7 @@ from astropy.wcs import wcs
 from mayavi import mlab
 from ..core.utils import get_mesh,get_ranges
 
-def volume(cube,wcs):
+def volume3D(cube,wcs):
      figure = mlab.figure('Volume Plot')
      xi,yi,zi=get_mesh(cube)
      ranges=get_ranges(cube,wcs)
@@ -18,7 +18,7 @@ def volume(cube,wcs):
      mlab.show()
 
 
-def contour(cube,wcs):
+def contour3D(cube,wcs):
      figure = mlab.figure('Contour Plot')
      xi,yi,zi=get_mesh(cube)
      ranges=get_ranges(cube,wcs)
