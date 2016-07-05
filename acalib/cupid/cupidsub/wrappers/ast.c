@@ -14,7 +14,7 @@ void *astFree( void *ptr){
 }
 
 AstObject *astAnnul( AstObject *obj){
-    Py_DECREF((PyObject *)obj);
+    //Py_DECREF((PyObject *)obj);
     return NULL;
 }
 
@@ -54,9 +54,10 @@ int astMapGet0D( AstKeyMap *map, const char *key, double *value){
 
 
 int astMapGet0A( AstKeyMap *map, const char *key, AstObject **obj){
-   *obj=dictGet(map,key);
-   if (obj==NULL) return 0;
-   return 1;
+   return 0;
+   //*obj=dictGet(map,key);
+   //if (obj==NULL) return 0;
+   //return 1;
 }
 
 void dictPut(AstKeyMap *map, const char *key,PyObject *pvalue){
