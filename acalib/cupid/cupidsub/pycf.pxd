@@ -6,11 +6,11 @@ cimport numpy as cnp
 #from cpython.dict cimport PyDictObject
 
 cdef extern from "Python.h":
-	ctypedef struct PyObject
-	ctypedef struct PyDictObject
+	cdef struct PyObject
+	cdef struct PyDictObject
 
 cdef extern from "./cupidsub/wrappers/includes/ast.h":
-	ctypedef PyDictObject AstKeyMap
+	cdef struct AstKeyMap
 
 cdef extern from "./cupidsub/cupid.h":
 	cdef int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, 
