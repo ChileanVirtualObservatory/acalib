@@ -180,7 +180,8 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
 
 /* Return the instrumental smoothing FWHMs */
    if( !perspectrum ) {
-      beamcorr[ 0 ] = cupidConfigD( config, "FWHMBEAM", 2.0, status );
+   beamcorr[ 0 ] = cupidConfigD( config, "FWHMBEAM", 2.0, status );
+		   
       beamcorr[ 1 ] = beamcorr[ 0 ];
       if( ndim == 3 ) {
          beamcorr[ 2 ] = beamcorr[ 0 ];
@@ -241,7 +242,8 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
 /* Initialise the index assignment array to indicate that no pixels have
    yet been assigned to any PixelSet. */
       for( i = 0; i < el; i++ ) ipa[ i ] = CUPID__CFNULL;
-
+      for( i = 0; i < el; i++ )  printf("%d\n", ipa[i]); 
+      
 /* Initialise an array to hold the pointers to the PixelSet structures which
    describe the clumps. */
       clumps = astMalloc( sizeof( CupidPixelSet *) );
