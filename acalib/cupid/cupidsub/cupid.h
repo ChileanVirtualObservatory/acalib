@@ -54,6 +54,7 @@
 #include "msg_par.h"
 #include <string.h>
 #include <math.h>
+#include <Python.h>
 
 /* Constants */
 /* --------- */
