@@ -264,7 +264,7 @@ CupidBoxIter *cupidBoxIterator( CupidBoxIter *, int[3], int[3], int[3], int, int
 CupidPixelSet *cupidCFDeletePS( CupidPixelSet *, int * );
 CupidPixelSet *cupidCFFreePS( CupidPixelSet *, int *, int, int * );
 CupidPixelSet *cupidCFMakePS( int, int * );
-int *cupidClumpFind( int, int, int *, int *, void *, double *, double, AstKeyMap *, int, int, double[3], int *, int * );
+int *cupidClumpFind( int, int, int *, int *, void *, double *, double, PyObject *, int, int, double[3], int *, int * );
 HDSLoc *cupidFellWalker( int, int, int *, int *, void *, double *, double, AstKeyMap *, int, int, double[3], int * );
 HDSLoc *cupidGaussClumps( int, int, int *, int *, void *, double *, double, AstKeyMap *, int, double[3], int * );
 HDSLoc *cupidReinhold( int, int, int *, int *, void *, double *, double, AstKeyMap *, int, double[3], int * );
