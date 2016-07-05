@@ -14,7 +14,7 @@ int cupid_ps_cache_size = 0;
 
 
 int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
-                        double *ipv, double rms, PyDictObject *pyconfig, int velax,
+                        double *ipv, double rms, PyObject *pyconfig, int velax,
                         int perspectrum, double beamcorr[ 3 ],
                         int *backoff, int *status ){
 
