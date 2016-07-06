@@ -2,39 +2,52 @@ from astropy import log
 import numpy as np
 from astropy.wcs import wcs
 from mayavi import mlab
-from ..core.utils import get_mesh,get_ranges
+from astropy.nddata import support_nddata
+from acalib import *
+from acalib.core.indices import *
+from acalib.core.utils import *
 
-def volume3D(cube,wcs):
+#TODO: complete the nddata support (i.e. data, meta...)
+#TODO: make animation possible again
+
+@support_nddata
+def volume3D(data,wcs=None):
+     if wcs==None:
+        log.error("WCS is needed by this function")
      figure = mlab.figure('Volume Plot')
-     xi,yi,zi=get_mesh(cube)
-     ranges=get_ranges(cube,wcs)
-     grid = mlab.pipeline.scalar_field(xi, yi, zi, cube)
-     mmin = cube.min()
-     mmax = cube.max()
+     mesh=get_mesh(data)
+     xi,yi,zi=mesh
+     ranges=axes_ranges(data,wcs)
+     grid = mlab.pipeline.scalar_field(xi, yi, zi, data)
+     mmin = data.min()
+     mmax = data.max()
      mlab.pipeline.volume(grid)#,vmin=mmin, vmax=mmin)
      ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
      ax.axes.label_format='%.3f'
      mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
      mlab.show()
 
-
-def contour3D(cube,wcs):
+@support_nddata
+def contour3D(data,wcs=None):
+     if wcs==None:
+        log.error("WCS is needed by this function")
      figure = mlab.figure('Contour Plot')
-     xi,yi,zi=get_mesh(cube)
-     ranges=get_ranges(cube,wcs)
-     mmin = cube.min()
-     mmax = cube.max()
-     mlab.contour3d(xi,yi,zi,cube,transparent=True,contours=10,opacity=0.5)
+     mesh=get_mesh(data)
+     xi,yi,zi=mesh
+     ranges=axes_ranges(data,wcs)
+     mmin = data.min()
+     mmax = data.max()
+     mlab.contour3d(xi,yi,zi,data,transparent=True,contours=10,opacity=0.5)
      ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
      ax.axes.label_format='%.3f'
      mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
      mlab.show()
 
-#def stacked(cube):
+#def stacked(data):
 #     figure = mlab.figure('Stacked Plot')
-#     ranges=cube.get_ranges()
+#     ranges=data.get_ranges()
 #     ranges=[ranges[2],ranges[3],ranges[4],ranges[5],ranges[0],ranges[1]]
-#     img=cube.stack()
+#     img=data.stack()
 #     mlab.imshow(img)
 #     ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="VEL [km/s] ",ranges=ranges,nb_labels=5)
 #     ax.axes.label_format='%.3f'
@@ -42,17 +55,17 @@ def contour3D(cube,wcs):
 #     mlab.show()
 
 
-#def velocity(cube):
+#def velocity(data):
 #     figure = mlab.figure('Velocity Map')
-#     ranges=cube.get_ranges()
-#     nn=cube.data.shape[0]
+#     ranges=data.get_ranges()
+#     nn=data.data.shape[0]
 #     ranges=[ranges[2],ranges[3],ranges[4],ranges[5],-nn/2,nn/2]
-#     #nn=cube.data.shape[0]
+#     #nn=data.data.shape[0]
 #     #vect=np.linspace(0.0,1.0,nn)
-#     #vfield=np.average(cube.data,axis=0,weights=vect)
-#     rms=cube.estimate_rms()
-#     afield=np.argmax(cube.data,axis=0) - nn/2
-#     vfield=np.max(cube.data,axis=0)
+#     #vfield=np.average(data.data,axis=0,weights=vect)
+#     rms=data.estimate_rms()
+#     afield=np.argmax(data.data,axis=0) - nn/2
+#     vfield=np.max(data.data,axis=0)
 #     afield[vfield<1.5*rms]=0
 #     afield[afield==-20]=0
 #     mlab.surf(afield,warp_scale="auto")
@@ -65,7 +78,7 @@ def contour3D(cube,wcs):
 
 #    def animate(self, inte, rep=True):
 #               #TODO: this is not ported to the new wcs usage: maybe we must use wcsaxes to plot the wcs information...
-#               """ Simple animation of the cube.
+#               """ Simple animation of the data.
 #                               - inte       : time interval between frames
 #                               - rep[=True] : boolean to repeat the animation
 #                       """

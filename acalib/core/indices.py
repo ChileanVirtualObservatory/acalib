@@ -42,17 +42,35 @@ def matching_slabs(data,flux,lower,upper):
     flux_slab=slab(flux,flow,fup)
     return data_slab,flux_slab
 
+def world_window_to_index(data,wcs,center,window):
+    ld=np.rint(wcs.wcs_world2pix([center-window],0))
+    lu=np.rint(wcs.wcs_world2pix([center+window],0))
+    lower=np.array([ld,lu]).min(axis=0)
+    upper=np.array([ld,lu]).max(axis=0)
+    lower=fix_limits(data,lower[0][::-1])
+    upper=fix_limits(data,upper[0][::-1])
+    return (lower,upper)
 
-# TODO: get mesh should include lower and upper
-def get_mesh(data):
+
+def get_mesh(data,lower=None,upper=None):
     """ Create an index mesh """
-    sh=data.shape
+    sl=slab(data,lower,upper)
     dim=data.ndim
     slices=[]
     for i in range(dim):
-       slices.append(slice(0:sh[i]))
+       slices.append(slice(sl[i].start,sl[i].stop))
     retval=np.mgrid[slices]
-    return slices
+    return retval
+
+def to_features(data,lower=None,upper=None):
+    msh=get_mesh(data,lower,upper)
+    dim=data.ndim
+    ii=np.empty((dim,int(msh.size/dim)))
+    for i in range(dim):
+       ii[dim-i-1]=msh[i].ravel()
+       ii[dim-i-1]=msh[i].ravel()
+       ii[dim-i-1]=msh[i].ravel()
+    return ii
 
 
 ### DEPRECATED ####

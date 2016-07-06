@@ -4,11 +4,11 @@ from acalib.io.fits import save_fits_from_cont,load_fits_to_cont
 
 
 class Container:
-""" Data structure that contains a list of NDData and astropy tables.
+    """ Data structure that contains a list of NDData and astropy tables.
     
     It can load from and save to fits file format. To write a fits, please put in "primary"
     the main object, and in nndata and table all the extensions.
-"""
+    """
     def __init__(self): 
         self.primary = None
         """Primary object""" 
