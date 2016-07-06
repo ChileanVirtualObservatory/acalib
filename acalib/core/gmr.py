@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 def gmr_from_pixels(data,threshold,nlevel,upper=None,lower=None):
     """ Obtain a pixel-based Gaussian Mixture Representation (GMR) from data.
 
-    This function generate a GMR by using only those pixels above the threshold. Each pixel generates a very small
+    This function generates a GMR by using only those pixels above the threshold. Each pixel generates a very small
     Gaussian ::math:`G(x) = a \\exp(-0.5 (\mu - x)^\\top P (\mu - x))` 
     where ::math:`a` is the instensity (data[pos]) of the pixel ::math:`n_{level}` (nlevel), the center ::math:`\\mu` is the pixel position (pos) and ::math:`P` is a diagonal matrix of
     the form ::math:`2\\log(a/n_{level}) \\cdot I`
