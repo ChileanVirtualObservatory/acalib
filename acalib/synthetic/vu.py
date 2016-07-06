@@ -163,9 +163,8 @@ class Universe:
         meta['DATE'] = meta['DATE-OBS']
         meta['ORIGIN'] = "ACALIB"
         mywcs=wcs.WCS(meta)
-        add_flux(data,2 * noise * (np.random.random(data.shape) - 0.5))
-        cube = NDData(data, wcs=mywcs,meta=meta,unit=u.Jy / u.beam)
         tab = [self._gen_sources_table()]
+        cube = NDData(data, wcs=mywcs,meta=meta,unit=u.Jy / u.beam)
         for source in self.sources:
             log.info('Projecting source ' + source)
             gen_tables = self.sources[source].project(cube, cutlev)
@@ -175,6 +174,7 @@ class Universe:
             # add all tables generated from each component of the source
             # on the complete components dictionary.
             tab+=gen_tables
+        add_flux(cube.data,2 * noise * (np.random.random(data.shape) - 0.5))
         cont=Container()
         cont.primary=cube
         cont.table=tab

@@ -53,4 +53,6 @@ for comp in cont.table:
    print comp
    print comp.meta
 
+volume3D(cont.primary)
 contour3D(cont.primary)
+
