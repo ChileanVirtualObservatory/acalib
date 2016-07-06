@@ -93,14 +93,14 @@ def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):
    lower,upper=world_window_to_index(data,wcs,mu,window)
    if np.any(np.array(upper-lower)<=0):
        return None,lower,upper
-   feat=to_features(data,lower,upper)
+   feat=world_features(data,wcs,lower,upper)
    res=gaussian_function(mu,P,feat,peak)
    res=res.reshape(upper[0]-lower[0],upper[1]-lower[1],upper[2]-lower[2])
    return res,lower,upper
 
 def world_features(data,wcs,lower=None,upper=None):
-    ii=features(data,lower,upper)
-    f=self.wcs.wcs_pix2world(ii.T,0)
+    ii=to_features(data,lower,upper)
+    f=wcs.wcs_pix2world(ii.T,0)
     f=f.T
     return f
 
