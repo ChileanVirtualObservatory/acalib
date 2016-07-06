@@ -4,15 +4,15 @@ sys.path.append('../../')
 import matplotlib.pyplot as plt
 import acalib.synthetic.imc as imc
 import astropy.units as u
-import acalib.synthetic.vu as vu
-from acalib.io import graph as gp
+from acalib.synthetic import *
+from acalib.io import *
 import numpy as np
 import math
 
 
 
 #TODO This is not working for near zero positions!!! (it is fault of the wcs i think!)
-univ=vu.Universe()
+univ=Universe()
 
 # Create Source
 center=[1.0,1.0]*u.deg
@@ -29,7 +29,7 @@ fwhm=30*u.km/u.s
 gradient=np.array([0.0,0.0])*u.km/(u.s*u.arcsec)
 rad_vel=150*u.km/u.s
 # Create Component
-model=imc.GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
+model=GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
 model.set_velocity(rad_vel)
 univ.add_component('example',model)
 
@@ -44,7 +44,7 @@ fwhm=10*u.km/u.s
 gradient=np.array([-3.0,3.0])*u.km/(u.s*u.arcsec)
 rad_vel=150*u.km/u.s
 # Create Component
-model=imc.GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
+model=GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
 model.set_velocity(rad_vel)
 univ.add_component('example',model)
 
@@ -59,7 +59,7 @@ fwhm=10*u.km/u.s
 gradient=np.array([3.0,-3.0])*u.km/(u.s*u.arcsec)
 rad_vel=150*u.km/u.s
 # Create Component
-model=imc.GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
+model=GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
 model.set_velocity(rad_vel)
 univ.add_component('example',model)
 
@@ -72,11 +72,9 @@ spe_res=0.002*u.GHz
 bw=0.2*u.GHz
 noise=0.001*u.Jy/u.beam
 
-#cube, tab = univ.gen_cube(center, ang_res, fov, freq, spe_res, bw, noise,noise/50.0)
-#print tab
+cont = univ.gen_cube(center, ang_res, fov, freq, spe_res, bw, noise,noise/50.0)
 
 
-#gp.stacked(cube)
-#gp.volume(cube)
-#gp.contour(cube)
+volume3D(cont.primary)
+contour3D(cont.primary)
 
