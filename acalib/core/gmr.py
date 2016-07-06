@@ -2,10 +2,9 @@
 import numpy as np
 from astropy.table import Table
 from astropy import log
-#from acalib.process.utils import *
-from utils import *
+from astropy import units as u
 import matplotlib.pyplot as plt
-
+from convert import *
 
 def gmr_from_pixels(data,threshold,nlevel,upper=None,lower=None):
     """ Obtain a pixel-based Gaussian Mixture Representation (GMR) from data.
@@ -205,3 +204,32 @@ if __name__ == '__main__':
     plt.imshow(np.sum(energy,axis=(0)))
     plt.colorbar()
     plt.show()
+
+
+def gclump_to_wcsgauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
+   # Parameter sanitization
+   pos=to_deg(pos)
+   std=to_deg(std)
+   angle=to_rad(angle)
+   freq=to_hz(freq)
+   #print "fwhm",fwhm
+   #print "freq",freq
+   sigma=fwhm_to_sigma(freq - vel_to_freq(fwhm,freq,equiv))
+   #print "sigma",sigma
+   grad= freq/u.deg -  to_hz_deg(gradient,freq,equiv) 
+   # get Values
+   pos=pos.value
+   std=std.value
+   angle=angle.value
+   freq=freq.value
+   sigma=sigma.value
+   grad=grad.value
+   # Construct the precision Matrix!
+   sphi=np.sin(angle)
+   cphi=np.cos(angle)
+   R=np.array([[cphi,-sphi,-grad[0]],[sphi,cphi,-grad[1]],[0,0,1]])
+   D=np.diag([1./std[0],1./std[1],1./sigma])
+   RD=R.dot(D)
+   P=RD.dot(RD.T)
+   mu=np.array([pos[0],pos[1],freq])
+   return (mu,P)
