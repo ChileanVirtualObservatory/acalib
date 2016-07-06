@@ -2,7 +2,7 @@
 
 import numpy as np
 cimport numpy as cnp
-from pycf cimport AstKeyMap, cupidClumpFind
+from pycf cimport cupidClumpFind
 #from clumpfind cimport AstKeyMap, cupidClumpFind
 
 
