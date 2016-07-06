@@ -1,10 +1,9 @@
 import sys
 sys.path.append('../../')
 
-import acalib.synthetic.imc as imc
 import astropy.units as u
-import acalib.synthetic.vu as vu
-import acalib as aca
+from acalib.io import *
+from acalib.synthetic import *
 import numpy as np
 import math
 import random
@@ -50,12 +49,7 @@ spe_res=0.005*u.GHz
 bw=0.5*u.GHz
 noise=0.005*u.Jy/u.beam
 
-(cube,tab)=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise,0.1*noise)
-(sources,components)=tab
-components=components.values()
-components.append(sources)
-cont=aca.AContainer()
-cont.primary=cube
-cont.atable=components
-cont.save("methanol.fits")
+cont =univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise,0.1*noise)
+cont.save_fits("methanol.fits")
+volume3D(cont.primary)
 

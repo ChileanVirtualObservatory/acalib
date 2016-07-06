@@ -4,6 +4,8 @@ import numpy as np
 import astropy.units as u
 from astropy.wcs import wcs
 import astropy.nddata as ndd
+from astropy.table.table import Table
+
 
 def HDU_to_NDData(hdu):
    data=hdu.data
@@ -52,24 +54,44 @@ def HDU_to_Table(hdu):
    log.warning("FITS Table ---> AstroPy Table not implemented Yet")
    #return atable.ATable(data=hdu.data,meta=hdu.header)
 
+def Table_to_HDU(tab):
+   #if tab.data.masked:???
+   #    dtmp = [col.filled(None) for col in six.itervalues(self.columns)]
+   hdu=fits.BinTableHDU.from_columns(np.array(tab))
+   if tab.meta is not None:
+       for k, v in tab.meta.iteritems():
+           hdu.header[k] = v
+   return hdu
+
+def NDData_to_HDU(cube,primary=False):
+    if primary==True:
+        hdu = fits.PrimaryHDU(cube.data)
+    else:
+        hdu = fits.ImageHdu(cube.data)
+    if cube.meta is not None:
+        for k, v in cube.meta.iteritems():
+            hdu.header[k] = v
+    return hdu
 
 def save_fits_from_cont(filepath,acont):
+   if isinstance(acont.primary,Table):
+      raise NotImplementedError("FITS Format do now support tables as primary HDU! You can set primary = None")        
    if acont.primary == None:
       phdu=fits.PrimaryHDU()
    else:
-      phdu=acont.primary.get_hdu(True)
+      phdu=NDData_to_HDU(acont.primary,primary=True)
    nlist=[phdu]
    count=0
-   for elm in acont.adata:
+   for elm in acont.nddata:
        count+=1
-       hdu=elm.get_hdu()
+       hdu=NDData_to_HDU(elm)
        hdu.header['EXTNAME'] = 'SCI'
        hdu.header['EXTVER'] = count
        nlist.append(hdu)
    count=0
-   for elm in acont.atable:
+   for elm in acont.table:
        count+=1
-       hdu=elm.get_hdu()
+       hdu=Table_to_HDU(elm)
        hdu.header['EXTNAME'] = 'TAB'
        hdu.header['EXTVER'] = count
        nlist.append(hdu)
