@@ -1,17 +1,15 @@
 from numpy import random
 from . import db
 from .vu import Component
-from ..core import flux as flx
 import astropy.units as u
 import numpy as np
 from astropy import log
+from astropy.table.table import Table
 import urllib
 import shutil
 import os.path
-from astropy.io import fits
-from ..core import parameter as par
-from ..core import atable
-from ..core.atable import ATable
+from acalib import *
+from acalib.core.gmr import *
 
 #INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H, HDO')]
 #INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
@@ -44,11 +42,11 @@ class IMC(Component):
     def project(self, cube, cutoff):
         # TODO Make all this with astropy units from the call functions
 
-        table = ATable(names=("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity"),dtype=('S80','S40','S40','f8','f8','f8'))
+        table = Table(names=("Line Code", "Mol", "Ch Name", "Rest Freq", "Obs Freq", "Intensity"),dtype=('S80','S40','S40','f8','f8','f8'))
 
         dba = db.lineDB(self.dbpath)  # Maybe we can have an always open DB
         dba.connect()
-        fwin = cube.wcs_limits(axis=2)
+        fwin = axis_range(cube.data,cube.wcs,axis=2)
         # print "fwin",fwin
         cor_fwin = np.array(fwin/(1 + self.z))*u.Hz
         cor_fwin = cor_fwin.to(u.MHz).value
@@ -81,14 +79,16 @@ class IMC(Component):
                 if flux < cutoff: # TODO: astropy units!
                     log.info('    - Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because I='+str(flux)+' < '+str(cutoff))
                     continue
-
+                
+                if self._draw(cube,flux,freq,cutoff)==False:
+                    log.info('    - Discarding ' + str(lin[1]) + ' at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') because it is too thin for the resolution')
+                    continue
                 log.info('   - Projecting ' + str(lin[2]) + ' (' + str(lin[1]) + ') at freq=' + str(freq) + '('+str(lin[3]*u.MHz)+') intens='+ str(flux))
-                self._draw(cube,flux,freq,cutoff)
                 used = True
 
                 # add line to the table.
                 # TODO: modificar ultimo valor, que corresponde a la intensidad.
-                table += (self.comp_name + "-l" + str(counter), mol, str(lin[2]), str(lin[3]),freq, flux)
+                table.add_row((self.comp_name + "-l" + str(counter), mol, str(lin[2]), str(lin[3]),freq, flux))
 
         dba.disconnect()
         if not used:
@@ -109,7 +109,7 @@ class GaussianIMC(IMC):
 
     def __init__(self, mol_list, temp, offset, std, angle, fwhm, gradient, dbpath=DEFAULT_DBPATH, equiv=u.doppler_radio):
         IMC.__init__(self,mol_list, temp, dbpath, equiv)
-        self.offset = par.to_deg(offset)
+        self.offset = to_deg(offset)
         self.std = std
         self.angle = angle
         self.fwhm = fwhm
@@ -117,25 +117,29 @@ class GaussianIMC(IMC):
 
     def _draw(self, cube, flux, freq, cutoff):
         new_pos = self.pos + self.offset
-        mu, p = flx.clump_to_gauss(new_pos, self.std, self.angle, freq, self.fwhm, self.gradient)
-        mcub, lower, upper = flx.create_gauss_flux(cube, mu, p, flux, cutoff)
-        cube.add_flux(mcub, lower, upper)
+        mu, p = gclump_to_wcsgauss(new_pos, self.std, self.angle, freq, self.fwhm, self.gradient)
+        mcub, lower, upper =gaussflux_from_world_window(cube.data,cube.wcs, mu, p, flux, cutoff)
+        if mcub==None:
+            return False
+        else:
+            add_flux(cube.data,mcub, lower, upper)
+            return True
 
     def info(self):
         return "species = " + str(self.mol_list) + " temp = "+str(self.temp)+" offset = "+str(self.offset)+" std = "+str(self.std)+" angle = "+str(self.angle)+" fwhm = "+str(self.fwhm)+"  gradient = "+str(self.gradient)
 
     def get_meta_data(self):
         return {
-            # TODO: make the keys constants, NOT HARDCODED!!!
+            'CNAME': self.comp_name,
             'CRVAL1': self.pos[0].value +  self.offset[0].value,
             'CRVAL2': self.pos[1].value +  self.offset[1].value,
-            '__STD1': self.std[0].value,
-            '__STD2': self.std[1].value,
-            '__GRD1': self.gradient[0].value,
-            '__GRD2': self.gradient[1].value,
-            '__FWHM': self.fwhm.value,
-            '__TEMP': self.temp.value,
-            '__ANGL': self.angle.value,
+            'STD1': self.std[0].value,
+            'STD2': self.std[1].value,
+            'GRD1': self.gradient[0].value,
+            'GRD2': self.gradient[1].value,
+            'FWHM': self.fwhm.value,
+            'TEMP': self.temp.value,
+            'ANGL': self.angle.value,
         }
 
 ################ ATTIC #######################

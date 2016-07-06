@@ -72,11 +72,11 @@ spe_res=0.002*u.GHz
 bw=0.2*u.GHz
 noise=0.001*u.Jy/u.beam
 
-cube, tab = univ.gen_cube(center, ang_res, fov, freq, spe_res, bw, noise,noise/50.0)
-print tab
+#cube, tab = univ.gen_cube(center, ang_res, fov, freq, spe_res, bw, noise,noise/50.0)
+#print tab
 
 
-gp.stacked(cube)
-gp.volume(cube)
-gp.contour(cube)
+#gp.stacked(cube)
+#gp.volume(cube)
+#gp.contour(cube)
 

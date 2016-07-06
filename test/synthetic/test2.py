@@ -1,15 +1,14 @@
 import sys
 sys.path.append('../../')
-
-import acalib.synthetic.imc as imc
 import astropy.units as u
-import acalib.synthetic.vu as vu
+from acalib.synthetic import *
+from acalib.io import *
 import numpy as np
 import math
 import random
 
 #TODO This is not working for near zero positions!!! (it is fault of the wcs i think!)
-univ=vu.Universe()
+univ=Universe()
 
 # Create Source
 center=[1.0,1.0]*u.deg
@@ -26,7 +25,7 @@ fwhm=10*u.km/u.s
 gradient=np.array([0.0,0.0])*u.km/(u.s*u.arcsec)
 rad_vel=150*u.km/u.s
 # Create Component
-model=imc.GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
+model=GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
 model.set_velocity(rad_vel)
 univ.add_component('methcloud',model)
 mol_list['CH3OHvt=0']=[100,200]* u.Jy/u.beam
@@ -37,7 +36,7 @@ for i in range(5):
   angle= random.random()*math.pi*u.rad
   fwhm=10*random.random()*u.km/u.s
   gradient=(4*np.random.random(2) - 2)*u.km/(u.s*u.arcsec)
-  model=imc.GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
+  model=GaussianIMC(mol_list,temp,offset,std,angle,fwhm,gradient)
   model.set_velocity(rad_vel)
   univ.add_component('methcloud',model)
 
@@ -47,16 +46,11 @@ fov=np.array([200,200])*u.arcsec
 freq=229.700*u.GHz
 spe_res=0.01*u.GHz
 bw=1.0*u.GHz
-noise=0.005*u.Jy/u.beam
+noise=0.0005*u.Jy/u.beam
 
-cube,tabs=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise)
-sources,components=tabs
-print sources
-print sources.meta
-for comp in components:
-   print components[comp]
-   print components[comp].meta
-#cube.stacked_show()
-#cube.volume_show()
-#cube.contour_show()
+cont=univ.gen_cube(center,ang_res,fov, freq,spe_res,bw,noise,0.5*noise)
+for comp in cont.table:
+   print comp
+   print comp.meta
 
+contour3D(cont.primary)
