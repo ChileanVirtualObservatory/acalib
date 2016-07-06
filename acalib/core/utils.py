@@ -1,21 +1,24 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from indices import *
+import astropy.units as u
 
 def add_flux(data,flux,lower=None,upper=None):
     """ Adds flux to data. 
 
-Lower and upper are bounds for data. This operation is border-safe. 
-"""
+    Lower and upper are bounds for data. This operation is border-safe. 
+    """
     #if data.ndim!=flux.ndim:
     #    log.error("")
     data_slab,flux_slab=matching_slabs(data,flux,lower,upper)
     data[data_slab]+=flux[flux_slab]
 
-def create_gauss(mu,P,feat,peak):
+def gaussian_function(mu,P,feat,peak):
     """ Generates an n-dimensional Gaussian using the feature matrix feat,
     centered at mu, with precision matrix P and with intensity peak.
     """
+    #print feat
     cent_feat=np.empty_like(feat)
     for i in range(len(mu)):
        cent_feat[i]=feat[i] - mu[i]
@@ -25,9 +28,9 @@ def create_gauss(mu,P,feat,peak):
     res=peak*(res/res.max())
     return res
 
-# TODO: extend to ndimensions (only works for 3)
-def get_ranges(data,wcs,lower=None,upper=None):
-    """ Get axes extent """
+# TODO: extend to n-dimensions (only works for 3)
+def axes_ranges(data,wcs,lower=None,upper=None):
+    """ Get axes extent (transforms freq to velocity!) """
     if lower==None:
         lower=[0,0,0]
     if upper==None:
@@ -46,6 +49,14 @@ def get_ranges(data,wcs,lower=None,upper=None):
     uvel=ufreq.to(u.km/u.s, equivalencies=eq)
     ranges=[lvel.value,uvel.value,lwcs[1],uwcs[1],lwcs[0],uwcs[0]]
     return ranges
+
+#TODO: try to merge with axes_ranges!
+def axis_range(data,wcs,axis):
+    lower=wcs.wcs_pix2world([[0,0,0]], 0) - wcs.wcs.cdelt/2.0
+    shape=data.shape
+    shape=[shape[::-1]]
+    upper=wcs.wcs_pix2world(shape, 1) + wcs.wcs.cdelt/2.0
+    return (lower[0][axis],upper[0][axis])  
 
 
 def create_mould(P,delta):
@@ -75,6 +86,23 @@ def estimate_rms(data):
     else:
         rms=np.sqrt(mm.sum()*1.0/mm.size)
     return rms
+
+def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):
+   Sigma=np.linalg.inv(P)
+   window=np.sqrt(2*np.log(peak/cutoff)*np.diag(Sigma))
+   lower,upper=world_window_to_index(data,wcs,mu,window)
+   if np.any(np.array(upper-lower)<=0):
+       return None,lower,upper
+   feat=to_features(data,lower,upper)
+   res=gaussian_function(mu,P,feat,peak)
+   res=res.reshape(upper[0]-lower[0],upper[1]-lower[1],upper[2]-lower[2])
+   return res,lower,upper
+
+def world_features(data,wcs,lower=None,upper=None):
+    ii=features(data,lower,upper)
+    f=self.wcs.wcs_pix2world(ii.T,0)
+    f=f.T
+    return f
 
 
 #if __name__ == '__main__':
