@@ -4,6 +4,8 @@ import numpy as np
 
 FWHM_TO_SIGMA = 1. / (8 * np.log(2))**0.5
 
+#TODO Document
+
 def _check(par,default):
     if not isinstance(par, u.Quantity):
         log.warning("Value '"+str(par)+"' without units, assuming '"+default.name+"'")
