@@ -3,6 +3,7 @@ import numpy as np
 from astropy.table import Table
 from astropy import log
 from astropy import units as u
+from utils import *
 import matplotlib.pyplot as plt
 from convert import *
 
@@ -109,6 +110,21 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
     delta=np.sqrt(2*np.log(max_val/nlevel)*Sigma.diagonal())
     # Compute mould TODO
     mould=create_mould(P,delta)
+    #plt.imshow(mould[0,:,:])
+    #plt.colorbar()
+    #plt.show()
+    #plt.imshow(mould[1,:,:])
+    #plt.colorbar()
+    #plt.show()
+    #plt.imshow(mould[2,:,:])
+    #plt.colorbar()
+    #plt.show()
+    #plt.imshow(mould[3,:,:])
+    #plt.colorbar()
+    #plt.show()
+    #plt.imshow(mould[4,:,:])
+    #plt.colorbar()
+    #plt.show()
     #mould=mould/mould.max()
     #discretize delta
     delta=np.floor(np.array(mould.shape)/2)
@@ -134,6 +150,16 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
            break
        max_idx=np.array(np.unravel_index(energy.argmax(),energy.shape))
        max_val=energy[tuple(max_idx)]
+       base=np.unravel_index(residual.argmax(),residual.shape)
+       print "e(max)=",energy[tuple(base)]
+       #    tlb=base-delta
+       #    tub=base+delta + 1
+       #    plt.imshow(residual[slab(residual,tlb,tub)].sum(axis=0))
+       #    print energy[tuple(base)]
+       #    print residual[slab(residual,tlb,tub)]
+       #    print mould
+       #    print (residual[slab(residual,tlb,tub)]/mould)
+       #    plt.show()
        rem=max_val - nlevel
        
        if rem <= 0.0:
@@ -170,42 +196,7 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
     if full_output:
        return res,message,residual,energy
     return res
-  
-def gmr_from_iterfit(data):
-    pass
-
-def gmr_from_heuristic(data):
-    pass
-
-
-if __name__ == '__main__':
-    # SandBox space for testing
-    a=np.random.random((200,200,200))
-    P=np.array([[2,0,0],[0,2,0],[0,0,2]])
-    freak=np.array([[2,0.5,0.9],[0.5,1,0.3],[0.9,0.3,1]])
-    delta=np.array([50,50,50])
-    p1=np.array([45,97,143])
-    peak=create_mould(0.01*freak,delta)
-    add_flux(a,5*peak,p1-delta,p1+delta+1)
-    p2=np.array([143,45,97])
-    peak=create_mould(0.02*freak,delta)
-    add_flux(a,10*peak,p2-delta,p2+delta+1)
-    rms=estimate_rms(a)
-    print("RMS = "+str(rms))
-    plt.imshow(np.sum(a,axis=(0)))
-    plt.colorbar()
-    plt.show()
-    (tab,message,residual,energy)=gmr_from_mould(a,0.2*rms,rms,P,full_output=True)
-    print(message)
-    print(tab)
-    plt.imshow(np.sum(residual,axis=(0)))
-    plt.colorbar()
-    plt.show()
-    plt.imshow(np.sum(energy,axis=(0)))
-    plt.colorbar()
-    plt.show()
-
-
+ 
 def gclump_to_wcsgauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
    # Parameter sanitization
    pos=to_deg(pos)
@@ -233,3 +224,34 @@ def gclump_to_wcsgauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
    P=RD.dot(RD.T)
    mu=np.array([pos[0],pos[1],freq])
    return (mu,P)
+
+ 
+
+if __name__ == '__main__':
+    # SandBox space for testing
+    a=3*np.random.random((50,200,200))
+    P=np.array([[10,0,0],[0,2,0],[0,0,2]])
+    freak=np.array([[2,0.5,0.9],[0.5,1,0.3],[0.9,0.3,1]])
+    delta=np.array([10,50,50])
+    p1=np.array([15,97,143])
+    peak=create_mould(0.01*freak,delta)
+    add_flux(a,5*peak,p1-delta,p1+delta+1)
+    p2=np.array([30,45,97])
+    peak=create_mould(0.02*freak,delta)
+    add_flux(a,10*peak,p2-delta,p2+delta+1)
+    rms=estimate_rms(a)
+    print("RMS = "+str(rms))
+    plt.imshow(np.sum(a,axis=(0)))
+    plt.colorbar()
+    plt.show()
+    (tab,message,residual,energy)=gmr_from_mould(a,0.2*rms,rms,P,full_output=True)
+    print(message)
+    print(tab)
+    plt.imshow(np.sum(residual,axis=(0)))
+    plt.colorbar()
+    plt.show()
+    plt.imshow(np.sum(energy,axis=(0)))
+    plt.colorbar()
+    plt.show()
+
+

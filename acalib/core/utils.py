@@ -73,7 +73,7 @@ def create_mould(P,delta):
     feat=np.empty((n,np.product(elms)))
     for i in range(n):
         feat[i]=grid[i].ravel()
-    mould=create_gauss(np.zeros(n),P,feat,1)
+    mould=gaussian_function(np.zeros(n),P,feat,1)
     mould=mould.reshape(*elms)
     return(mould)
 
