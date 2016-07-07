@@ -21,17 +21,17 @@ void msgOutif( msglev_t prior, const char * param, const char * text, int * stat
 
 void msgSetd( const char *token,
               double dvalue ){
-   // Not Implementing an error system TODO: maybe a exception?
+   //TODO: implement token-based print
 }
 
 void msgSetc( const char *token,
               const char *cvalue ){
-   // Not Implementing an error system TODO: maybe a exception?
+   //TODO: implement token-based print
 }
 
 void msgSeti( const char *token,
               int ivalue ){
-   // Not Implementing an error system TODO: maybe a exception?
+   //TODO: implement token-based print
 }
 
 void errRep( const char *param,
