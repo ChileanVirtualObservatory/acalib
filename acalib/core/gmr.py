@@ -107,7 +107,7 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
     max_val=residual[max_idx]
     # Compute delta
     Sigma=np.linalg.inv(P)
-    delta=np.sqrt(2*np.log(max_val/nlevel)*Sigma.diagonal())
+    delta=np.round(np.sqrt(2*np.log(max_val/nlevel)*Sigma.diagonal()))
     # Compute mould TODO
     mould=create_mould(P,delta)
     #plt.imshow(mould[0,:,:])
@@ -150,8 +150,6 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
            break
        max_idx=np.array(np.unravel_index(energy.argmax(),energy.shape))
        max_val=energy[tuple(max_idx)]
-       base=np.unravel_index(residual.argmax(),residual.shape)
-       print "e(max)=",energy[tuple(base)]
        #    tlb=base-delta
        #    tub=base+delta + 1
        #    plt.imshow(residual[slab(residual,tlb,tub)].sum(axis=0))
@@ -183,6 +181,8 @@ def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,f
            print "min_energy = ",np.min(energy)
            print "max_resid = ",np.max(residual)
            print "min_resid = ",np.min(residual)
+           base=np.unravel_index(residual.argmax(),residual.shape)
+           print "e(max_resid)=",energy[tuple(base)]
            #plt.imshow(residual.sum(axis=(0)))
            #plt.colorbar()
            #plt.show()
@@ -230,7 +230,7 @@ def gclump_to_wcsgauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
 if __name__ == '__main__':
     # SandBox space for testing
     a=3*np.random.random((50,200,200))
-    P=np.array([[10,0,0],[0,2,0],[0,0,2]])
+    P=np.array([[2,0,0],[0,1,0],[0,0,1]])
     freak=np.array([[2,0.5,0.9],[0.5,1,0.3],[0.9,0.3,1]])
     delta=np.array([10,50,50])
     p1=np.array([15,97,143])

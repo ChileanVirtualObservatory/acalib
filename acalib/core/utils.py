@@ -66,7 +66,7 @@ def create_mould(P,delta):
     ax=[]
     elms=[]
     for i in range(n):
-        lin=np.arange(-delta[i]-0.5,delta[i]+0.5)
+        lin=np.linspace(-delta[i]-0.5,delta[i]+0.5,delta[i]*2+1)
         elms.append(len(lin))
         ax.append(lin)
     grid=np.meshgrid(*ax,indexing='ij')
