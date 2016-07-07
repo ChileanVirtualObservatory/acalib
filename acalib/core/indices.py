@@ -36,8 +36,12 @@ def matching_slabs(data,flux,lower,upper):
     fup=np.array(flux.shape)
     for i in range(data.ndim):
        if data_slab[i].start == 0:
-          flow[i] = flux.shape[i] - data_slab[i].stop
+#         print data_slab
+#          print flux.shape
+          flow[i] = flux.shape[i] - (data_slab[i].stop - data_slab[i].start)
        if data_slab[i].stop == data.shape[i]:
+#          print data_slab
+#          print flux.shape
           fup[i] = data_slab[i].stop - data_slab[i].start
     flux_slab=slab(flux,flow,fup)
     return data_slab,flux_slab
