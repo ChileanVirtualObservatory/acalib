@@ -48,7 +48,7 @@ def HDU_to_NDData(hdu):
    else:
        log.error("Only 3D data allowed (or 4D in case of polarization)")
        raise TypeError
-   return ndd.NDData(data, uncertainty=None, mask=mask,wcs=wcs, meta=meta, unit=unit)
+   return ndd.NDData(data, uncertainty=None, mask=mask,wcs=mywcs, meta=meta, unit=bunit)
 
 def HDU_to_Table(hdu):
    log.warning("FITS Table ---> AstroPy Table not implemented Yet")
@@ -98,25 +98,25 @@ def save_fits_from_cont(filepath,acont):
    hdulist = fits.HDUList(nlist)
    hdulist.writeto(filepath,clobber=True)
 
-def load_fits_to_cont(filePath,name,acont):
+def load_fits_to_cont(filePath,acont):
    hdulist = fits.open(filePath)
    for counter,hdu in enumerate(hdulist):
            if isinstance(hdu,fits.PrimaryHDU) or isinstance(hdu,fits.ImageHDU):
                    log.info("Processing HDU "+str(counter)+" (Image)")
                    try:
-                           ndd=HDU_to_adata(hdu)
+                           ndd=HDU_to_NDData(hdu)
                            if isinstance(hdu,fits.PrimaryHDU):
                                    acont.primary = ndd
-                           acont.adata.append(ndd)
+                           acont.nddata.append(ndd)
                    except TypeError:
                            log.info(str(counter)+" (Image) wasn't an Image")
 
            if isinstance(hdu, fits.BinTableHDU):
-                   table = HDU_to_atable(hdu)
-                   acont.atable.append(table)
+                   table = HDU_to_Table(hdu)
+                   acont.table.append(table)
    if acont.primary is None:
-           if len(acont.adata)==0:
-                   acont.primary = acont.atable[0]
+           if len(acont.nddata)==0:
+                   acont.primary = acont.table[0]
            else:
-                   acont.primary = acont.adata[0]
+                   acont.primary = acont.nddata[0]
 

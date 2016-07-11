@@ -3,6 +3,7 @@ from astropy import log
 from acalib.io.fits import save_fits_from_cont,load_fits_to_cont
 
 
+
 class Container:
     """ Data structure that contains a list of NDData and astropy tables.
     
@@ -22,3 +23,8 @@ class Container:
     def save_fits(self,path): 
         save_fits_from_cont(path,self) 
 
+
+def load_fits(path):
+    cont=Container()
+    cont.load_fits(path)
+    return cont
