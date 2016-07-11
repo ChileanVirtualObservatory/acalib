@@ -2,8 +2,50 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from indices import *
+from astropy import log
 import astropy.units as u
+from astropy.nddata import *
 
+
+def _fix_mask(data,mask):
+    ismasked=isinstance(data,np.ma.MaskedArray)
+    if ismasked and mask is None: 
+        return data
+    else:
+       return np.ma.MaskedArray(data,mask)     
+
+def _find_spectral(wcs):
+    axis_type=wcs.get_axis_types()
+    count=0
+    for aty in axis_type:
+        if aty['coordinate_type']=='spectral':
+           return count
+        count+=1
+    return None
+
+# TODO: Consider different axis for frequency
+def _moment(data,order,wcs,mask,unit):
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    data=_fix_mask(data,mask)
+    anum=_find_spectral(wcs)
+    if order==0:
+        delta=wcs.wcs.cdelt[anum]
+        newdata=data.sum(axis=data.ndim - 1 -anum)*delta
+        mywcs=wcs.dropaxis(anum)
+    else:
+        log.error("Order not supported")
+        return None
+    return NDData(newdata, uncertainty=None, mask=newdata.mask,wcs=mywcs, meta=None, unit=unit)
+   
+        
+@support_nddata
+# Should return a NDData
+def moment0(data,wcs=None,mask=None,unit=None):
+   return _moment(data,0,wcs,mask,unit)
+
+@support_nddata
 def add_flux(data,flux,lower=None,upper=None):
     """ Adds flux to data. 
 
@@ -11,6 +53,7 @@ def add_flux(data,flux,lower=None,upper=None):
     """
     #if data.ndim!=flux.ndim:
     #    log.error("")
+
     data_slab,flux_slab=matching_slabs(data,flux,lower,upper)
     data[data_slab]+=flux[flux_slab]
 
@@ -29,6 +72,7 @@ def gaussian_function(mu,P,feat,peak):
     return res
 
 # TODO: extend to n-dimensions (only works for 3)
+@support_nddata
 def axes_ranges(data,wcs,lower=None,upper=None):
     """ Get axes extent (transforms freq to velocity!) """
     if lower==None:
@@ -51,6 +95,7 @@ def axes_ranges(data,wcs,lower=None,upper=None):
     return ranges
 
 #TODO: try to merge with axes_ranges!
+@support_nddata
 def axis_range(data,wcs,axis):
     lower=wcs.wcs_pix2world([[0,0,0]], 0) - wcs.wcs.cdelt/2.0
     shape=data.shape
@@ -77,16 +122,19 @@ def create_mould(P,delta):
     mould=mould.reshape(*elms)
     return(mould)
 
-def estimate_rms(data):
-    """A simple estimation of the RMS
+
+@support_nddata
+def estimate_rms(data,mask=None):
+    """A simple estimation of the RMS. If mask != None, then 
+       we use that mask.
     """
+    data=_fix_mask(data,mask)
     mm=data * data
-    if isinstance(mm,np.ma.MaskedArray):
-        rms=np.sqrt(mm.sum()*1.0/mm.count())
-    else:
-        rms=np.sqrt(mm.sum()*1.0/mm.size)
+    #if mask is not None and not ismasked:
+    rms=np.sqrt(mm.sum()*1.0/mm.count())
     return rms
 
+@support_nddata
 def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):
    Sigma=np.linalg.inv(P)
    window=np.sqrt(2*np.log(peak/cutoff)*np.diag(Sigma))
@@ -98,6 +146,7 @@ def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):
    res=res.reshape(upper[0]-lower[0],upper[1]-lower[1],upper[2]-lower[2])
    return res,lower,upper
 
+@support_nddata
 def world_features(data,wcs,lower=None,upper=None):
     ii=to_features(data,lower,upper)
     f=wcs.wcs_pix2world(ii.T,0)
