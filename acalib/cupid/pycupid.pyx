@@ -3,36 +3,44 @@
 import numpy as np
 cimport numpy as cnp
 from pycupid cimport cupidClumpFind
-#from clumpfind cimport AstKeyMap, cupidClumpFind
 
-
-ctypedef cnp.int_t int_t
-ctypedef cnp.float64_t float64_t
 ctypedef cnp.ndarray ndarray
 
-cdef int[:] _clumpfind(ndarray[double, ndim=1, mode="c"] data,config,rms,ndarray[int, ndim=1, mode="c"] shape):
-	#clumpf( int type, int ndim, int *slbnd, int *subnd, 
-	#void *ipd, double *ipv, double rms, AstKeyMap *config, int velax, 
-	#int perspectrum, double beamcorr[ 3 ], int *backoff, int *status )
+
+cdef int[:] _clumpfind(ndarray[double, ndim=1, mode="c"] data, config, 
+						double rms, ndarray[int, ndim=1, mode="c"] shape):
 	cdef:
-		int *slbnd = [0,0,0]
- 		#ndarray[float64_t, ndim=1, mode='fortran'] inp_arr
-		#int *s
-		double *beamcorr = [0.,0.,0.]
+		#Dependent parameters of ndim
+		int ndim = shape.size
+		ndarray[int, ndim=1, mode="c"] _slbnd = np.zeros(ndim)
+		ndarray[double, ndim=1, mode="c"] _beamcorr = np.zeros(ndim)
+	
+	cdef:
+		#Parameters of cupidClumpFind
+		int *slbnd = <int *> _slbnd.data
+		int *subnd = &shape[0]
+		void *ipd = &data[0]
+		double *ipv = NULL
+		PyObject* kmap = <PyObject *> config
+		int velax = 0
+		int perspectrum = 0
+		double *beamcorr = <double *> _beamcorr.data 
 		int backoff = 0
 		int status = 0
-#		ndarray[float64_t, ndim=1, mode='fortran'] inp_arr
-		int [:] out_arr
-	cdef PyObject* kmap = <PyObject *> config
-	#inp_arr = np.random.random((10,10,10)).flatten(order='F')
-	#inp_arr = data.flatten(order='F')
-	elm = data.size
-	out_arr = <int[:elm]> cupidClumpFind(1, 3,slbnd,&shape[0],&data[0], NULL, rms, kmap, 0, 0, beamcorr, &backoff, &status)
-	#out_arr = .asarray(out_arr)
+
+	cdef:
+		#Output array
+		int elm = data.size
+		int[:] out_arr
+
+	#Main function call
+	out_arr = <int[:elm]> cupidClumpFind(1, ndim, slbnd, subnd, ipd, ipv, rms, kmap, velax, 
+										perspectrum, beamcorr, &backoff, &status)
 	return out_arr
 
-#TODO Generalize to ndims!!
-def clumpfind(data,config,rms):
-	mv = _clumpfind(data.flatten(order='F'),config,rms,np.asarray(data.shape,dtype=np.int32))
-	cb = np.reshape(mv,data.shape,order='F')
+
+
+def clumpfind(data not None, config not None, rms):
+	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
+	cb = np.reshape(mv, data.shape, order='F')
 	return cb
