@@ -14,14 +14,23 @@ def _fix_mask(data,mask):
     else:
        return np.ma.MaskedArray(data,mask)     
 
-#def _find_spectral(wcs):
-#    axis_type=wcs.get_axis_types()
-#    count=0
-#    for aty in axis_type:
-#        if aty['coordinate_type']=='spectral':
-#           return count
-#        count+=1
-#    return None
+# TODO: generalize this function... is not very generic :S
+@support_nddata
+def spectra(data,wcs=None,mask=None,unit=None,position=None,aperture=None):
+    if position is None:
+        # Get celestial center
+        position=wcs.celestial.wcs.crval*u.deg
+    if aperture is None:
+        # Get 1 pixel aperture
+        aperture=np.abs(wcs.celestial.wcs.cdelt[0])*u.deg 
+    if position.unit == u.pix and aperture.unit == u.pix:
+        # TODO:  Here is the nasty part
+        lb=np.array([0,            position[1].value - aperture.value, position[0].value - aperture.value])
+        ub=np.array([data.shape[2],position[1].value + aperture.value, position[0].value + aperture.value])
+    else:
+        log.error("Not Implemented Yet!")
+    specview=data[slab(data,lb,ub)]
+    return specview.sum(axis=(0,1))
 
 def moment(data,order,wcs=None,mask=None,unit=None,restfrq=None):
     if wcs is None:
@@ -31,19 +40,22 @@ def moment(data,order,wcs=None,mask=None,unit=None,restfrq=None):
     dim=wcs.wcs.spec
     rdim=data.ndim - 1 - dim
     v=get_velocities(data,wcs,np.arange(data.shape[rdim]),restfrq)
+    v=v.value
     #delta=np.mean(np.abs(v[:v.size-1] - v[1:v.size]))
     #newdata=data.sum(axis=rdim)*delta
     m0=data.sum(axis=rdim)
     if order==0:
         mywcs=wcs.dropaxis(dim)
         return NDData(m0, uncertainty=None, mask=m0.mask,wcs=mywcs, meta=None, unit=unit)
-    mu,alpha=np.average(data,axis=rdim,weights=v,returned=True)
+    #mu,alpha=np.average(data,axis=rdim,weights=v,returned=True)
+    mu,alpha=np.ma.average(data,axis=rdim,weights=v,returned=True)
     m1=alpha*mu/m0
     if order==1:
         mywcs=wcs.dropaxis(dim)
         return NDData(m1, uncertainty=None, mask=m1.mask,wcs=mywcs, meta=None, unit=u.km/u.s)
     v2=v*v
-    var,beta=np.average(data,axis=rdim,weights=v2,returned=True)
+    var,beta=np.ma.average(data,axis=rdim,weights=v2,returned=True)
+    #var,beta=data.average(axis=rdim,weights=v2,returned=True)
     m2=np.sqrt(beta*var/m0 - m1*m1)
     if order==2:
         mywcs=wcs.dropaxis(dim)
@@ -92,7 +104,7 @@ def gaussian_function(mu,P,feat,peak):
     return res
 
 @support_nddata
-def denoise(data,wcs=None,unit=None,mask=None,threshold=0.0):
+def denoise(data,wcs=None,mask=None,unit=None,threshold=0.0):
       elms=data>threshold
       newdata=np.zeros(data.shape)
       newdata[elms]=data[elms]
