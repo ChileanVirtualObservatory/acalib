@@ -12,7 +12,7 @@ cdef int[:] _clumpfind(ndarray[double, ndim=1, mode="c"] data, config,
 	cdef:
 		#Dependent parameters of ndim
 		int ndim = shape.size
-		ndarray[int, ndim=1, mode="c"] _slbnd = np.zeros(ndim)
+		ndarray[int, ndim=1, mode="c"] _slbnd = np.zeros(ndim, dtype=np.int32)
 		ndarray[double, ndim=1, mode="c"] _beamcorr = np.zeros(ndim)
 	
 	cdef:
