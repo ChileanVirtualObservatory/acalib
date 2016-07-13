@@ -58,6 +58,9 @@ def gmr_from_pixels(data,threshold,nlevel,upper=None,lower=None):
     res=Table([inten,center,struct],names=('intensity','center','structure'))
     return res
 
+def gmr_to_dendogram(table):
+    pass
+
 def _update_energies(energy,residual,mould,nlevel,delta,lower=None,upper=None):
     #def _update_energies(self,lb,ub):
     """Update the energies, only from the lower to the upper points. 
