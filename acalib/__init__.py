@@ -1,6 +1,8 @@
 from . import core
 from .core import *
 
+from . import algorithms
+
 import warnings
 from astropy.utils.exceptions import AstropyWarning
 warnings.simplefilter('ignore', category=AstropyWarning)
