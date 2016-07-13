@@ -177,7 +177,7 @@ class Universe:
         add_flux(cube.data,2 * noise * (np.random.random(data.shape) - 0.5))
         cont=Container()
         cont.primary=cube
-        cont.table=tab
+        cont.tables=tab
         return cont
 
     #def save_cube(self, cube, filename):
