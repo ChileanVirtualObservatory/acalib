@@ -14,6 +14,13 @@ def _fix_mask(data,mask):
     else:
        return np.ma.MaskedArray(data,mask)     
 
+@support_nddata
+def cut(data,wcs=None,mask=None,unit=None,lower=None,upper=None):
+    mslab=slab(data,lower,upper)
+    scube=data[mslab]
+    newwcs=wcs.slice(mslab,numpy_order=True)
+    return NDData(scube,wcs=newwcs,unit=unit)
+
 # TODO: generalize this function... is not very generic :S
 @support_nddata
 def spectra(data,wcs=None,mask=None,unit=None,position=None,aperture=None):
@@ -30,7 +37,7 @@ def spectra(data,wcs=None,mask=None,unit=None,position=None,aperture=None):
     else:
         log.error("Not Implemented Yet!")
     specview=data[slab(data,lb,ub)]
-    return specview.sum(axis=(0,1))
+    return specview.sum(axis=(1,2))
 
 def moment(data,order,wcs=None,mask=None,unit=None,restfrq=None):
     if wcs is None:
@@ -46,20 +53,20 @@ def moment(data,order,wcs=None,mask=None,unit=None,restfrq=None):
     m0=data.sum(axis=rdim)
     if order==0:
         mywcs=wcs.dropaxis(dim)
-        return NDData(m0, uncertainty=None, mask=m0.mask,wcs=mywcs, meta=None, unit=unit)
+        return NDData(m0.data, uncertainty=None, mask=m0.mask,wcs=mywcs, meta=None, unit=unit)
     #mu,alpha=np.average(data,axis=rdim,weights=v,returned=True)
     mu,alpha=np.ma.average(data,axis=rdim,weights=v,returned=True)
     m1=alpha*mu/m0
     if order==1:
         mywcs=wcs.dropaxis(dim)
-        return NDData(m1, uncertainty=None, mask=m1.mask,wcs=mywcs, meta=None, unit=u.km/u.s)
+        return NDData(m1.data, uncertainty=None, mask=m1.mask,wcs=mywcs, meta=None, unit=u.km/u.s)
     v2=v*v
     var,beta=np.ma.average(data,axis=rdim,weights=v2,returned=True)
     #var,beta=data.average(axis=rdim,weights=v2,returned=True)
     m2=np.sqrt(beta*var/m0 - m1*m1)
     if order==2:
         mywcs=wcs.dropaxis(dim)
-        return NDData(m2, uncertainty=None, mask=m2.mask,wcs=mywcs, meta=None, unit=u.km*u.km/u.s/u.s)
+        return NDData(m2.data, uncertainty=None, mask=m2.mask,wcs=mywcs, meta=None, unit=u.km*u.km/u.s/u.s)
     log.error("Order not supported")
     return None
         
@@ -118,12 +125,12 @@ def get_velocities(data,wcs=None,fqi=None,restfrq=None):
     if fqi is None:
         return None
     if restfrq is None:
-        restfrq=wcs.wcs.restfrq
+        restfrq=wcs.wcs.restfrq*u.Hz
     dim=wcs.wcs.spec
     idx=np.zeros((fqi.size,data.ndim))
     idx[:,dim]=fqi
     vals=wcs.all_pix2world(idx,0)
-    eq=u.doppler_radio(restfrq*u.Hz)
+    eq=u.doppler_radio(restfrq)
     vec=vals[:,dim]*u.Hz
     return vec.to(u.km/u.s, equivalencies=eq)
 
