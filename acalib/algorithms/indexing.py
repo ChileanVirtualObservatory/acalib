@@ -13,6 +13,13 @@ import matplotlib.pyplot as plt
 
 from collections import namedtuple
 
+from astropy.nddata import support_nddata, NDData
+
+from astropy.table import Table
+        
+@support_nddata
+def _set_data(data, wcs = None):
+    return data, wcs
 
 class SpectraSketcher:
     """
@@ -23,7 +30,12 @@ class SpectraSketcher:
     """
 
     def __init__(self,data):
-        self.cube = nddata
+        self.cube, self.wcs = _set_data(data)
+        self.cube[np.isnan(self.cube)] = 0
+
+        if self.wcs:
+            self.wcs.dropaxis(2)
+
 
     def cube_spectra(self,samples):
         """
@@ -147,7 +159,7 @@ class SpectraSketcher:
             
             :param data_slice: Sector to be collapsed
             :type data_slice: slice 
-            :returns: image (numpy array): 2D-Array with the stacked cube.
+            :returns: image (NDData): 2D-Array with the stacked cube.
 
         """
         dims = self.cube.shape
@@ -157,9 +169,7 @@ class SpectraSketcher:
         
         h = (stacked - min_stacked) / (np.max(stacked) - min_stacked)
 
-        CollapsedCube = namedtuple('CollapsedCube',['data', 'min','max'])
-
-        return CollapsedCube(data=h, min=min_stacked, max=np.max(stacked))
+        return NDData(h, uncertainty=None, mask=None,wcs=self.wcs, meta=None, unit=None)
 
 
 class GaussianSegmentation:
@@ -175,13 +185,22 @@ class GaussianSegmentation:
         self.prob = prob
         self.precision = precision
 
-    def gaussian_mix(self,image):
+
+    def gaussian_mix(self,data, images=False):
         """
         Run the algorithm to detect objects.
         
         :param image: Velocity collapsed image
         :returns: list of skimage.measure.regionprops Objects, with detected regions properties
         """
+        if images:
+            image_list = []
+        centroid_x = []
+        centroid_y = []
+
+        image, wcs = _set_data(data)
+        image[np.isnan(image)] = 0
+
         prob = self.prob
         dims = image.shape
         rows = dims[0]
@@ -201,7 +220,6 @@ class GaussianSegmentation:
         rMin = 2*np.round(precision)
 
 
-        objects = []
         while (r > rMin):
             background = np.zeros((rows,cols))
             selem = disk(r)
@@ -209,14 +227,20 @@ class GaussianSegmentation:
             sub = clear_border(sub)
             sub = label(sub)
             fts = regionprops(sub)
-
-            plt.imshow(sub, origin='lower')
-            plt.show()
+            
+            if images:
+                image_list.append(NDData(sub,wcs=wcs))
 
             if len(fts) > 0:
-                objects.append({'radius': r,'objects':fts})
                 for props in fts:
                     C_x, C_y = props.centroid
+
+                    if wcs:
+                        ra , dec = wcs.celestial.all_pix2world(C_x,C_y,1)
+                        centroid_x.append(ra)
+                        centroid_y.append(dec)
+
+
                     radius = props.equivalent_diameter / 2.
                     kern = 0.01 * np.ones((2*radius, 2*radius))
                     krn = self._kernelsmooth( x = np.ones((2*radius, 2*radius)), kern = kern)
@@ -230,7 +254,11 @@ class GaussianSegmentation:
             diff = (diff-np.min(diff))/(np.max(diff)-np.min(diff))
             g = threshold_adaptive(diff, r*r,method='mean',offset=0)
             r = np.round(r/2.)
-        return objects  
+        objects = Table([centroid_x,centroid_y],names=["RA","DEC"], meta={"name": "Region of interest found"})
+        if images:
+            return objects, image_list
+
+        return objects
 
 
     def _optimal_w(self,image,p = 0.05):
@@ -331,7 +359,7 @@ class GaussianSegmentation:
 
         for row in xrange(rowsKernel):
             for col in xrange(colsKernel):
-                if (rowInit + row <= rows_back) and (colInit+col <= cols_back):
+                if (rowInit + row < rows_back-1) and (colInit+col < cols_back-1):
                     back[rowInit+row][colInit+col] = kernel[row][col]
 
         return back
