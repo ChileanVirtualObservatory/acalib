@@ -3,7 +3,7 @@ import numpy as np
 
 def fix_limits(data,vect):
     """ Fix vect index to be inside data """ 
-    if isinstance(vect,tuple):
+    if isinstance(vect,(tuple,list)):
         vect=np.array(vect)
     vect=vect.astype(int)
     low=vect < 0
