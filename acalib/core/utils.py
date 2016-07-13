@@ -45,6 +45,12 @@ def _moment(data,order,wcs,mask,unit):
 def moment0(data,wcs=None,mask=None,unit=None):
    return _moment(data,0,wcs,mask,unit)
 
+
+@support_nddata
+def rotate(data, angle):
+    return sni.rotate(data, angle)
+    
+
 @support_nddata
 def add_flux(data,flux,lower=None,upper=None):
     """ Adds flux to data. 
