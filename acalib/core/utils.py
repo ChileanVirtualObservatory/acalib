@@ -5,7 +5,7 @@ from indices import *
 from astropy import log
 import astropy.units as u
 from astropy.nddata import *
-import scipy.ndimage.interpolation as sni
+
 
 def _fix_mask(data,mask):
     ismasked=isinstance(data,np.ma.MaskedArray)
@@ -13,11 +13,6 @@ def _fix_mask(data,mask):
         return data
     else:
        return np.ma.MaskedArray(data,mask)     
-
-
-@support_nddata
-def rotate(data,angle):
-    return sni.rotate(data,angle)
 
 @support_nddata
 def cut(data,wcs=None,mask=None,unit=None,lower=None,upper=None):
