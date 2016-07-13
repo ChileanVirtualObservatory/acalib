@@ -13,15 +13,9 @@ class Container:
     def __init__(self): 
         self.primary = None
         """Primary object""" 
-<<<<<<< HEAD
-        self.nddata = [] 
-        """List of NDData object""" 
-        self.table = []
-=======
         self.images = [] 
         """List of NDData object""" 
         self.tables = []
->>>>>>> f212972b038469446ffa48c5d21e86f18c311105
         """List of astropy tables""" 
 
     def load_fits(self,path): 
