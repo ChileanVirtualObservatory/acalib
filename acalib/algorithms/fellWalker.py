@@ -4,7 +4,8 @@ import ca
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import log
-
+import astropy.units as u
+from astropy.nddata import *
 
 class FellWalker:
 
@@ -332,19 +333,19 @@ class FellWalker:
       return path,pathv,flat,flatv
 
    # Back compatibility function
-   def fit(self, cube, verbose=False):
-       log.warning("The .fit() interface will be removed soon, please use .run()")
-       return self.run(cube, verbose=verbose)
+   #def fit(self, cube, verbose=False):
+   #    log.warning("The .fit() interface will be removed soon, please use .run()")
+   #    return self.run(cube, verbose=verbose)
 
-   def run(self, cube, verbose=False):
-      cube = cube.copy()
+   def run(self, data, rms, verbose=False):
+      #cube = cube.copy()
 
       # Set the RMS, or automatically find an estimate for it
-      rms = cube.estimate_rms()
+      #rms = estimate_rms(cube)
       self.par['RMS'] = rms
 
       #cube.data is masked array
-      data = cube.data
+      data = data.copy()
 
       """
       Fill the supplied caa array with -1 for all pixels which are below the
@@ -517,3 +518,14 @@ class FellWalker:
          del caa
          caa = _caa
       return (caa,clump)
+
+
+
+# Wrapper for a non-OO use of fellwalker
+@support_nddata
+def fellwalker(data,wcs=None,mask=None,unit=None,rms=0.0):
+   fw=FellWalker()
+   fw.defaultParams()
+   clasar=fw.run(data,rms)
+   return NDData(clasar,uncertainty=None, mask=m0.mask,wcs=wcs, meta=None, unit=unit)
+   

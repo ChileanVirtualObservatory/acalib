@@ -44,6 +44,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
          cb=plt.colorbar()
          cbar.ax.set_ylabel(unit)
      else:
+
          gax=plt.subplot(111,projection=wcs)
          plt.imshow(data, origin='lower', cmap=plt.cm.gist_heat)
          g0=gax.coords[0]
@@ -59,6 +60,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
          dmax=data.max()
          crs=np.arange(1,dmax/rms)
          plt.contour(data,levels=rms*crs,alpha=0.5)
+
      plt.show()
 
 # TODO: Remove hardocded stuff
