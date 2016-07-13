@@ -44,15 +44,23 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
          cb=plt.colorbar()
          cbar.ax.set_ylabel(unit)
      else:
-         plt.subplot(111,projection=wcs)
+
+         gax=plt.subplot(111,projection=wcs)
          plt.imshow(data, origin='lower', cmap=plt.cm.gist_heat)
+         g0=gax.coords[0]
+         g1=gax.coords[1]
+         g0.set_axislabel(wcs.axis_type_names[0])
+         g1.set_axislabel(wcs.axis_type_names[1])
+         g0.grid(color='yellow', alpha=0.5, linestyle='solid')
+         g1.grid(color='yellow', alpha=0.5, linestyle='solid')
          cb=plt.colorbar()
          cb.ax.set_ylabel(unit)
      if contour:
          rms=estimate_rms(data)
          dmax=data.max()
          crs=np.arange(1,dmax/rms)
-         plt.contour(data,levels=rms*crs,colors='white',alpha=0.5)
+         plt.contour(data,levels=rms*crs,alpha=0.5)
+
      plt.show()
 
 # TODO: Remove hardocded stuff

@@ -3,7 +3,11 @@ import numpy as np
 
 def fix_limits(data,vect):
     """ Fix vect index to be inside data """ 
+<<<<<<< HEAD
     if isinstance(vect,tuple):
+=======
+    if isinstance(vect,(tuple,list)):
+>>>>>>> f212972b038469446ffa48c5d21e86f18c311105
         vect=np.array(vect)
     vect=vect.astype(int)
     low=vect < 0
