@@ -10,6 +10,8 @@ cdef extern from "Python.h":
 	cdef struct PyDictObject
 
 cdef extern from "./cupid.h":
+
 	cdef int *cupidClumpFind(int type, int ndim, int *slbnd, int *subnd, 
 	void *ipd, double *ipv, double rms, PyObject *config, int velax, 
 	int perspectrum, double beamcorr[ 3 ], int *backoff, int *status)
+
