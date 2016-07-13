@@ -524,8 +524,8 @@ class FellWalker:
 # Wrapper for a non-OO use of fellwalker
 @support_nddata
 def fellwalker(data,wcs=None,mask=None,unit=None,rms=0.0):
-   fw=FellWalker()
-   fw.defaultParams()
-   clasar=fw.run(data,rms)
-   return NDData(clasar,uncertainty=None, mask=m0.mask,wcs=wcs, meta=None, unit=unit)
+    fw=FellWalker()
+    fw.defaultParams()
+    clasar=fw.run(data,rms)
+    return NDData(clasar,uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
    
