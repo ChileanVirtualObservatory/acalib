@@ -41,7 +41,7 @@ cdef int[:] _clumpfind(ndarray[double, ndim=1, mode="c"] data, config,
 
 
 def clumpfind(data not None, config not None, rms):
+	data = data.copy()
 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
 	cb = np.reshape(mv, data.shape, order='F')
-
 	return cb
