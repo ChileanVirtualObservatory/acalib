@@ -1,6 +1,10 @@
 from distutils.core import setup
 from distutils.extension import Extension
+
+from Cython.Build import cythonize
 import numpy as np
+
+cythonize('pycupid.pyx')
 
 sourcefiles = []
 wrapper_sources= ['mers.c','ast.c','pycupid.c', 'cf.c']
@@ -16,5 +20,6 @@ sourcefiles += cupidsub_routes
 setup(
   name = 'Cupid Library for Python',
   include_dirs = [np.get_include(),'include'],       
-  ext_modules = [Extension("pycupid",sourcefiles )]
+  ext_modules = [Extension("pycupid",sourcefiles)]
+
 )

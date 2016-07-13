@@ -64,10 +64,13 @@ def Table_to_HDU(tab):
    return hdu
 
 def NDData_to_HDU(cube,primary=False):
+
+    header = cube.wcs.to_header()
     if primary==True:
-        hdu = fits.PrimaryHDU(cube.data)
+        hdu = fits.PrimaryHDU(cube.data,header=header)
     else:
-        hdu = fits.ImageHdu(cube.data)
+        hdu = fits.ImageHdu(cube.data,header=header)
+
     if cube.meta is not None:
         for k, v in cube.meta.iteritems():
             hdu.header[k] = v
@@ -82,14 +85,16 @@ def save_fits_from_cont(filepath,acont):
       phdu=NDData_to_HDU(acont.primary,primary=True)
    nlist=[phdu]
    count=0
-   for elm in acont.nddata:
+   for elm in acont.images:
+
        count+=1
        hdu=NDData_to_HDU(elm)
        hdu.header['EXTNAME'] = 'SCI'
        hdu.header['EXTVER'] = count
        nlist.append(hdu)
    count=0
-   for elm in acont.table:
+   for elm in acont.tables:
+
        count+=1
        hdu=Table_to_HDU(elm)
        hdu.header['EXTNAME'] = 'TAB'
@@ -107,16 +112,18 @@ def load_fits_to_cont(filePath,acont):
                            ndd=HDU_to_NDData(hdu)
                            if isinstance(hdu,fits.PrimaryHDU):
                                    acont.primary = ndd
-                           acont.nddata.append(ndd)
+                           acont.images.append(ndd)
+
                    except TypeError:
                            log.info(str(counter)+" (Image) wasn't an Image")
 
            if isinstance(hdu, fits.BinTableHDU):
                    table = HDU_to_Table(hdu)
-                   acont.table.append(table)
+                   acont.tables.append(table)
    if acont.primary is None:
-           if len(acont.nddata)==0:
-                   acont.primary = acont.table[0]
+           if len(acont.images)==0:
+                   acont.primary = acont.tables[0]
            else:
-                   acont.primary = acont.nddata[0]
+                   acont.primary = acont.images[0]
+
 
