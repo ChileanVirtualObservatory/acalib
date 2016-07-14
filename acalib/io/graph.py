@@ -40,9 +40,9 @@ def visualize_plot(data,wcs=None,unit=None):
 @support_nddata
 def visualize_image(data,wcs=None,unit=None,contour=False):
      if wcs is None:
-         plt.imshow(data, cmap=plt.cm.gist_heat)
+         plt.imshow(data, origin='lower', cmap=plt.cm.gist_heat)
          cb=plt.colorbar()
-         cbar.ax.set_ylabel(unit)
+         cb.ax.set_ylabel(unit)
      else:
 
          gax=plt.subplot(111,projection=wcs)
