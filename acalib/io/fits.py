@@ -5,7 +5,8 @@ import astropy.units as u
 from astropy.wcs import wcs
 import astropy.nddata as ndd
 from astropy.table.table import Table
-
+from astropy.vo.samp import SAMPIntegratedClient
+import os
 
 def HDU_to_NDData(hdu):
    data=hdu.data
@@ -127,3 +128,14 @@ def load_fits_to_cont(filePath,acont):
                    acont.primary = acont.images[0]
 
 
+def SAMP_send_fits(filename,longname):
+   client = SAMPIntegratedClient()
+   client.connect()
+   params = {}
+   params["url"] = 'file://'+os.getcwd()+'/'+filename
+   params["name"] = longname
+   message = {}
+   message["samp.mtype"] = "image.load.fits"
+   message["samp.params"] = params
+   client.notify_all(message)
+   client.disconnect()
