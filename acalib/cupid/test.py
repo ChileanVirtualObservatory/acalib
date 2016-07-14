@@ -25,6 +25,7 @@ rms2D = np.sqrt((data2D*data2D).sum()/data2D.size)
 """
 CUPID's clumpfind call
 """
-res2D = clumpfind(data2D, dict(), rms2D)
-print "min index",res2D.min()
-print "max index",res2D.max()
+ret = []
+for i in range(100):
+    ret.append(clumpfind(data2D, dict(), rms2D).max())
+print ret

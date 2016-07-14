@@ -22,7 +22,7 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
 /*
 *+
 *  Name:
-*     pyCupidClumpFind
+*     cupidClumpFind
 
 *  Purpose:
 *     Identify clumps of emission within a 1, 2 or 3 dimensional numpy ndarray using
@@ -232,6 +232,7 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
       dims[ i ] = 1;
       skip[ i ] = 0;
    }
+   printf("%s %d\n", "el", el);
 
 /* Allocate work array to hold an index value for each pixel in the
    data array. Each different index value corresponds to one of the
@@ -275,6 +276,7 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
          }
 
       }
+      printf("%s %f\n", "maxd", maxd);
 
 /* Report an error if the RMS value looks wrong. */
       if( *status == SAI__OK ) {
@@ -297,14 +299,18 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
       }
 
 /* Get the contour levels at which to check for clumps. */
+      printf("%s %f\n", "mind", mind);
+      printf("%s %f\n", "rms", rms);
       levels = cupidCFLevels( config, maxd, mind, rms, &nlevels, status );
+      printf("%d\n", nlevels);
 
 /* Initialise the largest data value in the remaining unassigned pixels. */
       maxrem = maxd;
-
 /* Loop round all contour levels. */
       for( ilev = 0; ilev < nlevels; ilev++ ) {
+
          clevel = levels[ ilev ];
+
 
 /* Tell the user the current contour level. */
          msgSetd( "C", clevel );
@@ -462,17 +468,19 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
       clumps = astFree( clumps );
       levels = astFree( levels );
 
-   }
+  }
 
 /* Free resources */
    //ipa = astFree( ipa );
+   ret=ipa;
    
    for( i = 0; i < cupid_ps_cache_size; i++ ) {
       cupid_ps_cache[ i ] = cupidCFDeletePS( cupid_ps_cache[ i ], status );
    }
    cupid_ps_cache = astFree( cupid_ps_cache );
+   cupid_ps_cache = NULL;
    cupid_ps_cache_size = 0;
-   ret=ipa;
+   
 /* Return the list of clump NDFs. */
    return ret;
 

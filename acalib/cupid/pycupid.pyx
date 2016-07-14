@@ -17,14 +17,14 @@ cdef int[:] _clumpfind(ndarray[double, ndim=1, mode="c"] data, config,
 	
 	cdef:
 		#Parameters of cupidClumpFind
-		int *slbnd = <int *> _slbnd.data
+		int *slbnd = &_slbnd[0]
 		int *subnd = &shape[0]
 		void *ipd = &data[0]
 		double *ipv = NULL
 		PyObject* kmap = <PyObject *> config
 		int velax = 0
 		int perspectrum = 0
-		double *beamcorr = <double *> _beamcorr.data 
+		double *beamcorr = &_beamcorr[0]
 		int backoff = 0
 		int status = 0
 
@@ -42,6 +42,7 @@ cdef int[:] _clumpfind(ndarray[double, ndim=1, mode="c"] data, config,
 
 def clumpfind(data not None, config not None, rms):
 	data = data.copy()
-	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
+	shape = np.asarray(data.shape,dtype=np.int32)-1
+	mv = _clumpfind(data.flatten(order='F'), config, rms, shape)
 	cb = np.reshape(mv, data.shape, order='F')
 	return cb
