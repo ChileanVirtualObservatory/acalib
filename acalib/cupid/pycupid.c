@@ -1187,6 +1187,14 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
 #define __Pyx_PyObject_CallNoArg(func) __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL)
 #endif
 
+/* PyIntBinop.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static PyObject* __Pyx_PyInt_SubtractObjC(PyObject *op1, PyObject *op2, long intval, int inplace);
+#else
+#define __Pyx_PyInt_SubtractObjC(op1, op2, intval, inplace)\
+    (inplace ? PyNumber_InPlaceSubtract(op1, op2) : PyNumber_Subtract(op1, op2))
+#endif
+
 /* RaiseException.proto */
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause);
 
@@ -2049,9 +2057,11 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
   __pyx_t_6acalib_5cupid_7pycupid_ndarray __pyx_t_8 = NULL;
   Py_ssize_t __pyx_t_9;
   Py_ssize_t __pyx_t_10;
-  int *__pyx_t_11;
-  struct __pyx_array_obj *__pyx_t_12 = NULL;
-  __Pyx_memviewslice __pyx_t_13 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  Py_ssize_t __pyx_t_11;
+  Py_ssize_t __pyx_t_12;
+  int *__pyx_t_13;
+  struct __pyx_array_obj *__pyx_t_14 = NULL;
+  __Pyx_memviewslice __pyx_t_15 = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_RefNannySetupContext("_clumpfind", 0);
   __pyx_pybuffer__slbnd.pybuffer.buf = NULL;
   __pyx_pybuffer__slbnd.refcount = 0;
@@ -2197,49 +2207,59 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
   /* "acalib/cupid/pycupid.pyx":20
  * 	cdef:
  * 		#Parameters of cupidClumpFind
- * 		int *slbnd = <int *> _slbnd.data             # <<<<<<<<<<<<<<
+ * 		int *slbnd = &_slbnd[0]             # <<<<<<<<<<<<<<
  * 		int *subnd = &shape[0]
  * 		void *ipd = &data[0]
- */
-  __pyx_v_slbnd = ((int *)__pyx_v__slbnd->data);
-
-  /* "acalib/cupid/pycupid.pyx":21
- * 		#Parameters of cupidClumpFind
- * 		int *slbnd = <int *> _slbnd.data
- * 		int *subnd = &shape[0]             # <<<<<<<<<<<<<<
- * 		void *ipd = &data[0]
- * 		double *ipv = NULL
  */
   __pyx_t_9 = 0;
   __pyx_t_2 = -1;
   if (__pyx_t_9 < 0) {
-    __pyx_t_9 += __pyx_pybuffernd_shape.diminfo[0].shape;
+    __pyx_t_9 += __pyx_pybuffernd__slbnd.diminfo[0].shape;
     if (unlikely(__pyx_t_9 < 0)) __pyx_t_2 = 0;
-  } else if (unlikely(__pyx_t_9 >= __pyx_pybuffernd_shape.diminfo[0].shape)) __pyx_t_2 = 0;
+  } else if (unlikely(__pyx_t_9 >= __pyx_pybuffernd__slbnd.diminfo[0].shape)) __pyx_t_2 = 0;
+  if (unlikely(__pyx_t_2 != -1)) {
+    __Pyx_RaiseBufferIndexError(__pyx_t_2);
+    __PYX_ERR(0, 20, __pyx_L1_error)
+  }
+  __pyx_v_slbnd = (&(*__Pyx_BufPtrCContig1d(int *, __pyx_pybuffernd__slbnd.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd__slbnd.diminfo[0].strides)));
+
+  /* "acalib/cupid/pycupid.pyx":21
+ * 		#Parameters of cupidClumpFind
+ * 		int *slbnd = &_slbnd[0]
+ * 		int *subnd = &shape[0]             # <<<<<<<<<<<<<<
+ * 		void *ipd = &data[0]
+ * 		double *ipv = NULL
+ */
+  __pyx_t_10 = 0;
+  __pyx_t_2 = -1;
+  if (__pyx_t_10 < 0) {
+    __pyx_t_10 += __pyx_pybuffernd_shape.diminfo[0].shape;
+    if (unlikely(__pyx_t_10 < 0)) __pyx_t_2 = 0;
+  } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_shape.diminfo[0].shape)) __pyx_t_2 = 0;
   if (unlikely(__pyx_t_2 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_2);
     __PYX_ERR(0, 21, __pyx_L1_error)
   }
-  __pyx_v_subnd = (&(*__Pyx_BufPtrCContig1d(int *, __pyx_pybuffernd_shape.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_shape.diminfo[0].strides)));
+  __pyx_v_subnd = (&(*__Pyx_BufPtrCContig1d(int *, __pyx_pybuffernd_shape.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_shape.diminfo[0].strides)));
 
   /* "acalib/cupid/pycupid.pyx":22
- * 		int *slbnd = <int *> _slbnd.data
+ * 		int *slbnd = &_slbnd[0]
  * 		int *subnd = &shape[0]
  * 		void *ipd = &data[0]             # <<<<<<<<<<<<<<
  * 		double *ipv = NULL
  * 		PyObject* kmap = <PyObject *> config
  */
-  __pyx_t_10 = 0;
+  __pyx_t_11 = 0;
   __pyx_t_2 = -1;
-  if (__pyx_t_10 < 0) {
-    __pyx_t_10 += __pyx_pybuffernd_data.diminfo[0].shape;
-    if (unlikely(__pyx_t_10 < 0)) __pyx_t_2 = 0;
-  } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_data.diminfo[0].shape)) __pyx_t_2 = 0;
+  if (__pyx_t_11 < 0) {
+    __pyx_t_11 += __pyx_pybuffernd_data.diminfo[0].shape;
+    if (unlikely(__pyx_t_11 < 0)) __pyx_t_2 = 0;
+  } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_data.diminfo[0].shape)) __pyx_t_2 = 0;
   if (unlikely(__pyx_t_2 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_2);
     __PYX_ERR(0, 22, __pyx_L1_error)
   }
-  __pyx_v_ipd = (&(*__Pyx_BufPtrCContig1d(double *, __pyx_pybuffernd_data.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_data.diminfo[0].strides)));
+  __pyx_v_ipd = (&(*__Pyx_BufPtrCContig1d(double *, __pyx_pybuffernd_data.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_data.diminfo[0].strides)));
 
   /* "acalib/cupid/pycupid.pyx":23
  * 		int *subnd = &shape[0]
@@ -2264,7 +2284,7 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
  * 		PyObject* kmap = <PyObject *> config
  * 		int velax = 0             # <<<<<<<<<<<<<<
  * 		int perspectrum = 0
- * 		double *beamcorr = <double *> _beamcorr.data
+ * 		double *beamcorr = &_beamcorr[0]
  */
   __pyx_v_velax = 0;
 
@@ -2272,7 +2292,7 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
  * 		PyObject* kmap = <PyObject *> config
  * 		int velax = 0
  * 		int perspectrum = 0             # <<<<<<<<<<<<<<
- * 		double *beamcorr = <double *> _beamcorr.data
+ * 		double *beamcorr = &_beamcorr[0]
  * 		int backoff = 0
  */
   __pyx_v_perspectrum = 0;
@@ -2280,15 +2300,25 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
   /* "acalib/cupid/pycupid.pyx":27
  * 		int velax = 0
  * 		int perspectrum = 0
- * 		double *beamcorr = <double *> _beamcorr.data             # <<<<<<<<<<<<<<
+ * 		double *beamcorr = &_beamcorr[0]             # <<<<<<<<<<<<<<
  * 		int backoff = 0
  * 		int status = 0
  */
-  __pyx_v_beamcorr = ((double *)__pyx_v__beamcorr->data);
+  __pyx_t_12 = 0;
+  __pyx_t_2 = -1;
+  if (__pyx_t_12 < 0) {
+    __pyx_t_12 += __pyx_pybuffernd__beamcorr.diminfo[0].shape;
+    if (unlikely(__pyx_t_12 < 0)) __pyx_t_2 = 0;
+  } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd__beamcorr.diminfo[0].shape)) __pyx_t_2 = 0;
+  if (unlikely(__pyx_t_2 != -1)) {
+    __Pyx_RaiseBufferIndexError(__pyx_t_2);
+    __PYX_ERR(0, 27, __pyx_L1_error)
+  }
+  __pyx_v_beamcorr = (&(*__Pyx_BufPtrCContig1d(double *, __pyx_pybuffernd__beamcorr.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd__beamcorr.diminfo[0].strides)));
 
   /* "acalib/cupid/pycupid.pyx":28
  * 		int perspectrum = 0
- * 		double *beamcorr = <double *> _beamcorr.data
+ * 		double *beamcorr = &_beamcorr[0]
  * 		int backoff = 0             # <<<<<<<<<<<<<<
  * 		int status = 0
  * 
@@ -2296,7 +2326,7 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
   __pyx_v_backoff = 0;
 
   /* "acalib/cupid/pycupid.pyx":29
- * 		double *beamcorr = <double *> _beamcorr.data
+ * 		double *beamcorr = &_beamcorr[0]
  * 		int backoff = 0
  * 		int status = 0             # <<<<<<<<<<<<<<
  * 
@@ -2324,8 +2354,8 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
  * 										perspectrum, beamcorr, &backoff, &status)
  * 	return out_arr
  */
-  __pyx_t_11 = cupidClumpFind(1, __pyx_v_ndim, __pyx_v_slbnd, __pyx_v_subnd, __pyx_v_ipd, __pyx_v_ipv, __pyx_v_rms, __pyx_v_kmap, __pyx_v_velax, __pyx_v_perspectrum, __pyx_v_beamcorr, (&__pyx_v_backoff), (&__pyx_v_status));
-  if (!__pyx_t_11) {
+  __pyx_t_13 = cupidClumpFind(1, __pyx_v_ndim, __pyx_v_slbnd, __pyx_v_subnd, __pyx_v_ipd, __pyx_v_ipv, __pyx_v_rms, __pyx_v_kmap, __pyx_v_velax, __pyx_v_perspectrum, __pyx_v_beamcorr, (&__pyx_v_backoff), (&__pyx_v_status));
+  if (!__pyx_t_13) {
     PyErr_SetString(PyExc_ValueError,"Cannot create cython.array from NULL pointer");
     __PYX_ERR(0, 37, __pyx_L1_error)
   }
@@ -2334,17 +2364,17 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
   if (unlikely(!__pyx_t_4 || !__pyx_t_6 || !PyBytes_AsString(__pyx_t_4))) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_12 = __pyx_array_new(__pyx_t_6, sizeof(int), PyBytes_AS_STRING(__pyx_t_4), (char *) "c", (char *) __pyx_t_11);
-  if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 37, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_12);
+  __pyx_t_14 = __pyx_array_new(__pyx_t_6, sizeof(int), PyBytes_AS_STRING(__pyx_t_4), (char *) "c", (char *) __pyx_t_13);
+  if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_14);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_13 = __Pyx_PyObject_to_MemoryviewSlice_ds_int(((PyObject *)__pyx_t_12));
-  if (unlikely(!__pyx_t_13.memview)) __PYX_ERR(0, 37, __pyx_L1_error)
-  __Pyx_DECREF(((PyObject *)__pyx_t_12)); __pyx_t_12 = 0;
-  __pyx_v_out_arr = __pyx_t_13;
-  __pyx_t_13.memview = NULL;
-  __pyx_t_13.data = NULL;
+  __pyx_t_15 = __Pyx_PyObject_to_MemoryviewSlice_ds_int(((PyObject *)__pyx_t_14));
+  if (unlikely(!__pyx_t_15.memview)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __Pyx_DECREF(((PyObject *)__pyx_t_14)); __pyx_t_14 = 0;
+  __pyx_v_out_arr = __pyx_t_15;
+  __pyx_t_15.memview = NULL;
+  __pyx_t_15.data = NULL;
 
   /* "acalib/cupid/pycupid.pyx":39
  * 	out_arr = <int[:elm]> cupidClumpFind(1, ndim, slbnd, subnd, ipd, ipv, rms, kmap, velax,
@@ -2372,8 +2402,8 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_XDECREF(((PyObject *)__pyx_t_12));
-  __PYX_XDEC_MEMVIEW(&__pyx_t_13, 1);
+  __Pyx_XDECREF(((PyObject *)__pyx_t_14));
+  __PYX_XDEC_MEMVIEW(&__pyx_t_15, 1);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
@@ -2409,7 +2439,7 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__clumpfind(__pyx_t_6ac
  * 
  * def clumpfind(data not None, config not None, rms):             # <<<<<<<<<<<<<<
  * 	data = data.copy()
- * 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
+ * 	shape = np.asarray(data.shape,dtype=np.int32)-1
  */
 
 /* Python wrapper */
@@ -2491,6 +2521,7 @@ static PyObject *__pyx_pw_6acalib_5cupid_7pycupid_1clumpfind(PyObject *__pyx_sel
 }
 
 static PyObject *__pyx_pf_6acalib_5cupid_7pycupid_clumpfind(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_data, PyObject *__pyx_v_config, PyObject *__pyx_v_rms) {
+  PyObject *__pyx_v_shape = NULL;
   PyObject *__pyx_v_mv = NULL;
   PyObject *__pyx_v_cb = NULL;
   PyObject *__pyx_r = NULL;
@@ -2498,11 +2529,10 @@ static PyObject *__pyx_pf_6acalib_5cupid_7pycupid_clumpfind(CYTHON_UNUSED PyObje
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
   PyObject *__pyx_t_3 = NULL;
-  double __pyx_t_4;
+  PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
-  PyObject *__pyx_t_6 = NULL;
-  PyObject *__pyx_t_7 = NULL;
-  __Pyx_memviewslice __pyx_t_8 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  double __pyx_t_6;
+  __Pyx_memviewslice __pyx_t_7 = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_RefNannySetupContext("clumpfind", 0);
   __Pyx_INCREF(__pyx_v_data);
 
@@ -2510,8 +2540,8 @@ static PyObject *__pyx_pf_6acalib_5cupid_7pycupid_clumpfind(CYTHON_UNUSED PyObje
  * 
  * def clumpfind(data not None, config not None, rms):
  * 	data = data.copy()             # <<<<<<<<<<<<<<
- * 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
- * 	cb = np.reshape(mv, data.shape, order='F')
+ * 	shape = np.asarray(data.shape,dtype=np.int32)-1
+ * 	mv = _clumpfind(data.flatten(order='F'), config, rms, shape)
  */
   __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_data, __pyx_n_s_copy); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -2539,91 +2569,103 @@ static PyObject *__pyx_pf_6acalib_5cupid_7pycupid_clumpfind(CYTHON_UNUSED PyObje
   /* "acalib/cupid/pycupid.pyx":45
  * def clumpfind(data not None, config not None, rms):
  * 	data = data.copy()
- * 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))             # <<<<<<<<<<<<<<
+ * 	shape = np.asarray(data.shape,dtype=np.int32)-1             # <<<<<<<<<<<<<<
+ * 	mv = _clumpfind(data.flatten(order='F'), config, rms, shape)
  * 	cb = np.reshape(mv, data.shape, order='F')
- * 	return cb
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_data, __pyx_n_s_flatten); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_asarray); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_order, __pyx_n_s_F) < 0) __PYX_ERR(0, 45, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_data, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 45, __pyx_L1_error)
-  __pyx_t_4 = __pyx_PyFloat_AsDouble(__pyx_v_rms); if (unlikely((__pyx_t_4 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 45, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 45, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_asarray); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
+  __pyx_t_1 = 0;
+  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_data, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 45, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_int32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_GIVEREF(__pyx_t_2);
-  PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_2);
-  __pyx_t_2 = 0;
-  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 45, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 45, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_int32); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 45, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_7);
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_7) < 0) __PYX_ERR(0, 45, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_5, __pyx_t_2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 45, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_7);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(((__pyx_t_7) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_7, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 45, __pyx_L1_error)
-  __pyx_t_8 = __pyx_f_6acalib_5cupid_7pycupid__clumpfind(((__pyx_t_6acalib_5cupid_7pycupid_ndarray)__pyx_t_3), __pyx_v_config, __pyx_t_4, ((__pyx_t_6acalib_5cupid_7pycupid_ndarray)__pyx_t_7)); if (unlikely(!__pyx_t_8.memview)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __pyx_t_7 = __pyx_memoryview_fromslice(__pyx_t_8, 1, (PyObject *(*)(char *)) __pyx_memview_get_int, (int (*)(char *, PyObject *)) __pyx_memview_set_int, 0);; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 45, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_7);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
-  __pyx_v_mv = __pyx_t_7;
-  __pyx_t_7 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyInt_SubtractObjC(__pyx_t_5, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_v_shape = __pyx_t_1;
+  __pyx_t_1 = 0;
 
   /* "acalib/cupid/pycupid.pyx":46
  * 	data = data.copy()
- * 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
+ * 	shape = np.asarray(data.shape,dtype=np.int32)-1
+ * 	mv = _clumpfind(data.flatten(order='F'), config, rms, shape)             # <<<<<<<<<<<<<<
+ * 	cb = np.reshape(mv, data.shape, order='F')
+ * 	return cb
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_data, __pyx_n_s_flatten); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_order, __pyx_n_s_F) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsDouble(__pyx_v_rms); if (unlikely((__pyx_t_6 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 46, __pyx_L1_error)
+  if (!(likely(((__pyx_v_shape) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_shape, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_7 = __pyx_f_6acalib_5cupid_7pycupid__clumpfind(((__pyx_t_6acalib_5cupid_7pycupid_ndarray)__pyx_t_3), __pyx_v_config, __pyx_t_6, ((__pyx_t_6acalib_5cupid_7pycupid_ndarray)__pyx_v_shape)); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_t_7, 1, (PyObject *(*)(char *)) __pyx_memview_get_int, (int (*)(char *, PyObject *)) __pyx_memview_set_int, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
+  __pyx_v_mv = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "acalib/cupid/pycupid.pyx":47
+ * 	shape = np.asarray(data.shape,dtype=np.int32)-1
+ * 	mv = _clumpfind(data.flatten(order='F'), config, rms, shape)
  * 	cb = np.reshape(mv, data.shape, order='F')             # <<<<<<<<<<<<<<
  * 	return cb
  */
-  __pyx_t_7 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 46, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_reshape); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_data, __pyx_n_s_shape); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 46, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_INCREF(__pyx_v_mv);
-  __Pyx_GIVEREF(__pyx_v_mv);
-  PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_mv);
-  __Pyx_GIVEREF(__pyx_t_7);
-  PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_t_7);
-  __pyx_t_7 = 0;
-  __pyx_t_7 = PyDict_New(); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 46, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_7);
-  if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_order, __pyx_n_s_F) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_2, __pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_reshape); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __pyx_v_cb = __pyx_t_5;
-  __pyx_t_5 = 0;
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_data, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 47, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 47, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__pyx_v_mv);
+  __Pyx_GIVEREF(__pyx_v_mv);
+  PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_mv);
+  __Pyx_GIVEREF(__pyx_t_3);
+  PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_t_3);
+  __pyx_t_3 = 0;
+  __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 47, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_order, __pyx_n_s_F) < 0) __PYX_ERR(0, 47, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 47, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_v_cb = __pyx_t_2;
+  __pyx_t_2 = 0;
 
-  /* "acalib/cupid/pycupid.pyx":47
- * 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
+  /* "acalib/cupid/pycupid.pyx":48
+ * 	mv = _clumpfind(data.flatten(order='F'), config, rms, shape)
  * 	cb = np.reshape(mv, data.shape, order='F')
  * 	return cb             # <<<<<<<<<<<<<<
  */
@@ -2637,7 +2679,7 @@ static PyObject *__pyx_pf_6acalib_5cupid_7pycupid_clumpfind(CYTHON_UNUSED PyObje
  * 
  * def clumpfind(data not None, config not None, rms):             # <<<<<<<<<<<<<<
  * 	data = data.copy()
- * 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
+ * 	shape = np.asarray(data.shape,dtype=np.int32)-1
  */
 
   /* function exit code */
@@ -2645,13 +2687,13 @@ static PyObject *__pyx_pf_6acalib_5cupid_7pycupid_clumpfind(CYTHON_UNUSED PyObje
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_XDECREF(__pyx_t_7);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_8, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
   __Pyx_AddTraceback("acalib.cupid.pycupid.clumpfind", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_shape);
   __Pyx_XDECREF(__pyx_v_mv);
   __Pyx_XDECREF(__pyx_v_cb);
   __Pyx_XDECREF(__pyx_v_data);
@@ -17725,12 +17767,12 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * def clumpfind(data not None, config not None, rms):             # <<<<<<<<<<<<<<
  * 	data = data.copy()
- * 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
+ * 	shape = np.asarray(data.shape,dtype=np.int32)-1
  */
-  __pyx_tuple__25 = PyTuple_Pack(5, __pyx_n_s_data, __pyx_n_s_config, __pyx_n_s_rms, __pyx_n_s_mv, __pyx_n_s_cb); if (unlikely(!__pyx_tuple__25)) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_tuple__25 = PyTuple_Pack(6, __pyx_n_s_data, __pyx_n_s_config, __pyx_n_s_rms, __pyx_n_s_shape, __pyx_n_s_mv, __pyx_n_s_cb); if (unlikely(!__pyx_tuple__25)) __PYX_ERR(0, 43, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__25);
   __Pyx_GIVEREF(__pyx_tuple__25);
-  __pyx_codeobj__26 = (PyObject*)__Pyx_PyCode_New(3, 0, 5, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__25, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_martin_Repositories_ACALIB, __pyx_n_s_clumpfind, 43, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__26)) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_codeobj__26 = (PyObject*)__Pyx_PyCode_New(3, 0, 6, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__25, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_martin_Repositories_ACALIB, __pyx_n_s_clumpfind, 43, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__26)) __PYX_ERR(0, 43, __pyx_L1_error)
 
   /* "View.MemoryView":282
  *         return self.name
@@ -17960,7 +18002,7 @@ PyMODINIT_FUNC PyInit_pycupid(void)
  * 
  * def clumpfind(data not None, config not None, rms):             # <<<<<<<<<<<<<<
  * 	data = data.copy()
- * 	mv = _clumpfind(data.flatten(order='F'), config, rms, np.asarray(data.shape,dtype=np.int32))
+ * 	shape = np.asarray(data.shape,dtype=np.int32)-1
  */
   __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6acalib_5cupid_7pycupid_1clumpfind, NULL, __pyx_n_s_acalib_cupid_pycupid); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 43, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -19150,6 +19192,104 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
         }
     }
     return __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL);
+}
+#endif
+
+/* PyIntBinop */
+        #if CYTHON_COMPILING_IN_CPYTHON
+static PyObject* __Pyx_PyInt_SubtractObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, CYTHON_UNUSED int inplace) {
+    #if PY_MAJOR_VERSION < 3
+    if (likely(PyInt_CheckExact(op1))) {
+        const long b = intval;
+        long x;
+        long a = PyInt_AS_LONG(op1);
+            x = (long)((unsigned long)a - b);
+            if (likely((x^a) >= 0 || (x^~b) >= 0))
+                return PyInt_FromLong(x);
+            return PyLong_Type.tp_as_number->nb_subtract(op1, op2);
+    }
+    #endif
+    #if CYTHON_USE_PYLONG_INTERNALS && PY_MAJOR_VERSION >= 3
+    if (likely(PyLong_CheckExact(op1))) {
+        const long b = intval;
+        long a, x;
+        const PY_LONG_LONG llb = intval;
+        PY_LONG_LONG lla, llx;
+        const digit* digits = ((PyLongObject*)op1)->ob_digit;
+        const Py_ssize_t size = Py_SIZE(op1);
+        if (likely(__Pyx_sst_abs(size) <= 1)) {
+            a = likely(size) ? digits[0] : 0;
+            if (size == -1) a = -a;
+        } else {
+            switch (size) {
+                case -2:
+                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
+                        a = -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
+                        lla = -(PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+                    }
+                case 2:
+                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
+                        a = (long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
+                        lla = (PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+                    }
+                case -3:
+                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
+                        a = -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
+                        lla = -(PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+                    }
+                case 3:
+                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
+                        a = (long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
+                        lla = (PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+                    }
+                case -4:
+                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
+                        a = -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
+                        lla = -(PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+                    }
+                case 4:
+                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
+                        a = (long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
+                        lla = (PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+                    }
+                default: return PyLong_Type.tp_as_number->nb_subtract(op1, op2);
+            }
+        }
+                x = a - b;
+            return PyLong_FromLong(x);
+        long_long:
+                llx = lla - llb;
+            return PyLong_FromLongLong(llx);
+    }
+    #endif
+    if (PyFloat_CheckExact(op1)) {
+        const long b = intval;
+        double a = PyFloat_AS_DOUBLE(op1);
+            double result;
+            PyFPE_START_PROTECT("subtract", return NULL)
+            result = ((double)a) - (double)b;
+            PyFPE_END_PROTECT(result)
+            return PyFloat_FromDouble(result);
+    }
+    return (inplace ? PyNumber_InPlaceSubtract : PyNumber_Subtract)(op1, op2);
 }
 #endif
 
