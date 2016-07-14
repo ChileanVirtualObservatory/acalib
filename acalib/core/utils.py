@@ -1,4 +1,3 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 from indices import *
@@ -196,10 +195,11 @@ def estimate_rms(data,mask=None):
     """A simple estimation of the RMS. If mask != None, then 
        we use that mask.
     """
-    data=_fix_mask(data,mask)
-    mm=data * data
+    if mask is not None:
+        data=_fix_mask(data,mask)
+    mm=data*data
     #if mask is not None and not ismasked:
-    rms=np.sqrt(mm.sum()*1.0/mm.count())
+    rms=np.sqrt(mm.sum()*1.0/mm.size)
     return rms
 
 @support_nddata
@@ -220,6 +220,13 @@ def world_features(data,wcs,lower=None,upper=None):
     f=wcs.wcs_pix2world(ii.T,0)
     f=f.T
     return f
+
+
+@support_nddata
+def integrate(data, wcs=None, mask=None, unit=None, axis=(0)):
+    newdata = np.sum(data, axis=axis)
+    mask = np.isnan(newdata)
+    return NDData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 
 
 #if __name__ == '__main__':
