@@ -72,8 +72,6 @@ def to_features(data,lower=None,upper=None):
     ii=np.empty((dim,int(msh.size/dim)))
     for i in range(dim):
        ii[dim-i-1]=msh[i].ravel()
-       ii[dim-i-1]=msh[i].ravel()
-       ii[dim-i-1]=msh[i].ravel()
     return ii
 
 
