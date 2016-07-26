@@ -1,6 +1,6 @@
 #include "sae_par.h"
 #include "prm_par.h"
-#include "ndf.h"
+//#include "ndf.h"
 #include "ast.h"
 #include "dat_par.h"
 #include "cupid.h"

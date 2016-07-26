@@ -8,6 +8,14 @@ void *astMalloc( size_t size) {
 }
 
 
+void *astCalloc( size_t nmemb, size_t size) {
+   // Do not care about security, nor caching... only considering the first argument
+   void *result;
+   result=calloc(nmemb, size);
+   return result;
+}
+
+
 void *astFree( void *ptr){
     free(ptr);
     return ptr;
