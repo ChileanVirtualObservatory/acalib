@@ -8,7 +8,6 @@
 #include "Python.h"
 
 #define AST__BAD (-(DBL_MAX))
-
 #define astOK 1
 
 typedef PyObject AstObject;
@@ -33,6 +32,7 @@ typedef struct AstMapping_t {
 } AstMapping;
 
 void *astMalloc( size_t size);
+void *astCalloc( size_t nmemb, size_t size);
 void *astFree( void *ptr);
 int astMapGet0D( AstKeyMap *map, const char *key, double *value);
 int astMapGet0A( AstKeyMap *map, const char *key, AstObject **obj);

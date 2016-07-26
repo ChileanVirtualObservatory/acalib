@@ -8,15 +8,27 @@ void msgSetd( const char *token,
 
 void msgSeti( const char *token,
               int ivalue );
+
 void msgSetc( const char *token,
               const char *cvalue );
+
 void msgOutif( msglev_t prior,
                const char *param,
                const char *text,
                int *status );
+
+void msgOut( const char *param,
+             const char *text,
+             int *status );
+
+void msgOutf( const char *param,
+              const char *text,
+              int *status,
+              ... ) __attribute__((format (printf, 2, 4 )));
+
 void msgBlankif( msglev_t prior, int *status );
 
-
+void msgSetr( const char *token, float rvalue );
 
 void errRep( const char *param,
              const char *text,
@@ -29,9 +41,11 @@ void errRepf( const char *param,
               int *status,
               ... ) __attribute__((format (printf, 2, 4 )));
 
-
 void errBegin( int *status );
+
 void errEnd( int *status );
+
+
 
 #endif  /* MERS_DEFINED */
 
