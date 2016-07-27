@@ -13,7 +13,7 @@ cupidsub_sources = ['cupidcfaddpixel.c', 'cupidcfclump.c','cupidcfdeleteps.c',
 'cupidcfxfer.c','cupidcfmakeps.c','cupidcffreeps.c','cupiddefminpix.c',
 'cupidconfigrms.c','cupidcflevels.c','cupidconfigI.c','cupidconfigD.c',
 'cupidfwjoin.c', 'cupidfwmain.c', 'cupidfwpixelsets.c', 'cupidrca.c',
-'cupidrca2.c', 'cupiddumpi.c']
+'cupidrca2.c']
 
 sourcefiles += wrapper_sources
 cupidsub_routes = ['cupidsub/'+c for c in cupidsub_sources]
