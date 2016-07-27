@@ -213,8 +213,10 @@ class GaussianSegmentation:
         w_max = self._optimal_w(image,prob)
         diff = (image - np.min(image)) / (np.max(image)- np.min(image))
 
-        
-        g = threshold_adaptive(diff, w_max*w_max,method='mean',offset=0)
+        tt=w_max*w_max
+        if tt%2==0:
+           tt+=1
+        g = threshold_adaptive(diff, tt,method='mean',offset=0)
 
         r = w_max/2
         rMin = 2*np.round(precision)
@@ -252,7 +254,10 @@ class GaussianSegmentation:
                 background = (background-np.min(background))/(np.max(background)-np.min(background))
                 diff = diff - background
             diff = (diff-np.min(diff))/(np.max(diff)-np.min(diff))
-            g = threshold_adaptive(diff, r*r,method='mean',offset=0)
+            tt=r*r
+            if tt%2==0:
+               tt+=1
+            g = threshold_adaptive(diff,tt,method='mean',offset=0)
             r = np.round(r/2.)
         objects = Table([centroid_x,centroid_y],names=["RA","DEC"], meta={"name": "Region of interest found"})
         if images:
@@ -290,7 +295,11 @@ class GaussianSegmentation:
         #print "Radius Min: ", radiusMin, " Radius Max: ", radiusMax, " Increment: ", inc
         #print "Background ", "%.16f "% bg, "Foreground ", "%.16f "%fg
         while(radius <= radiusMax):
-            g = threshold_adaptive(f,radius*radius,method='mean',offset=0)
+            tt=radius*radius
+            if tt%2==0:
+               tt+=1
+            
+            g = threshold_adaptive(f,tt,method='mean',offset=0)
             ov = self._bg_fg(f,g,bg,fg)
             if(ov < min_ov):
                 w = radius
