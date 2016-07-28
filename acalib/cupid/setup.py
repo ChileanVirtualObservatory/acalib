@@ -23,5 +23,4 @@ setup(
   name = 'Cupid Library for Python',
   include_dirs = [np.get_include(),'include'],       
   ext_modules = [Extension("pycupid",sourcefiles)]
-
 )
