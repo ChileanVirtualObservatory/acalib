@@ -38,7 +38,7 @@ def matching_slabs(data,flux,lower,upper):
        if data_slab[i].start == 0:
 #         print data_slab
 #          print flux.shape
-          flow[i] = flux.shape[i] - (data_slab[i].stop - data_slab[i].start)
+          flow[i] = flux.shape[i] - data_slab[i].stop 
        if data_slab[i].stop == data.shape[i]:
 #          print data_slab
 #          print flux.shape

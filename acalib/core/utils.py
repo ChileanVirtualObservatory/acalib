@@ -6,17 +6,31 @@ import astropy.units as u
 from astropy.nddata import *
 import scipy.ndimage.interpolation as sni
 
-def _fix_mask(data,mask):
+def fix_mask(data,mask):
     ismasked=isinstance(data,np.ma.MaskedArray)
     if ismasked and mask is None: 
         return data
     else:
        return np.ma.MaskedArray(data,mask)     
 
-
 @support_nddata
 def rotate(data,angle):
     return sni.rotate(data,angle)
+
+@support_nddata
+def standarize(data,wcs=None,unit=None,mask=None,meta=None):
+    if mask is not None:
+        data=fix_mask(data,mask)
+    y_min=data.min()
+    res=data - y_min
+    y_fact=res.sum()
+    res=res/y_fact
+    nres=NDData(res, uncertainty=None, mask=mask,wcs=wcs, meta=meta, unit=unit)
+    return (nres,y_min,y_fact)
+
+# TODO need to be nddatafied
+def unstandarize(data, y_min,y_fact):
+    return data*y_fact + y_min
 
 @support_nddata
 def cut(data,wcs=None,mask=None,unit=None,lower=None,upper=None):
@@ -47,7 +61,7 @@ def moment(data,order,wcs=None,mask=None,unit=None,restfrq=None):
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
-    data=_fix_mask(data,mask)
+    data=fix_mask(data,mask)
     dim=wcs.wcs.spec
     rdim=data.ndim - 1 - dim
     v=get_velocities(data,wcs,np.arange(data.shape[rdim]),restfrq)
@@ -178,7 +192,7 @@ def create_mould(P,delta):
     ax=[]
     elms=[]
     for i in range(n):
-        lin=np.linspace(-delta[i]-0.5,delta[i]+0.5,delta[i]*2+1)
+        lin=np.linspace(-delta[i],delta[i],delta[i]*2+1)
         elms.append(len(lin))
         ax.append(lin)
     grid=np.meshgrid(*ax,indexing='ij')
@@ -187,7 +201,7 @@ def create_mould(P,delta):
         feat[i]=grid[i].ravel()
     mould=gaussian_function(np.zeros(n),P,feat,1)
     mould=mould.reshape(*elms)
-    return(mould)
+    return mould
 
 
 @support_nddata
@@ -196,7 +210,7 @@ def estimate_rms(data,mask=None):
        we use that mask.
     """
     if mask is not None:
-        data=_fix_mask(data,mask)
+        data=fix_mask(data,mask)
     mm=data*data
     #if mask is not None and not ismasked:
     rms=np.sqrt(mm.sum()*1.0/mm.size)
@@ -224,6 +238,8 @@ def world_features(data,wcs,lower=None,upper=None):
 
 @support_nddata
 def integrate(data, wcs=None, mask=None, unit=None, axis=(0)):
+    if mask is not None:
+        data=fix_mask(data,mask)
     newdata = np.sum(data, axis=axis)
     mask = np.isnan(newdata)
     return NDData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
