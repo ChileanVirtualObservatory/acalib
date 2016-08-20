@@ -12,12 +12,14 @@ def stacking(template_path, data_path):
 
 	scaled = tr.scale(data_path, tprops['major'])
 
-	rotated = tr.rotate(scaled, tprops['angle'])
+	rotated, angles = tr.rotate(scaled, tprops['angle'])
 
-	aligned = tr.cropAndAlign(rotated, tprops['angle'])
+	aligned = tr.cropAndAlign(rotated, angles)
 
 	result = np.mean(aligned, axis = 0)
 
 	plt.imshow(result)
-	plt.show
+	plt.show()
+
+stacking('fb2/M13-dss2b.fits','test')
 
