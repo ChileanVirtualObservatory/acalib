@@ -21,5 +21,5 @@ def stacking(template_path, data_path):
 	plt.imshow(result)
 	plt.show()
 
-stacking('fb2/M13-dss2b.fits','test')
+
 
