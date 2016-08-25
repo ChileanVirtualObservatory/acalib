@@ -4,6 +4,7 @@
 #include "mers.h"
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 void CGEN_FUNCTION(cupidFWJoin)( CGEN_TYPE *array, int nel, int ndim,
                                  int dims[ 3 ], int skip[ 3 ], double rms,
@@ -170,7 +171,7 @@ void CGEN_FUNCTION(cupidFWJoin)( CGEN_TYPE *array, int nel, int ndim,
 
 /* Enter an iterative loop in which we join clumps that have a small dip
    between them. Quit when an interation fails to merge any more clumps. */
-   nmerged = 1;
+   nmerged = 0;
    while( nmerged && *status == SAI__OK ) {
 
 /* Loop round all clumps. For each one, we consider moving all the clump
@@ -211,7 +212,10 @@ void CGEN_FUNCTION(cupidFWJoin)( CGEN_TYPE *array, int nel, int ndim,
                for( ineb = 0; ineb < ps1->nneb; ineb++ ) {
                   jneb = ps1->nebs[ ineb ];
                   if( jneb != -1 ) {
+                     printf("%s\n", "asdf1");
+				     printf("%d\n", jneb);
                      ps2 = pslist[ jneb ];
+                     printf("%s\n", "asdf2");
                      if( ps2 ) {
                         if( jneb != iclump2 ) {
                            hasnew = 0;
