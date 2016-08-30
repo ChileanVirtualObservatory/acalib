@@ -25,9 +25,10 @@ rms2D = np.sqrt((data2D*data2D).sum()/data2D.size)
 """
 CUPID's clumpfind call
 """
-#ret = fellwalker(data2D, dict(), rms2D)
-ret = fellwalker(data3D, dict(), rms3D)
-print ret.max()
+ret1 = fellwalker(data2D, dict(), rms2D)
+ret2 = fellwalker(data3D, dict(), rms3D)
+print ret1.max()
+print ret2.max()
 # ret = []
 # for i in range(100):
 #     ret.append(clumpfind(data2D, dict(), rms2D).max())
