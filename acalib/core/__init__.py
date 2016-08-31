@@ -2,9 +2,7 @@ from . import container
 from . import convert
 from . import indices
 from . import utils
-from . import gmr
 from .container import *
 from .convert import *
 from .indices import *
 from .utils import *
-from .gmr import *
