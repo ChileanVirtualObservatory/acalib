@@ -30,6 +30,8 @@ void msgBlankif( msglev_t prior, int *status );
 
 void msgSetr( const char *token, float rvalue );
 
+int msgFlevok( msglev_t filter, int *status );
+
 void errRep( const char *param,
              const char *text,
              int *status );
