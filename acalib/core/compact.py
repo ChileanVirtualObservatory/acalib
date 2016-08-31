@@ -24,13 +24,13 @@ def eighth_mould(P,delta):
     mould=gaussian_function(np.zeros(n),P,feat,1)
     return mould,feat.T
 
-@support_nddata
-def max_points(data,nlevel,equant,mask=None):
-    if mask is not None:
-        data=fix_mask(data,mask)
-    res=data  - nlevel
-    res[res<0.0]=0.0
-    return np.round(res.sum()/equant)
+#@support_nddata
+#def max_points(data,nlevel,equant,mask=None):
+#    if mask is not None:
+#        data=fix_mask(data,mask)
+#    res=data  - nlevel
+#    res[res<0.0]=0.0
+#    return np.round(res.sum()/equant)
 
 def _update_min_energy(energy,mat,ub,lb,delta):
     """Updates the minimum energies of energy from mat defaced by delta. 
@@ -122,7 +122,17 @@ def gclump_to_wcsgauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
    P=RD.dot(RD.T)
    mu=np.array([pos[0],pos[1],freq])
    return (mu,P)
-#
+
+def precision_from_delta(delta,clev):
+    delta=np.array(delta)
+    sq_delta=1./(delta*delta)
+    P=np.diag(sq_delta)
+    return(-2*np.log(clev)*P)
+
+
+
+print np.abs(cube.meta['BMIN']/cube.meta['CDELT1'])
+print np.ceil((np.abs(cube.meta['BMIN']/cube.meta['CDELT1']) - 1)/2.0)
 
 #def _update_energies(energy,residual,mould,nlevel,delta,lower=None,upper=None):
 #    """Update the energies, only from the lower to the upper points. 

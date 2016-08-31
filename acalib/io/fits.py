@@ -70,7 +70,7 @@ def NDData_to_HDU(cube,primary=False):
     if primary==True:
         hdu = fits.PrimaryHDU(cube.data,header=header)
     else:
-        hdu = fits.ImageHdu(cube.data,header=header)
+        hdu = fits.ImageHDU(cube.data,header=header)
 
     if cube.meta is not None:
         for k, v in cube.meta.iteritems():

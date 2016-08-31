@@ -14,9 +14,9 @@ from acalib.core.utils import *
 @support_nddata
 def visualize(data,wcs=None,unit=None,contour=False):
     if data.ndim == 1:
-        visualize_plot(data,wcs,unit)
+        return visualize_plot(data,wcs,unit)
     elif data.ndim == 2:
-        visualize_image(data,wcs,unit,contour)
+        return visualize_image(data,wcs,unit,contour)
     elif data.ndim == 3:
         if contour:
             visualize_contour3D(data,wcs,unit)

@@ -205,8 +205,8 @@ def create_mould(P,delta):
 
 
 @support_nddata
-def estimate_rms(data,mask=None):
-    """A simple estimation of the RMS. If mask != None, then 
+def estimate_noise(data,mask=None):
+    """A simple estimation of the noise level by computing the RMS. If mask != None, then 
        we use that mask.
     """
     if mask is not None:
@@ -215,6 +215,23 @@ def estimate_rms(data,mask=None):
     #if mask is not None and not ismasked:
     rms=np.sqrt(mm.sum()*1.0/mm.size)
     return rms
+
+@support_nddata
+def snr_evolution(data,mask=None,noise=None,points=1000):
+    if noise is None:
+       noise=estimate_rms(data,mask)
+    x=[]
+    y=[]
+    sdata=data[cube.data>noise]
+    for i in range(1,int(points)):
+        val=1.0 + 2.0*i/points
+        sdata=sdata[sdata>val*noise]
+        if sdata.size < 2:
+            break
+        yval=sdata.mean()/noise
+        x.append(val)
+        y.append(yval)
+     return x,y
 
 @support_nddata
 def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):
@@ -243,6 +260,8 @@ def integrate(data, wcs=None, mask=None, unit=None, axis=(0)):
     newdata = np.sum(data, axis=axis)
     mask = np.isnan(newdata)
     return NDData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
+
+
 
 
 #if __name__ == '__main__':
