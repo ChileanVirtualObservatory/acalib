@@ -7,7 +7,7 @@ from utils import *
 import matplotlib.pyplot as plt
 from convert import *
 
-def eighth_mould(P,delta):
+def _eighth_mould(P,delta):
     """This function creates a Gaussian mould with precision matrix P, using the already computed values of delta
     """
     n=len(delta)
@@ -24,19 +24,10 @@ def eighth_mould(P,delta):
     mould=gaussian_function(np.zeros(n),P,feat,1)
     return mould,feat.T
 
-#@support_nddata
-#def max_points(data,nlevel,equant,mask=None):
-#    if mask is not None:
-#        data=fix_mask(data,mask)
-#    res=data  - nlevel
-#    res[res<0.0]=0.0
-#    return np.round(res.sum()/equant)
-
 def _update_min_energy(energy,mat,ub,lb,delta):
     """Updates the minimum energies of energy from mat defaced by delta. 
        ub and lb bounds are provided to shrink the mat matrix when required (out of bounds, or partial update)
     """
-    #bord=np.array(energy.shape)
     # Numpyfy everithing
     ub=np.array(ub)
     lb=np.array(lb)
@@ -77,7 +68,7 @@ def _update_min_energy(energy,mat,ub,lb,delta):
     eview[cmat]=mview[cmat]
 
 
-def update_energies_sym(residual,energy,ev,ef,lb,ub):
+def _update_energies_sym(residual,energy,ev,ef,lb,ub):
       """Update the energies, only from the lb to the ub points. 
       """
       #TODO: I do now know if get_slice actually states that we are making a copy...
@@ -94,125 +85,128 @@ def update_energies_sym(residual,energy,ev,ef,lb,ub):
          for delta in dset:
              _update_min_energy(energy,mat,ub,lb,delta)
 
-
-def gclump_to_wcsgauss(pos,std,angle,freq,fwhm,gradient,equiv=u.doppler_radio):
-   # Parameter sanitization
-   pos=to_deg(pos)
-   std=to_deg(std)
-   angle=to_rad(angle)
-   freq=to_hz(freq)
-   #print "fwhm",fwhm
-   #print "freq",freq
-   sigma=fwhm_to_sigma(freq - vel_to_freq(fwhm,freq,equiv))
-   #print "sigma",sigma
-   grad= freq/u.deg -  to_hz_deg(gradient,freq,equiv) 
-   # get Values
-   pos=pos.value
-   std=std.value
-   angle=angle.value
-   freq=freq.value
-   sigma=sigma.value
-   grad=grad.value
-   # Construct the precision Matrix!
-   sphi=np.sin(angle)
-   cphi=np.cos(angle)
-   R=np.array([[cphi,-sphi,-grad[0]],[sphi,cphi,-grad[1]],[0,0,1]])
-   D=np.diag([1./std[0],1./std[1],1./sigma])
-   RD=R.dot(D)
-   P=RD.dot(RD.T)
-   mu=np.array([pos[0],pos[1],freq])
-   return (mu,P)
-
-def precision_from_delta(delta,clev):
+def _precision_from_delta(delta,clev):
     delta=np.array(delta)
     sq_delta=1./(delta*delta)
     P=np.diag(sq_delta)
     return(-2*np.log(clev)*P)
 
+@support_nddata
+def scatpix_detect(data,wcs=None,meta=None,threshold=None,noise=None,upper=None,lower=None,full_output=False):
+    """ Obtain an homogeneous representation using the scattered pixels over a threshold.
 
+    This function generates an homogeneous representation by using only those pixels above the threshold. 
+    Each pixel generates several identical values depending on the intensity of each pixel (i.e., floor(intensity/noise)). 
 
-print np.abs(cube.meta['BMIN']/cube.meta['CDELT1'])
-print np.ceil((np.abs(cube.meta['BMIN']/cube.meta['CDELT1']) - 1)/2.0)
+    :param data: n-dimensional array containing the data to be processed.
+    :type data: ndarray
+    :param threshold: the theshold to consider a pixel relevant to be included in the representation.
+    :type threshold: float
+    :param noise : noise level to be subtracted from the intensities 
+    :type noise: float
+    :returns: An astropy table with all the ::math:`\\mu` and the metadata.
+    :rtype: Table
 
-#def _update_energies(energy,residual,mould,nlevel,delta,lower=None,upper=None):
-#    """Update the energies, only from the lower to the upper points. 
-#    """
-#    #TODO: I do now know if slab actually states that we are making a copy...
-#    if lower is None:
-#       lower=np.zeros(residual.ndim)
-#    lower=fix_limits(residual,lower)
-#    residual_slab=slab(residual,lower,upper)
-#    residual_view=residual[residual_slab]
-#    energy[residual_slab]=np.zeros(residual_view.shape)
-#    #resi_view=residual[energy_slab]
-#    feat=np.array(np.where(residual_view>nlevel))
-#    feat=feat.T
-#    #print lower,upper
-#    for idx in feat:
-#        base=idx + lower
-#        lb=base-delta
-#        ub=base+delta + 1
-#        #print base,lb,ub
-#        #print mould.shape
-#        residual_slab,mould_slab=matching_slabs(residual,mould,lb,ub)
-#        val=np.min(residual[residual_slab]/mould[mould_slab])
-#        #if val > 100:
-#        #    print("Base = "+str(base)+" Value = "+str(val))
-#        #    print residual[residual_slab]
-#        energy[tuple(base)]=val
-#        #energy[tuple(base)]=1000
+    """
+# COMMENT Removed
+#This can also be understood as very small Gaussians ::math:`G(x) = a \\exp(-0.5 (\mu - x)^\\top P (\mu - x))` 
+#    where ::math:`a=\sigma` correspond to the noise parameter,  the center ::math:`\\mu` is the pixel position (pos) and ::math:`P` is a diagonal matrix of
+#    the form ::math:`-2\\log(\delta) \\cdot I` (::math:`\delta` is a small number
 
+    #Restrict data to what the corresponding slab
+    data=data[slab(data,upper,lower)]
 
-#def gmr_from_pixels(data,threshold,nlevel,upper=None,lower=None):
-#    """ Obtain a pixel-based Gaussian Mixture Representation (GMR) from data.
-#
-#    This function generates a GMR by using only those pixels above the threshold. Each pixel generates a very small
-#    Gaussian ::math:`G(x) = a \\exp(-0.5 (\mu - x)^\\top P (\mu - x))` 
-#    where ::math:`a` is the instensity (data[pos]) of the pixel ::math:`n_{level}` (nlevel), the center ::math:`\\mu` is the pixel position (pos) and ::math:`P` is a diagonal matrix of
-#    the form ::math:`2\\log(a/n_{level}) \\cdot I`
-#
-#    :param data: n-dimensional array containing the data to be processed.
-#    :type data: ndarray
-#    :param threshold: the theshold to consider a pixel relevant to be included in the representation.
-#    :type threshold: float
-#    :param nlevel: noise level to be subtracted from the intensities and to compute the structure of each Gaussian.
-#    :type nlevel: float
-#    :param upper: 
-#    :type upper: ndarray
-#    :returns: An astropy table, where each row has the parameters of a single Gaussian ::math:`a`, ::math:`\\mu` and ::math:`P` (intensity, center and structure).
-#    :rtype: Table
-#
-#    :Example:
-#    
-#    >>> a=np.random.random((2,2,2))
-#    >>> tab=gmr_from_pixels(a,0.5,0.001)
-#    intensity      center [3]        structure [3,3]          
-#    -------------- ---------- ------------------------------
-#    0.537338435568 0.0 .. 0.0 12.5732562597 .. 12.5732562597
-#    0.685661594975 0.0 .. 0.0 13.0607684085 .. 13.0607684085
-#    0.939673095857 0.0 .. 1.0 13.6910640888 .. 13.6910640888
-#    0.554681589695 1.0 .. 1.0 12.6367884737 .. 12.6367884737
-#    0.522312859713 1.0 .. 0.0 12.5165335129 .. 12.5165335129
-#
-#    """
-#    #Restrict data to what the corresponding slab
-#    data=data[slab(data,upper,lower)]
-#
-#    ff=np.where(data>threshold)
-#    if isinstance(data,np.ma.MaskedArray):
-#        inten=data[ff].filled()
-#    else: 
-#        inten=data[ff]
-#    inten-=nlevel
-#    center=np.transpose(ff).astype(float)
-#    I=np.identity(data.ndim)
-#    struct=[]
-#    for i in inten:
-#        val=2*np.log(i/nlevel)
-#        struct.append(val*I)
-#    struct=np.array(struct)
-#    res=Table([inten,center,struct],names=('intensity','center','structure'))
-#    return res
+    ff=np.where(data>threshold)
+    if isinstance(data,np.ma.MaskedArray):
+        inten=data[ff].filled()
+    else: 
+        inten=data[ff]
+    if full_output:
+       residual=np.nan_to_num(data)
+       synthetic=np.zeros(data.shape)
+    ntimes=(inten/noise).astype(int)
+    center=np.transpose(ff).astype(float)
+    positions=[]
+    for cen,tim in zip(center,ntimes):
+        #print cen,tim,noise
+        mylst=[cen.astype(int)]*tim
+        positions.extend(mylst)
+        if full_output:
+            residual[tuple(cen.astype(int))]-=tim*noise
+            synthetic[tuple(cen.astype(int))]=tim*noise
+    positions=np.array(positions)
+    rep=Table([positions],names=['center'])
+    if full_output:
+        return rep,synthetic,residual
+    return rep
+
+@support_nddata
+def bubble_detect(data,wcs=None,meta=None,noise=None,threshold=None,delta=None,gamma=0.1,full_output=False,verbose=False):
+    if delta is None:
+        if meta is None:
+            delta=[1,1,1]
+        else:
+            spa=np.ceil((np.abs(meta['BMIN']/meta['CDELT1']) - 1)/2.0)
+            delta=[1,spa,spa]
+    if noise is None:
+        noise=rms(data)
+    if threshold is None:
+        threshold=snr_estimation(data,mask=mask,noise=noise)*noise
+    if verbose:
+        print threshold,noise,delta
+    P=_precision_from_delta(delta,gamma)
+    mould=create_mould(P,delta)
+    #equant=mould.sum()*noise
+    residual=np.nan_to_num(data)
+    energy=residual.copy()
+    if full_output:
+        synthetic=np.zeros(residual.shape)
+        elist=[]
+    (ev,ef)=_eighth_mould(P,delta)
+    _update_energies_sym(residual,energy,ev,ef,lb=(0,0,0),ub=residual.shape)
+    positions=[]
+    niter=0
+    delta=np.array(delta)
+    while True:
+        niter+=1
+        idx      = np.unravel_index(energy.argmax(), energy.shape)
+        max_ener = energy[idx]
+        if verbose and niter%1000==0:
+            log.info("Iteration: "+str(niter))
+            log.info("Maximum energy E = "+str(max_ener)+" SNR = "+str(max_ener/noise))   #at "+str(idx))
+            #fig = plt.figure(figsize=(20,5))
+            #ax = fig.add_subplot(121)
+            #ax.imshow(integrate(residual).data, origin='lower')
+            #ax.set_title('Residual')
+            #ax = fig.add_subplot(122)
+            #ax.imshow(integrate(synthetic).data, origin='lower')
+            #ax.set_title('Denoised')
+            #plt.show()
+       
+        if max_ener < noise:
+            if verbose:
+                log.info("Criterion Met: Energy < Noise Level ")
+            break
+        if (max_ener < threshold):
+            if verbose:
+                log.info("Criterion Met: SNR="+str(max_ener/noise)+"<"+str(threshold/noise))
+            break
+        ub=idx + delta + 1
+        lb=idx - delta
+        add_flux(residual,-noise*mould,lb,ub)
+        if full_output:
+            add_flux(synthetic,noise*mould,lb,ub)
+            elist.append(max_ener)
+        _update_energies_sym(residual,energy,ev,ef,lb,ub)
+        positions.append(idx)
+    positions=np.array(positions)
+    rep=Table([positions],names=['center'])
+    if full_output:
+        return rep,synthetic,residual,energy,elist
+    return rep
+
+    
+
 
 #def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,full_output=False):
 #    debug=True

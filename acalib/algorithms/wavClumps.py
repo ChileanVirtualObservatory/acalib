@@ -47,7 +47,7 @@ class WavClumps:
 
         # Set the RMS, or automatically find an estimate for it
         if not self.par.has_key('RMS'):
-            rms = cube.estimate_rms()
+            rms = cube.rms()
             self.par['RMS'] = rms
 
         #stacking cube on Velocity axis

@@ -205,7 +205,7 @@ def create_mould(P,delta):
 
 
 @support_nddata
-def estimate_noise(data,mask=None):
+def rms(data,mask=None):
     """A simple estimation of the noise level by computing the RMS. If mask != None, then 
        we use that mask.
     """
@@ -217,12 +217,12 @@ def estimate_noise(data,mask=None):
     return rms
 
 @support_nddata
-def snr_evolution(data,mask=None,noise=None,points=1000):
+def snr_estimation(data,mask=None,noise=None,points=1000,full_output=False):
     if noise is None:
-       noise=estimate_rms(data,mask)
+       noise=rms(data,mask)
     x=[]
     y=[]
-    sdata=data[cube.data>noise]
+    sdata=data[data>noise]
     for i in range(1,int(points)):
         val=1.0 + 2.0*i/points
         sdata=sdata[sdata>val*noise]
@@ -231,7 +231,13 @@ def snr_evolution(data,mask=None,noise=None,points=1000):
         yval=sdata.mean()/noise
         x.append(val)
         y.append(yval)
-     return x,y
+    y=np.array(y)
+    v=y[1:]-y[0:-1]
+    p=v.argmax() + 1
+    snrlimit=x[p]
+    if full_output==True:
+       return snrlimit,noise,x,y,v,p 
+    return snrlimit
 
 @support_nddata
 def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):
