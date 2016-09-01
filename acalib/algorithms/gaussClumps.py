@@ -578,7 +578,7 @@ class GaussClumps:
       FWHM_TO_SIGMA = 1. / (8 * np.log(2))**0.5
       # Set the RMS, or automatically find an estimate for it
       if not self.par.has_key('RMS'):
-         rms=cube.estimate_rms()
+         rms=cube.rms()
          self.par['RMS']=rms
       
       # TODO: set parameters according to meta
