@@ -14,7 +14,7 @@ int cupid_ps_cache_size = 0;
 
 
 int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
-                        double *ipv, double rms, PyObject *pyconfig, int velax,
+                        double *ipv, double rms, AstKeyMap *config, int velax,
                         int perspectrum, double beamcorr[ 3 ],
                         int *backoff, int *status ){
 
@@ -164,11 +164,9 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
    int nlevels;         /* Number of values in "levels" */
    int nminpix;         /* Number of clumps with < MinPix pixels */
    int skip[3];         /* Pointer to array of axis skips */
-   AstKeyMap *config;
-   
+
 /* Initialise */
    ret = NULL;
-   config=(AstKeyMap *)pyconfig;
 
 /* Abort if an error has already occurred. */
    if( *status != SAI__OK ) return ret;
@@ -181,7 +179,7 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
 /* Return the instrumental smoothing FWHMs */
    if( !perspectrum ) {
    beamcorr[ 0 ] = cupidConfigD( config, "FWHMBEAM", 2.0, status );
-		   
+
       beamcorr[ 1 ] = beamcorr[ 0 ];
       if( ndim == 3 ) {
          beamcorr[ 2 ] = beamcorr[ 0 ];
@@ -243,7 +241,7 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
 /* Initialise the index assignment array to indicate that no pixels have
    yet been assigned to any PixelSet. */
       for( i = 0; i < el; i++ ) ipa[ i ] = CUPID__CFNULL;
-      
+
 /* Initialise an array to hold the pointers to the PixelSet structures which
    describe the clumps. */
       clumps = astMalloc( sizeof( CupidPixelSet *) );
@@ -473,14 +471,14 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
 /* Free resources */
    //ipa = astFree( ipa );
    ret=ipa;
-   
+
    for( i = 0; i < cupid_ps_cache_size; i++ ) {
       cupid_ps_cache[ i ] = cupidCFDeletePS( cupid_ps_cache[ i ], status );
    }
    cupid_ps_cache = astFree( cupid_ps_cache );
    cupid_ps_cache = NULL;
    cupid_ps_cache_size = 0;
-   
+
 /* Return the list of clump NDFs. */
    return ret;
 
