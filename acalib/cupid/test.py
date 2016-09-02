@@ -9,8 +9,7 @@ loading data
 """
 binpath = '../../bindata/fits/cubes/'
 
-# Data from ALMA science verification 
-orion_path = binpath + 'Orion.methanol.cbc.contsub.image.fits'
+orion_path = binpath + 'ALMA01000740.fits'
 container = load_fits(orion_path)
 orion = container.primary
 
