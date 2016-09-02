@@ -2319,7 +2319,7 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__fellwalker(__pyx_t_6a
   int *__pyx_v_subnd;
   void *__pyx_v_ipd;
   double *__pyx_v_ipv;
-  struct PyObject *__pyx_v_kmap;
+  __pyx_t_6acalib_5cupid_7pycupid_AstKeyMap *__pyx_v_kmap;
   int __pyx_v_velax;
   int __pyx_v_perspectrum;
   double *__pyx_v_beamcorr;
@@ -2539,7 +2539,7 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__fellwalker(__pyx_t_6a
  * 		int *subnd = &shape[0]
  * 		void *ipd = &data[0]             # <<<<<<<<<<<<<<
  * 		double *ipv = NULL
- * 		PyObject* kmap = <PyObject *> config
+ * 		AstKeyMap* kmap = <AstKeyMap *> config
  */
   __pyx_t_11 = 0;
   __pyx_t_2 = -1;
@@ -2557,7 +2557,7 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__fellwalker(__pyx_t_6a
  * 		int *subnd = &shape[0]
  * 		void *ipd = &data[0]
  * 		double *ipv = NULL             # <<<<<<<<<<<<<<
- * 		PyObject* kmap = <PyObject *> config
+ * 		AstKeyMap* kmap = <AstKeyMap *> config
  * 		int velax = 0
  */
   __pyx_v_ipv = NULL;
@@ -2565,15 +2565,15 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__fellwalker(__pyx_t_6a
   /* "acalib/cupid/pycupid.pyx":55
  * 		void *ipd = &data[0]
  * 		double *ipv = NULL
- * 		PyObject* kmap = <PyObject *> config             # <<<<<<<<<<<<<<
+ * 		AstKeyMap* kmap = <AstKeyMap *> config             # <<<<<<<<<<<<<<
  * 		int velax = 0
  * 		int perspectrum = 0
  */
-  __pyx_v_kmap = ((struct PyObject *)__pyx_v_config);
+  __pyx_v_kmap = ((__pyx_t_6acalib_5cupid_7pycupid_AstKeyMap *)__pyx_v_config);
 
   /* "acalib/cupid/pycupid.pyx":56
  * 		double *ipv = NULL
- * 		PyObject* kmap = <PyObject *> config
+ * 		AstKeyMap* kmap = <AstKeyMap *> config
  * 		int velax = 0             # <<<<<<<<<<<<<<
  * 		int perspectrum = 0
  * 		double *beamcorr = &_beamcorr[0]
@@ -2581,7 +2581,7 @@ static __Pyx_memviewslice __pyx_f_6acalib_5cupid_7pycupid__fellwalker(__pyx_t_6a
   __pyx_v_velax = 0;
 
   /* "acalib/cupid/pycupid.pyx":57
- * 		PyObject* kmap = <PyObject *> config
+ * 		AstKeyMap* kmap = <AstKeyMap *> config
  * 		int velax = 0
  * 		int perspectrum = 0             # <<<<<<<<<<<<<<
  * 		double *beamcorr = &_beamcorr[0]
