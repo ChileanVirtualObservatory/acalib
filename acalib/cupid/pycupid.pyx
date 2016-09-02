@@ -52,7 +52,7 @@ cdef int[:] _fellwalker(ndarray[double, ndim=1, mode="c"] data, config,
 		int *subnd = &shape[0]
 		void *ipd = &data[0]
 		double *ipv = NULL
-		PyObject* kmap = <PyObject *> config
+		AstKeyMap* kmap = <AstKeyMap *> config
 		int velax = 0
 		int perspectrum = 0
 		double *beamcorr = &_beamcorr[0]

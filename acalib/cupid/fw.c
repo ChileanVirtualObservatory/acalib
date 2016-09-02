@@ -11,7 +11,7 @@
 
 
 int *cupidFellWalker( int type, int ndim, int *slbnd, int *subnd, void *ipd,
-                         double *ipv, double rms, PyObject *config, int velax,
+                         double *ipv, double rms, AstKeyMap *config, int velax,
                          int perspectrum, double beamcorr[ 3 ],
                          int *status ){
 /*
@@ -170,8 +170,8 @@ int *cupidFellWalker( int type, int ndim, int *slbnd, int *subnd, void *ipd,
 
 /* Local Variables: */
 
-   
-   int *ret;         /* Locator for the returned array of NDFs */   
+
+   int *ret;         /* Locator for the returned array of NDFs */
    //HDSLoc *ret;         /* Locator for the returned array of NDFs */
    double *pd;          /* Pointer to next element of data array */
    double *peakvals;    /* Pointer to array holding clump peak values */
