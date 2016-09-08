@@ -1,7 +1,7 @@
 
 
 from astropy.io import fits
-from skimage.filters import threshold_otsu
+from skimage.filter import threshold_otsu
 from skimage.measure import label
 from skimage.segmentation import clear_border
 import numpy as np
