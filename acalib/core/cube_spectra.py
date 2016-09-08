@@ -1,11 +1,12 @@
 from astropy.nddata import support_nddata, NDData
+from astropy import log 
 import numpy as np
 
 
 @support_nddata
 def cube_spectra(data,samples):
     """
-    Create the spectra usin pixel samples.
+    Create the spectra using pixel samples.
     
     :param samples: Number of pixel samples used for the sketch.
     :type samples: int
@@ -114,4 +115,5 @@ def _masking(boxing, pixels):
             output[i] = boxing[i]* pixels[i]
         return output
     else:
+        log.error("boxing and pixels has different length")        
         raise ValueError("boxing and pixels has different length")

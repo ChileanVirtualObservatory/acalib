@@ -11,17 +11,18 @@ from skimage.measure import label
 from skimage.measure import regionprops
 
 from skimage.segmentation import clear_border
-
+from astropy import log
 
 @support_nddata
 def gaussian_mix(data,prob = 0.05, precision=0.02, images=False , wcs=None):
     """
-    Run the algorithm to detect objects.
+    Using a mixture of gaussians make an multiscale segmentation to get the region of interest of a 2D astronomical image.
     
     :param image: Velocity collapsed image
     :returns: list of skimage.measure.regionprops Objects, with detected regions properties
     """
     if len(data.shape) > 2:
+        log.error("Only 2D images supported")        
         raise ValueError("Only 2D images supported")
 
 
@@ -124,8 +125,6 @@ def _optimal_w(image, p = 0.05):
     fg = np.percentile(f, (1-p) * 100)
     min_ov = imagesize
 
-    #print "Radius Min: ", radiusMin, " Radius Max: ", radiusMax, " Increment: ", inc
-    #print "Background ", "%.16f "% bg, "Foreground ", "%.16f "%fg
     while(radius <= radiusMax):
         tt=radius*radius
         if tt%2==0:
@@ -138,7 +137,6 @@ def _optimal_w(image, p = 0.05):
             min_ov = ov
         
         radius += inc
-    #print "Optimal w ",w
     return w
 
 def _bg_fg(f,g,bg,fg):
@@ -167,7 +165,6 @@ def _kernelsmooth(x,kern, norm = True):
     x_w = x.shape[0]
     x_h = x.shape[1]
 
-    # Are we normalizing the kernel?
     if norm:
         k = kern / np.sum(abs(kern))
     else:
