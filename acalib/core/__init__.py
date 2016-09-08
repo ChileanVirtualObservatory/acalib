@@ -2,7 +2,13 @@ from . import container
 from . import convert
 from . import indices
 from . import utils
+from . import cube_spectra
+from . import gaussian_segmentation
+from . import vel_stacking
 from .container import *
 from .convert import *
 from .indices import *
 from .utils import *
+from .cube_spectra import *
+from .gaussian_segmentation import *
+from .vel_stacking import *
