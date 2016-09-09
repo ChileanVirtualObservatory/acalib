@@ -1,6 +1,8 @@
 doc/_build
 notebooks/.ipynb_checkpoints
 bindata/
+Notebooks/
+notebooks/
 # Created by https://www.gitignore.io
 
 ### Python ###
