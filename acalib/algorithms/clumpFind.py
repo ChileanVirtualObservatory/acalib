@@ -1,13 +1,14 @@
-1import sys
+import sys
 sys.path.append('../../')
-from acalib import *
+import acalib as aca
 from acalib.cupid import pycupid
 import astropy.units as u
 from astropy.nddata import *
 import numpy as np
 
 
-def struct_builder(caa):
+# storing unusable pixels for now (-1)
+def _struct_builder(caa):
     dims = caa.shape
     clumps = dict()
 
@@ -24,28 +25,63 @@ def struct_builder(caa):
         for i in range(dims[0]):
             for j in range(dims[1]):
                 for k in range(dims[2]):
-                if caa[i,j,k] in clumps:
-                    clumps[caa[i,j,k]].append((i,j,k))
-                else:
-                    clumps[caa[i,j,k]] = [(i,j,k)]
+                    if caa[i,j,k] in clumps:
+                        clumps[caa[i,j,k]].append((i,j,k))
+                    else:
+                        clumps[caa[i,j,k]] = [(i,j,k)]
     return clumps
 
 
 @support_nddata
-def _clumpfind(data, wcs=None, mask=None, unit=None, rms=0.0):
+def _clumpfind(data, config, wcs=None, mask=None, unit=None, rms=0.0):
     data = data.astype(np.float64)
-    ret = pycupid.clumpfind(data, dict(), rms)
+    ret = pycupid.clumpfind(data, config, rms)
     return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
 
 
 class ClumpFind:
 
-    def __init__(self, config):
-        if config is not None:
-            self.default_params()
+    def __init__(self, params=None):
+        self.config = dict()
+        if params is not None:
+            for key,value in params.items():
+                self.config[key] = value
+        self.default_params()
 
-    def default_params(self, config):
-        pass
+    def default_params(self):
+        if 'FWHMBEAM' not in self.config:
+            self.config['FWHMBEAM'] = 2.0
+        if 'VELORES' not in self.config:
+            self.config['VELORES'] = 2.0
+        if 'ALLOWEDGE' not in self.config:
+            self.config['ALLOWEDGE'] = 0
+        if 'NAXIS' not in self.config:
+            self.config['NAXIS'] = 2
+        if 'IDLALG' not in self.config:
+            self.config['IDLALG'] = 0
+        if 'MINPIX' not in self.config:
+            self.config['MINPIX'] = 10
+
+    def set_param(self, key, value):
+        self.config[key] = value
+
+    def get_param(self, key):
+        if key in self.config:
+            return self.config[key]
+        else: return None
+
+    def get_params(self):
+        return self.config
 
     def run(self, data):
-        ret = _clumpfind(data, rms)
+        # if rms not in config, estimate it
+        if 'RMS' not in self.config:
+            rms = aca.rms(data)
+
+        # computing the CAA thruogh clumpfind clumping algorithm
+        caa = _clumpfind(data, self.config, rms=rms)
+
+        # computing asocciated structures
+        clumps = _struct_builder(caa.data)
+
+        return caa,clumps
