@@ -1,17 +1,16 @@
-
 from astropy import log
 import numpy as np
 import astropy.constants as const
 
 import astropy.wcs as wcs
 import astropy.units as u
+from astropy.table.table import Table
+from astropy.nddata import NDData
 import datetime 
-
-from ..core import parameter as par
-from ..core import adata as dt
-from ..core import atable
-from ..core.atable import ATable
 import copy
+
+from acalib import *
+from convert import * 
 
 
 class Universe:
@@ -38,23 +37,23 @@ class Universe:
     def _gen_sources_table(self):
         """
         Will generate a resumed table of each component.
-        :return: an Aca Table.
+        :return: an Astropy Table.
         """
 
-        table = ATable(names=("Source Name", "Comp ID", "Model", "Alpha", "Delta", "Redshift", "Radial Vel"),dtype=('S80','S80','S40','f8','f8','f8','f8'))
+        table = Table(names=("Source Name", "Comp ID", "Model", "Alpha", "Delta", "Redshift", "Radial Vel"),dtype=('S80','S80','S40','f8','f8','f8','f8'))
         for source in self.sources:
             for component in self.sources[source].comp:
-                table += (self.sources[source].name, component.comp_name, component.get_model_name(),
+                table.add_row((self.sources[source].name, component.comp_name, component.get_model_name(),
                           component.pos[0].value + component.offset[1].value, component.pos[1].value + component.offset[0].value, component.get_redshift().value,
-                          component.get_velocity().value)
+                          component.get_velocity().value))
 
         return table
     
     def gen_cube(self, pos, ang_res, fov, freq, spe_res, bw, noise, cutlev):
         """
-        Returns a Cube object where all the sources within the FOV and BW are projected, and
-        a dictionary with a sources astropy Table and all the parameters of the components
-        in the successive Tables
+        Returns a container object where all the sources within the FOV and BW are projected in the
+        primary object (NDData), and with a sources astropy Table and all the parameters of the components
+        in the successive tables as extensions
 
         This function needs the following parameters:
         - name    : name of the cube
@@ -63,17 +62,19 @@ class Universe:
         - fov     : angular field of view x 2
         - freq    : spectral center (frequency)
         - spe_res : spectral resolution
-        - bw  : spectral bandwidth
+        - bw      : spectral bandwidth
+        - noise   : noise level
+        - cutlev  : cut level
         """
 
         # Create a new WCS object.
-        pos = par.to_deg(pos)
-        ang_res = par.to_deg(ang_res)
-        fov = par.to_deg(fov)
+        pos = to_deg(pos)
+        ang_res = to_deg(ang_res)
+        fov = to_deg(fov)
         #print pos,ang_res,fov
-        freq = par.to_hz(freq)
-        spe_res = par.to_hz(spe_res)
-        bw = par.to_hz(bw)
+        freq = to_hz(freq)
+        spe_res = to_hz(spe_res)
+        bw = to_hz(bw)
         #print freq,spe_res,bw
         #w = wcs.WCS(naxis=3)
         #w.wcs.crval = np.array([pos[0].value, pos[1].value, freq.value])
@@ -161,10 +162,8 @@ class Universe:
         meta['DATE'] = meta['DATE-OBS']
         meta['ORIGIN'] = "ACALIB"
         mywcs=wcs.WCS(meta)
-        cube = dt.AData(data, mywcs, meta, u.Jy / u.beam)
-        sources_table = self._gen_sources_table()
-        component_tables = dict()
-
+        tab = [self._gen_sources_table()]
+        cube = NDData(data, wcs=mywcs,meta=meta,unit=u.Jy / u.beam)
         for source in self.sources:
             log.info('Projecting source ' + source)
             gen_tables = self.sources[source].project(cube, cutlev)
@@ -173,16 +172,20 @@ class Universe:
 
             # add all tables generated from each component of the source
             # on the complete components dictionary.
-            component_tables.update(gen_tables)
+            tab+=gen_tables
+        add_flux(cube.data,2 * noise * (np.random.random(data.shape) - 0.5))
+        cont=Container()
+        cont.primary=cube
 
-        cube.add_flux(2 * noise * (np.random.random(cube.data.shape) - 0.5))
-        return cube, (sources_table, component_tables)
+        cont.tables=tab
 
-    def save_cube(self, cube, filename):
-        """
-        Wrapper function that saves a cube into a FITS (filename).
-        """
-        cube.save_fits(self.sources, filename)
+        return cont
+
+    #def save_cube(self, cube, filename):
+    #    """
+    #    Wrapper function that saves a cube into a FITS (filename).
+    #    """
+    #    cube.save_fits(self.sources, filename)
 
 
 class Source:
@@ -195,7 +198,7 @@ class Source:
         :param name:    a name of the source
         """
 
-        self.pos=par.to_deg(pos)
+        self.pos=to_deg(pos)
         self.name = name
         self.comp = list()
 
@@ -220,7 +223,7 @@ class Source:
         Projects all components in the source to a cube.
         """
 
-        component_tables = dict()
+        component_tables = []
         log.info('Projecting Source at ' + str(self.pos))
 
         for component in self.comp:
@@ -228,7 +231,7 @@ class Source:
             comp_table = component.project(cube, limit)
 
             if comp_table is not None:
-                component_tables[self.name + "." + component.comp_name] = comp_table
+                component_tables += [comp_table]
                 meta_data = component.get_meta_data()
 
                 if isinstance(meta_data, dict):
@@ -254,7 +257,7 @@ class Component:
     def set_velocity(self, rvel):
         """Set radial velocity rvel. If rvel has no units, we assume km/s"""
         c = const.c.to('m/s')
-        rvel = par.to_m_s(rvel)
+        rvel = to_m_s(rvel)
 
         self.z = np.sqrt((1 + rvel/c) / (1 - rvel/c)) - 1
 
