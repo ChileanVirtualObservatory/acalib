@@ -301,9 +301,9 @@ int CGEN_FUNCTION(cupidFWMain)( CGEN_TYPE *array, int nel, int ndim,
    }
 
 /* If required, dump the mask indicating which pixel are below the threshold. */
-   if( msgFlevok( MSG__DEBUG2, status ) ) {
-      cupidDumpI( ipa, ndim, dims, slbnd, "initial mask", status );
-   }
+   //if( msgFlevok( MSG__DEBUG2, status ) ) {
+   //   cupidDumpI( ipa, ndim, dims, slbnd, "initial mask", status );
+   //}
 
 /* Use a cellular automata to remove small isolated groups of usable
    pixels from the above "ipa" array. This allocates new memory for the
@@ -321,9 +321,9 @@ int CGEN_FUNCTION(cupidFWMain)( CGEN_TYPE *array, int nel, int ndim,
    work = cupidRCA( ipa, NULL, nel, dims, skip, frac, VAL__MAXI, 0, -1, 1, status );
 
 /* If required, dump the mask resulting from the above cleaning. */
-   if( msgFlevok( MSG__DEBUG2, status ) ) {
-      cupidDumpI( work, ndim, dims, slbnd, "cleaned initial mask", status );
-   }
+   //if( msgFlevok( MSG__DEBUG2, status ) ) {
+   //   cupidDumpI( work, ndim, dims, slbnd, "cleaned initial mask", status );
+   //}
 
 /* Pre-allocate some memory for the route array which holds the 1D vector
    indices of the pixels traversed in the route from the initial pixel to
@@ -723,18 +723,18 @@ int CGEN_FUNCTION(cupidFWMain)( CGEN_TYPE *array, int nel, int ndim,
 /* If this is the clump specified by config parameter DUMP_PEAK, and the
    current path is the first path to reach the peak, dump the clump
    assignment array. */
-                  if( new_peak && clump_index == dump_peak ) {
-                     char text[200];
-                     sprintf( text, "first walk to peak %d", dump_peak );
-                     cupidDumpI( work, ndim, dims, slbnd, text, status );
+                  //if( new_peak && clump_index == dump_peak ) {
+                  //   char text[200];
+                  //   sprintf( text, "first walk to peak %d", dump_peak );
+                  //   cupidDumpI( work, ndim, dims, slbnd, text, status );
 
 /* Otherwise, if this is the walk specified by config parameter DUMP_WALK,
    dump the clump assignment array. */
-                  } else if( iv0 == dump_walk ) {
-                     char text[200];
-                     sprintf( text, "walk from pixel %d", dump_walk );
-                     cupidDumpI( work, ndim, dims, slbnd, text, status );
-                  }
+                  //} else if( iv0 == dump_walk ) {
+                  //   char text[200];
+                  //   sprintf( text, "walk from pixel %d", dump_walk );
+                  //   cupidDumpI( work, ndim, dims, slbnd, text, status );
+                  //}
                }
 
 /* Issue a progress report if required.*/
@@ -758,9 +758,9 @@ int CGEN_FUNCTION(cupidFWMain)( CGEN_TYPE *array, int nel, int ndim,
    msgBlankif( MSG__VERB, status );
 
 /* If required, dump the unmerged clump mask. */
-   if( msgFlevok( MSG__DEBUG2, status ) ) {
-      cupidDumpI( work, ndim, dims, slbnd, "raw clump mask", status );
-   }
+   //if( msgFlevok( MSG__DEBUG2, status ) ) {
+   //   cupidDumpI( work, ndim, dims, slbnd, "raw clump mask", status );
+   //}
 
 /* Amalgamate adjoining clumps if there is no significant dip between the
    clumps. */
@@ -770,10 +770,10 @@ int CGEN_FUNCTION(cupidFWMain)( CGEN_TYPE *array, int nel, int ndim,
    msgOutif( MSG__VERB, "", "Merging completed", status );
 
 /* If required, dump the merged clump mask. */
-   if( msgFlevok( MSG__DEBUG2, status ) ) {
-      cupidDumpI( work, ndim, dims, slbnd, "merged but uncleaned clump mask",
-                  status );
-   }
+   //if( msgFlevok( MSG__DEBUG2, status ) ) {
+   //   cupidDumpI( work, ndim, dims, slbnd, "merged but uncleaned clump mask",
+   //               status );
+   //}
 
 /* Smooth the boundaries between the clumps. This cellular automata replaces
    each output pixels by the most commonly occuring value within a 3x3x3
@@ -804,9 +804,9 @@ int CGEN_FUNCTION(cupidFWMain)( CGEN_TYPE *array, int nel, int ndim,
    if( m1 != ipa ) memcpy( ipa, work, sizeof( int )*nel );
 
 /* If required, dump the cleaned clump mask. */
-   if( msgFlevok( MSG__DEBUG2, status ) ) {
-      cupidDumpI( ipa, ndim, dims, slbnd, "cleaned clump mask", status );
-   }
+   //if( msgFlevok( MSG__DEBUG2, status ) ) {
+   //   cupidDumpI( ipa, ndim, dims, slbnd, "cleaned clump mask", status );
+   //}
 
 /* Free resources. */
    work = astFree( work );
@@ -816,11 +816,5 @@ int CGEN_FUNCTION(cupidFWMain)( CGEN_TYPE *array, int nel, int ndim,
    return ret;
 
 }
-
-
-
-
-
-
 
 
