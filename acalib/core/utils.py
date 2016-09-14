@@ -222,12 +222,14 @@ def snr_estimation(data,mask=None,noise=None,points=1000,full_output=False):
        noise=rms(data,mask)
     x=[]
     y=[]
+    n=[]
     sdata=data[data>noise]
     for i in range(1,int(points)):
         val=1.0 + 2.0*i/points
         sdata=sdata[sdata>val*noise]
         if sdata.size < 2:
             break
+        n.append(sdata.size)
         yval=sdata.mean()/noise
         x.append(val)
         y.append(yval)
@@ -236,7 +238,7 @@ def snr_estimation(data,mask=None,noise=None,points=1000,full_output=False):
     p=v.argmax() + 1
     snrlimit=x[p]
     if full_output==True:
-       return snrlimit,noise,x,y,v,p 
+       return snrlimit,noise,x,y,v,n,p 
     return snrlimit
 
 @support_nddata
