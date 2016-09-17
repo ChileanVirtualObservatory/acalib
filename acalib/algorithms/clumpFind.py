@@ -46,9 +46,9 @@ class ClumpFind:
         if params is not None:
             for key,value in params.items():
                 self.config[key] = value
-        self.default_params()
+        self._default_params()
 
-    def default_params(self):
+    def _default_params(self):
         if 'FWHMBEAM' not in self.config:
             self.config['FWHMBEAM'] = 2.0
         if 'VELORES' not in self.config:
@@ -69,9 +69,6 @@ class ClumpFind:
         if key in self.config:
             return self.config[key]
         else: return None
-
-    def get_params(self):
-        return self.config
 
     def run(self, data):
         # if rms not in config, estimate it
