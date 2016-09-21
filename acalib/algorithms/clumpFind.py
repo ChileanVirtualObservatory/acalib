@@ -1,9 +1,10 @@
 import sys
 sys.path.append('../../')
-import acalib as aca
+import acalib
 from acalib.cupid import pycupid
 import astropy.units as u
 from astropy.nddata import *
+from algorithm import Algorithm
 import numpy as np
 
 
@@ -39,14 +40,7 @@ def _clumpfind(data, config, wcs=None, mask=None, unit=None, rms=0.0):
     return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
 
 
-class ClumpFind:
-
-    def __init__(self, params=None):
-        self.config = dict()
-        if params is not None:
-            for key,value in params.items():
-                self.config[key] = value
-        self.default_params()
+class ClumpFind(Algorithm):
 
     def default_params(self):
         if 'FWHMBEAM' not in self.config:
@@ -62,23 +56,12 @@ class ClumpFind:
         if 'MINPIX' not in self.config:
             self.config['MINPIX'] = 10
 
-    def set_param(self, key, value):
-        self.config[key] = value
-
-    def get_param(self, key):
-        if key in self.config:
-            return self.config[key]
-        else: return None
-
-    def get_params(self):
-        return self.config
-
     def run(self, data):
         # if rms not in config, estimate it
         if 'RMS' not in self.config:
-            rms = aca.rms(data)
+            rms = acalib.rms(data)
 
-        # computing the CAA thruogh clumpfind clumping algorithm
+        # computing the CAA through clumpfind clumping algorithm
         caa = _clumpfind(data, self.config, rms=rms)
 
         # computing asocciated structures
