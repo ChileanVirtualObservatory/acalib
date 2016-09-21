@@ -62,7 +62,6 @@ class ClumpFind(Algorithm):
             rms = acalib.rms(data)
         else:
             rms = self.config['RMS']
-
         # computing the CAA through clumpfind clumping algorithm
         caa = _clumpfind(data, self.config, rms=rms)
 
