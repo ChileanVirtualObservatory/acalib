@@ -60,6 +60,8 @@ class ClumpFind(Algorithm):
         # if rms not in config, estimate it
         if 'RMS' not in self.config:
             rms = acalib.rms(data)
+        else:
+            rms = self.config['RMS']
 
         # computing the CAA through clumpfind clumping algorithm
         caa = _clumpfind(data, self.config, rms=rms)
