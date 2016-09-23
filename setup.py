@@ -7,7 +7,6 @@ import os
 
 class InstallPyCupid(install):
     def run(self):
-        """Install pycupid library before install."""
         print("installing pycupid library")
         cwd = os.getcwd()
         rel_pycupid = 'acalib/cupid/'
@@ -27,7 +26,7 @@ setup(
     url = "https://github.com/ChileanVirtualObservatory/ACALIB",
     author = "LIRAE",
     author_email = 'contact@lirae.cl',
-    cmdclass={"install": InstallPyCupid},
+    cmdclass = {"install": InstallPyCupid},
     classifiers = [
         'Intended Audience :: Science/Research',
 
@@ -41,6 +40,6 @@ setup(
     include_package_data = True,
     setup_requires = ['numpy>=1.11', 'cython>=0.18'],
     install_requires = ['numpy>=1.11', 'astropy>=1.2', 'cython>=0.24',
-    					'matplotlib>=1.5', 'db>=0.1', 'scipy>=0.18',
-    					'scikit-image>=0.12']
+                        'matplotlib>=1.5', 'db>=0.1', 'scipy>=0.18',
+                        'scikit-image>=0.12']
 )
