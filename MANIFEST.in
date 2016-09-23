@@ -1,0 +1,8 @@
+recursive-include acalib/cupid/attic *
+recursive-include acalib/cupid/cupidsub *
+recursive-include acalib/cupid/include *
+
+include acalib/cupid/*.c
+include acalib/cupid/Makefile
+include acalib/cupid/pycupid.pxd
+include acalib/cupid/pycupid.pyx
