@@ -154,7 +154,7 @@ def get_velocities(data,wcs=None,fqi=None,restfrq=None):
 
 # TODO: extend to n-dimensions (only works for 3)
 @support_nddata
-def axes_ranges(data,wcs,lower=None,upper=None):
+def axes_ranges(data,wcs=None,lower=None,upper=None):
     """ Get axes extent (transforms freq to velocity!) """
     if lower==None:
         lower=[0,0,0]
