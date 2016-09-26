@@ -31,23 +31,24 @@ class MayaviVisualization(HasTraits):
 	wireframe = 0
 	ax = 0
 	updated_cube = 0
+
 	@on_trait_change('scene.activated')
 	def update_volume(self):
 		# Clear the current visualization.
 		mlab.clf()
 		# Copy the cube to avoid modifying the original, and then eliminate lower values.
-		updated_cube = cube.copy()
+		updated_cube = NDData(data=cube.data.copy(),wcs=cube.wcs.copy(),meta=cube.meta.copy())
 		self.updated_cube = updated_cube
-		updated_cube.data = np.nan_to_num(updated_cube.data)
-		updated_cube.data[updated_cube.data < min_threshold_factor*rms] = 0
-		updated_cube.data[updated_cube.data > max_threshold_factor*rms] = 0
+		udata = np.nan_to_num(updated_cube.data)
+		udata[udata < min_threshold_factor*rms] = 0
+		udata[udata > max_threshold_factor*rms] = 0
 		# Create the volume visualization and axes.
-		xi, yi, zi = updated_cube.get_mesh()
+		xi, yi, zi = get_mesh(updated_cube.data)
 		if(volume_type == 'volume'):
-			volume = mlab.pipeline.scalar_field(xi*shape[1]/shape[0], yi, zi, updated_cube.data)
+			volume = mlab.pipeline.scalar_field(xi*shape[1]/shape[0], yi, zi, udata)
 			mlab.pipeline.volume(volume)
 		if(volume_type == 'contour'): 
-			mlab.contour3d(xi*shape[1]/shape[0], yi, zi, updated_cube.data, transparent=True, contours=contours, opacity=0.5)
+			mlab.contour3d(xi*shape[1]/shape[0], yi, zi, udata, transparent=True, contours=contours, opacity=0.5)
 			mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
 			
 	@on_trait_change('scene.activated')
@@ -73,7 +74,7 @@ class MayaviVisualization(HasTraits):
 		self.update_axis()
 		
 	def update_axis(self):
-		ranges=self.updated_cube.get_ranges(lower_cube_limit, upper_cube_limit)
+		ranges=axes_ranges(self.updated_cube.data,wcs=cube.wcs,lower=lower_cube_limit,upper=upper_cube_limit)
 		extent = [lower_cube_limit[0]*shape[1]/shape[0], upper_cube_limit[0]*shape[1]/shape[0], lower_cube_limit[1], upper_cube_limit[1], lower_cube_limit[2], upper_cube_limit[2]]
 		self.ax=mlab.axes(xlabel="VEL [km/s]",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5, extent=extent)
 		self.ax.axes.label_format='%.3f'
@@ -105,19 +106,23 @@ class MatplotlibVisualization(FigureCanvas):
 		self.axes.hold(False)
 		if(type == 'spectre'):
 			# Add the RA and DEC axes.
-			ranges = cube.get_ranges(lower_cube_limit, upper_cube_limit)
+			ranges = axes_ranges(cube,lower=lower_cube_limit, upper=upper_cube_limit)
 			vel = np.linspace(ranges[0], ranges[1], upper_cube_limit[0]-lower_cube_limit[0])
-			spectre = cube.stack(lower_cube_limit, upper_cube_limit, (1,2))
+                        ccut = cut(cube,lower=lower_cube_limit, upper=upper_cube_limit)
+                        spectre = ccut.data.sum(axis=(1,2))
+			#spectre = cube.stack(lower_cube_limit, upper_cube_limit, (1,2))
 			self.axes.plot(vel, spectre)
 			self.axes.set_xlabel("VEL\n[km/s]")
 			self.axes.xaxis.set_label_coords(1.08, 0.08)
 			if(ranges[0] > ranges[1]): self.axes.invert_xaxis()
 		if(type == 'stacked'):
 			# Calculate a new cube adjusted to limits.
-			stacked_cube = cube.stack(lower_cube_limit, upper_cube_limit)
-			ranges = cube.get_ranges(lower_cube_limit, upper_cube_limit)
+                        ccut = cut(cube,lower=lower_cube_limit, upper=upper_cube_limit)
+			stacked_cube = moment0(ccut)
+			ranges = axes_ranges(cube,lower=lower_cube_limit, upper=upper_cube_limit)
+			#ranges = cube.get_ranges(lower_cube_limit, upper_cube_limit)
 			extent = ranges[4:6] + ranges[2:4]
-			img = self.axes.imshow(stacked_cube, origin='lower', extent=extent, cmap="RdYlBu")
+			img = self.axes.imshow(stacked_cube.data, origin='lower', extent=extent, cmap="RdYlBu")
 			# Reduce the number of ticks.
 			xticks = np.linspace(ranges[4], ranges[5], 4)
 			yticks = np.linspace(ranges[2], ranges[3], 4)
@@ -138,9 +143,12 @@ class MatplotlibVisualization(FigureCanvas):
 		FigureCanvas.updateGeometry(self)
 		
 	def update_spectre(self):
-		ranges = cube.get_ranges(lower_cube_limit, upper_cube_limit)
+	        ranges = axes_ranges(cube,lower=lower_cube_limit, upper=upper_cube_limit)
+		#ranges = cube.get_ranges(lower_cube_limit, upper_cube_limit)
 		vel = np.linspace(ranges[0], ranges[1], upper_cube_limit[0]-lower_cube_limit[0])
-		spectre = cube.stack(lower_cube_limit, upper_cube_limit, (1,2))
+                ccut = cut(cube,lower=lower_cube_limit, upper=upper_cube_limit)
+                spectre = ccut.data.sum(axis=(1,2))
+		#spectre = cube.stack(lower_cube_limit, upper_cube_limit, (1,2))
 		self.axes.plot(vel, spectre)
 		self.axes.set_xlabel("VEL\n[km/s]")
 		self.axes.xaxis.set_label_coords(1.08, 0.08)
@@ -149,10 +157,13 @@ class MatplotlibVisualization(FigureCanvas):
 	def update_stacked(self):
 		self.fig.clf()
 		self.axes = self.fig.add_subplot(111)
-		stacked_cube = cube.stack(lower_cube_limit, upper_cube_limit)
-		ranges = cube.get_ranges(lower_cube_limit, upper_cube_limit)
+                ccut = cut(cube,lower=lower_cube_limit, upper=upper_cube_limit)
+		stacked_cube = moment0(ccut)
+		#stacked_cube = cube.stack(lower_cube_limit, upper_cube_limit)
+	        ranges = axes_ranges(cube,lower=lower_cube_limit, upper=upper_cube_limit)
+		#ranges = cube.get_ranges(lower_cube_limit, upper_cube_limit)
 		extent = ranges[4:6] + ranges[2:4]
-		img = self.axes.imshow(stacked_cube, origin='lower', extent=extent, cmap="RdYlBu")
+		img = self.axes.imshow(stacked_cube.data, origin='lower', extent=extent, cmap="RdYlBu")
 		xticks = np.linspace(ranges[4], ranges[5], 4)
 		yticks = np.linspace(ranges[2], ranges[3], 4)
 		self.axes.set_xticks(xticks)
@@ -180,7 +191,8 @@ class MatplotlibQWidget(QtGui.QWidget):
 	
 ############### Load the file and the data inside. ############### 
 ##################################################################
-folder = '../../../../fits/'
+#folder = '../../../../fits/'
+folder = '../../../bindata/fits/cubes/'
 #folder = '/home/mauricio/Downloads/2011.0.00772.S/sg_ouss_id/group_ouss_id/member_ouss_id/product/'
 #fits_file = folder+'M100line.image.fits'
 fits_file = folder+'Boom.cm.cln.fits'
@@ -189,9 +201,9 @@ fits_file = folder+'Boom.cm.cln.fits'
 #fits_file = folder+'new.fits'
 
 # Load from container.
-c = AContainer()
-c.load(fits_file)
-cube=c.adata[0]
+c = Container()
+c.load_fits(fits_file)
+cube=c.primary
 
 # Metadata.
 header = cube.meta
@@ -200,16 +212,16 @@ header = cube.meta
 volume_type = 'volume'
 
 # Simple Checks.
-shape=cube.shape()
-pixels=cube.count()
-tflux=cube.flux()
-vflux=cube.variance()
-mmin = cube.min()
-mmax = cube.max()
+shape=cube.data.shape
+#pixels=cube.count()
+#tflux=cube.flux()
+#vflux=cube.variance()
+#mmin = cube.min()
+mmax = cube.data.max()
 
 # Determine the threshold.
-rms=cube.estimate_rms()
-max_threshold = int(mmax[0]/rms)
+rms=rms(cube)
+max_threshold = int(mmax/rms)
 min_threshold_factor = 1
 max_threshold_factor = max_threshold
 
@@ -218,10 +230,10 @@ lower_cube_limit = (0,0,0)
 upper_cube_limit = shape
 
 # WCS Limits.
-l1=cube.wcs_limits(0)
-l2=cube.wcs_limits(1)
-l3=cube.wcs_limits(2)
-iw=cube.index_to_wcs((20,300,300))
+#l1=cube.wcs_limints(0)
+#l2=cube.wcs_limits(1)
+#l3=cube.wcs_limits(2)
+#iw=cube.index_to_wcs((20,300,300))
 
 ############### Create the windows and add the container. ###############
 #########################################################################
