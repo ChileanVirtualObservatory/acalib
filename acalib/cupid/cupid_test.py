@@ -33,11 +33,6 @@ cf2d_res = clumpfind(data2D, config, rms2D)
 cf3d_res = clumpfind(data3D, config, rms3D)
 print("Results on 2D data:")
 print(type(cf2d_res.data))
-print("============================================")
-for y in range(cf2d_res.shape[1]):
-    for x in range(cf2d_res.shape[0]):
-        if cf2d_res[x,y]>-1: print (str(x)+"\t"+str(y)+"\t"+str(cf2d_res[x,y]))
-print("============================================")
 print("number of clumps detected: {0}\n".format(np.max(cf2d_res)+1))
 for clump in range(np.max(cf2d_res)+1):
     print("number of pixels of clump {0}: {1}".format(clump, np.sum(cf2d_res==clump) ))
