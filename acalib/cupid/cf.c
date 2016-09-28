@@ -165,6 +165,8 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
    int nminpix;         /* Number of clumps with < MinPix pixels */
    int skip[3];         /* Pointer to array of axis skips */
 
+   int *trueids;        /* Array to map the clump ids before and after deleting the bad ones */
+
 /* Initialise */
    ret = NULL;
 
@@ -348,6 +350,10 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
       minpix = cupidConfigI( config, "MINPIX", minpix, status );
 
 /* Loop round each clump */
+        // -- Array to set the pixels of the ipa to their right clump.
+        trueids= (int*) astMalloc(sizeof(int)*(index+1));
+        for( j = 0; j < index+1 ; j++) trueids[j]=-1;
+
       nminpix = 0;
       nedge = 0;
       nclump = 0;
@@ -374,6 +380,9 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
                clumps[ ii ] = cupidCFFreePS( ps, NULL, 0, status );
 
             } else {
+                // -- Prepare this ii to be changed to nclump for each pixel
+                trueids[ ii ]= nclump ;
+                printf(" %d(/%d) -->> %d \n",ii,index,nclump);
                nclump++;
             }
          }
@@ -457,6 +466,15 @@ int *cupidClumpFind( int type, int ndim, int *slbnd, int *subnd, void *ipd,
       //                        cupidConfigD( config, "MAXBAD", 0.05, status ),
       //                        status );
       //}
+
+
+        // -- Change the clump ids to the right ones on the ipa.
+        for (j = 0; j < el ; j++) {
+            if(ipa[j]>=index) ipa[j]= -1;
+            if(ipa[j]>=0) ipa[j]= trueids[ipa[j]] ;
+        }
+        // -- Free the trueids.
+        trueids = astFree( trueids );
 
 /* Free resources */
       for( i = 0; i < index; i++ ) {
