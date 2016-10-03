@@ -1,23 +1,27 @@
 from distutils.core import run_setup
-from setuptools.command import easy_install
+from setuptools import setup, find_packages
 from setuptools.command.install import install
-from setuptools import setup, find_packages, sandbox
+from shutil import copyfile
 
 import os
+import glob
 
-class InstallPyCupid(install):
+# PyCupid Library command
+class BuildCupid(install):
     def run(self):
-        print("installing pycupid library")
         cwd = os.getcwd()
         rel_pycupid = 'acalib/cupid/'
         pycupid_dir = os.path.join(cwd, rel_pycupid)
         os.chdir(pycupid_dir)
-        run_setup('setup.py', ["build", "install"])
-        os.chdir(cwd)
-        print("pycupid library installed")
 
-        install.run(self)
-        
+        run_setup('setup.py', ["build"])
+
+        for fbuilded in glob.glob("build/lib*/*.so"):
+            dest_directory = os.getcwd() + '/' + os.path.basename(fbuilded)
+            copyfile(fbuilded, dest_directory)
+
+        os.chdir(cwd)
+
 setup(
     name = "acalib",
 
@@ -26,7 +30,7 @@ setup(
     url = "https://github.com/ChileanVirtualObservatory/ACALIB",
     author = "LIRAE",
     author_email = 'contact@lirae.cl',
-    cmdclass = {"install": InstallPyCupid},
+    cmdclass = {"bcupid": BuildCupid},
     classifiers = [
         'Intended Audience :: Science/Research',
 
@@ -40,6 +44,6 @@ setup(
     include_package_data = True,
     setup_requires = ['numpy>=1.11', 'cython>=0.18'],
     install_requires = ['numpy>=1.11', 'astropy>=1.2', 'cython>=0.24',
-                        'matplotlib>=1.5', 'db>=0.1', 'scipy>=0.18',
+                        'matplotlib>=1.5', 'scipy>=0.18',
                         'scikit-image>=0.12']
 )
