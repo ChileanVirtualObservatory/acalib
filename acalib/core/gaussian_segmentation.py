@@ -2,6 +2,7 @@ import numpy as np
 
 from astropy.nddata import support_nddata, NDData
 from astropy.table import Table
+from astropy import units as u
 
 from skimage.filter import threshold_adaptive
 from skimage.morphology import binary_opening
@@ -14,7 +15,7 @@ from skimage.segmentation import clear_border
 from astropy import log
 
 @support_nddata
-def gaussian_mix(data,prob = 0.05, precision=0.02, images=False , wcs=None):
+def gaussian_mix(data,prob = 0.05, precision=0.02, wcs=None):
     """
     Using a mixture of gaussians make an multiscale segmentation to get the region of interest of a 2D astronomical image.
     
@@ -27,8 +28,7 @@ def gaussian_mix(data,prob = 0.05, precision=0.02, images=False , wcs=None):
 
 
     image_list = []
-    centroid_x = []
-    centroid_y = []   
+ 
     
     image = data
     image[np.isnan(image)] = 0
@@ -62,18 +62,11 @@ def gaussian_mix(data,prob = 0.05, precision=0.02, images=False , wcs=None):
         sub = label(sub)
         fts = regionprops(sub)
         
-        if images:
-            image_list.append(NDData(sub,wcs=wcs))
+        image_list.append(NDData(sub,wcs=wcs))
 
         if len(fts) > 0:
             for props in fts:
                 C_x, C_y = props.centroid
-
-                if wcs:
-                    ra , dec = wcs.celestial.all_pix2world(C_x,C_y,1)
-                    centroid_x.append(ra)
-                    centroid_y.append(dec)
-
 
                 radius = props.equivalent_diameter / 2.
                 kern = 0.01 * np.ones((2*radius, 2*radius))
@@ -91,11 +84,8 @@ def gaussian_mix(data,prob = 0.05, precision=0.02, images=False , wcs=None):
            tt+=1
         g = threshold_adaptive(diff,tt,method='mean',offset=0)
         r = np.round(r/2.)
-    objects = Table([centroid_x,centroid_y],names=["RA","DEC"], meta={"name": "Region of interest found"})
-    if images:
-        return objects, image_list
-
-    return objects
+    
+    return image_list
 
 
 
@@ -201,3 +191,47 @@ def _kernel_shift(back,kernel, x,y):
                 back[rowInit+row][colInit+col] = kernel[row][col]
 
     return back
+
+@support_nddata
+def measure_shape(data, labeled_images, wcs=None):
+    objects = list()
+    intensity_image = data
+    for image in labeled_images:
+        objs_properties = _get_shape(image, intensity_image)
+        objects.extend(objs_properties)
+
+
+    if len(objects) == 0:
+        return Table()
+
+    names  = ["CentroidRa", "CentroidDec", "MajorAxisLength","MinorAxisLength",
+              "Area", "Eccentricity", "Solidity", "FilledPercentaje"]
+
+    t = Table(rows = objects, names=names, meta={"name": "Object Shapes"})
+    return t
+
+@support_nddata
+def _get_shape(data, intensity_image, wcs=None):
+    objs_properties = []
+    fts = regionprops(data, intensity_image = intensity_image)
+    
+    for obj in fts:
+        if wcs:
+            matrix = wcs.pixel_scale_matrix
+            deg_per_pix_x = matrix[0,0]
+            deg_per_pix_y = matrix[1,1]
+
+        centroid = wcs.celestial.all_pix2world(obj.centroid[0],obj.centroid[1],1) if wcs else obj.centroid
+        centroid_ra = centroid[0] if wcs else centroid[0]
+        centroid_dec = centroid[1] if wcs else centroid[1]
+        major_axis = abs(deg_per_pix_x) * obj.major_axis_length if wcs else obj.major_axis_length 
+        minor_axis = abs(deg_per_pix_x) * obj.minor_axis_length if wcs else obj.minor_axis_length
+        area = obj.area * abs(deg_per_pix_x)  if wcs else obj.area
+        eccentricity = obj.eccentricity
+        solidity = obj.solidity
+        filled = obj.area / obj.filled_area
+
+        objs_properties.append((centroid_ra, centroid_dec, major_axis, minor_axis, area,
+                               eccentricity , solidity, filled))        
+
+    return objs_properties
