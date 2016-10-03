@@ -55,7 +55,6 @@ def world_window_to_index(data,wcs,center,window):
     upper=fix_limits(data,upper[0][::-1])
     return (lower,upper)
 
-
 def get_mesh(data,lower=None,upper=None):
     """ Create an index mesh """
     sl=slab(data,lower,upper)
