@@ -3,8 +3,8 @@ from algorithm import Algorithm
 
 class Indexing(Algorithm):
 	def default_params(self):
-		if 'PROB' not in self.config:
-			self.config['PROB'] = 0.05
+		if 'P' not in self.config:
+			self.config['P'] = 0.05
 		if 'PRECISION' not in self.config:
 			self.config['PRECISION'] = 0.02
 		if 'RANDOM_STATE' not in self.config:
@@ -26,7 +26,7 @@ class Indexing(Algorithm):
 		pp_slices = []
 		for slice in slices:
 			pp_slice  = acalib.vel_stacking(data, slice)
-			labeled_images = acalib.gaussian_mix(pp_slice)
+			labeled_images = acalib.gaussian_mix(pp_slice,prob=self.config["P"], precision=self.config["PRECISION"])
 
 			if wcs is not None:
 				freq_min = float(wcs.all_pix2world(0,0,slice.start,1)[2])
@@ -38,6 +38,7 @@ class Indexing(Algorithm):
 			table = acalib.measure_shape(pp_slice, labeled_images, freq_min , freq_max )
 			if len(table) > 0:
 				c.tables.append(table)
+				c.images.append(pp_slice)
 				c.images.extend(labeled_images)
 
 
