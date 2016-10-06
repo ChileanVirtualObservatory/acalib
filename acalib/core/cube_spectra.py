@@ -2,8 +2,9 @@ from astropy.nddata import support_nddata, NDData
 from astropy import log 
 import numpy as np
 
+
 @support_nddata
-def cube_spectra(data,samples, random_state=None):
+def cube_spectra(data,samples):
     """
     Create the spectra using pixel samples.
     
@@ -11,9 +12,6 @@ def cube_spectra(data,samples, random_state=None):
     :type samples: int
     :returns: ( spectra (array), slices  (list)).
     """
-
-    if random_state is not None:
-        np.random.seed(random_state)
 
     dims = data.shape
     P_x = dims[2]
