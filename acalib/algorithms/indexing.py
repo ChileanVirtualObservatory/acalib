@@ -1,0 +1,48 @@
+import acalib
+from algorithm import Algorithm
+
+class Indexing(Algorithm):
+	def default_params(self):
+		if 'PROB' not in self.config:
+			self.config['PROB'] = 0.05
+		if 'PRECISION' not in self.config:
+			self.config['PRECISION'] = 0.02
+		if 'RANDOM_STATE' not in self.config:
+			self.config['RANDOM_STATE'] = None
+		if 'SAMPLES' not in self.config:
+			self.config["SAMPLES"]  = 1000
+
+	def run(self,data): 
+
+		if data.wcs:
+			wcs = data.wcs
+		else:
+			wcs = None
+
+		c = acalib.Container()
+
+		spectra, slices = acalib.cube_spectra(data,self.config["SAMPLES"],self.config["RANDOM_STATE"])
+
+		pp_slices = []
+		for slice in slices:
+			pp_slice  = acalib.vel_stacking(data, slice)
+			labeled_images = acalib.gaussian_mix(pp_slice)
+
+			if wcs is not None:
+				freq_min = float(wcs.all_pix2world(0,0,slice.start,1)[2])
+				freq_max = float(wcs.all_pix2world(0,0,slice.stop,1)[2])
+			else:
+				freq_min = None
+				freq_max = None
+
+			table = acalib.measure_shape(pp_slice, labeled_images, freq_min , freq_max )
+			if len(table) > 0:
+				c.tables.append(table)
+				c.images.extend(labeled_images)
+
+
+		c.images.insert(0,data) 
+		c.primary = c.images[0]
+		return c
+
+
