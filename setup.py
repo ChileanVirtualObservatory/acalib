@@ -1,4 +1,3 @@
-from distutils.core import run_setup
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from shutil import copyfile
@@ -6,44 +5,64 @@ from shutil import copyfile
 import os
 import glob
 
-# PyCupid Library command
-class BuildCupid(install):
-    def run(self):
-        cwd = os.getcwd()
-        rel_pycupid = 'acalib/cupid/'
-        pycupid_dir = os.path.join(cwd, rel_pycupid)
-        os.chdir(pycupid_dir)
+import sys
+import subprocess 
 
-        run_setup('setup.py', ["build"])
+def check_build():
+    good_commands = ('develop', 'sdist', 'build', 'build_ext', 'build_py',
+                     'build_clib', 'build_scripts', 'bdist_wheel', 'bdist_rpm',
+                     'bdist_wininst', 'bdist_msi', 'bdist_mpkg')
 
-        for fbuilded in glob.glob("build/lib*/*.so"):
-            dest_directory = os.getcwd() + '/' + os.path.basename(fbuilded)
-            copyfile(fbuilded, dest_directory)
+    for command in good_commands:
+        if command in sys.argv[1::]:
+            return True
 
-        os.chdir(cwd)
+def build_and_move(path):
+    cwd = os.getcwd()
+    rel_module = path
+    module_dir = os.path.join(cwd, rel_module)
+    os.chdir(module_dir)
 
-setup(
-    name = "acalib",
+    subprocess.call(["python","setup.py", "build"])
 
-    version = "1.0.0",
-    description = "Advanced Computing for Astronomy Library",
-    url = "https://github.com/ChileanVirtualObservatory/ACALIB",
-    author = "LIRAE",
-    author_email = 'contact@lirae.cl',
-    cmdclass = {"bcupid": BuildCupid},
-    classifiers = [
-        'Intended Audience :: Science/Research',
+    for fbuilded in glob.glob("build/lib*/*.so"):
+        dest_directory = os.getcwd() + '/' + os.path.basename(fbuilded)
+        copyfile(fbuilded, dest_directory)
 
-        'Topic :: Scientific/Engineering :: Astronomy',
+    os.chdir(cwd)
 
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.6'
-        ],
-    
-    packages = find_packages(),
-    include_package_data = True,
-    setup_requires = ['numpy>=1.11', 'cython>=0.18'],
-    install_requires = ['numpy>=1.11', 'astropy>=1.2', 'cython>=0.24',
-                        'matplotlib>=1.5', 'scipy>=0.18',
-                        'scikit-image>=0.12']
-)
+
+def setup_package():
+    #Building packages
+    if check_build():
+        build_and_move('acalib/cupid')
+        build_and_move('acalib/core/_morph')
+
+    setup(
+        name = "acalib",
+        version = "1.0.0",
+        description = "Advanced Computing for Astronomy Library",
+        url = "https://github.com/ChileanVirtualObservatory/ACALIB",
+        author = "LIRAE",
+        author_email = 'contact@lirae.cl',
+        classifiers = [
+            'Intended Audience :: Science/Research',
+
+            'Topic :: Scientific/Engineering :: Astronomy',
+
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3.6'
+            ],
+        
+        packages = find_packages(),
+        include_package_data = True,
+        setup_requires = ['numpy>=1.11', 'cython>=0.18'],
+        install_requires = ['numpy>=1.11', 'astropy>=1.2', 'cython>=0.24',
+                            'matplotlib>=1.5', 'scipy>=0.18',
+                            'scikit-image>=0.12']
+    )
+
+
+
+
+setup_package()
