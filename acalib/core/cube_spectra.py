@@ -2,8 +2,10 @@ from astropy.nddata import support_nddata, NDData
 from astropy import log 
 import numpy as np
 
+from _morph import *
+
 @support_nddata
-def cube_spectra(data,samples, random_state=None):
+def cube_spectra(data,samples, random_state = None):
     """
     Create the spectra using pixel samples.
     
@@ -52,6 +54,7 @@ def cube_spectra(data,samples, random_state=None):
     return spectra,slices
 
 def _pixel_processing(pixels):
+    pixels = pixels.astype(np.float64)
     acum = _accumulating(pixels)
     diff = _differenting(acum)
     boxing = _segmenting(diff)
@@ -63,59 +66,20 @@ def _accumulating(pixels):
     return np.cumsum(pixels)
 
 def _differenting(cumPixels):
-    n = len(cumPixels)
-    diff = np.zeros(n)
-    diff[0] = cumPixels[0]
-    for i in xrange(1,n):
-        diff[i] = cumPixels[i] - diff[i-1]
-    return diff 
+    d = diff(cumPixels)
+    return d
 
 def _segmenting(diff):
-    n = len(diff)
-    boxing = np.zeros(n)
     
-    for i in xrange(1,n-1):
-        boxing[i] = 1
-        if (
-            (diff[i] < diff[i-1]) and (diff[i] < diff[i+1])
-
-            or
-
-            (diff[i] > diff[i-1]) and (diff[i] > diff[i+1])
-            ):
-            boxing[i] = 0
-
+    boxing = seg(diff)
+    
     return boxing
 
 def _erosing(boxing):
-    n = len(boxing)
-    blocking = np.zeros(n)
-
-    for i in xrange(1,n-1):
-        blocking[i] = boxing[i]
-
-        if ( boxing[i-1] == 0 and boxing[i] == 1 and boxing[i+1] == 0 ):
-            blocking[i] = 0
-
-    boxing = np.copy(blocking)
-    for i in xrange(1, n-1):
-        if (blocking[i-1] == 0 and blocking[i]== 1):
-            boxing[i-1] = 1
-        if (blocking[i]==1 and blocking[i+1]==0):
-            boxing[i+1] = 1
+    
+    boxing = eros(boxing)
 
     return boxing
 
 def _masking(boxing, pixels):
-    n1 = len(boxing)
-    n2 = len(pixels)
-
-    if n1 == n2:
-        n = n1
-        output = np.zeros(n)
-        for i in xrange(n):
-            output[i] = boxing[i]* pixels[i]
-        return output
-    else:
-        log.error("boxing and pixels has different length")        
-        raise ValueError("boxing and pixels has different length")
+    return boxing.reshape(-1)*pixels.reshape(-1)
