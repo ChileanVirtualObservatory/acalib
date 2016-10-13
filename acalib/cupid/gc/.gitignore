@@ -1,0 +1,6 @@
+# Libraries
+*.so
+
+# Builds
+build/
+libraries/
