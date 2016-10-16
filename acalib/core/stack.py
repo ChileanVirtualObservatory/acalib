@@ -5,6 +5,9 @@ import transforms as tr
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import signaltonoise
+
+from utils import moment2
 
 
 def stacking(template_path, data_path):
@@ -17,9 +20,9 @@ def stacking(template_path, data_path):
 	aligned = tr.cropAndAlign(rotated, angles)
 
 	result = np.mean(aligned, axis = 0)
-
-	plt.imshow(result)
-	plt.show()
+	return result, signaltonoise(result), moment2(result) 	
+	#plt.imshow(result)
+	#plt.show()
 
 
 
