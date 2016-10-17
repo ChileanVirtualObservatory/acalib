@@ -13,9 +13,6 @@ def cut(data,wcs=None,mask=None,unit=None,lower=None,upper=None):
 def rotate(data,angle):
     return sni.rotate(data,angle)
 
-
-
-
 def scale(inputCont, majorAxisTemplate):
 	scaledData = []
 
@@ -23,11 +20,7 @@ def scale(inputCont, majorAxisTemplate):
 	    prop = pr.fits_props(inputCont.images[i].data)
 	    scale = majorAxisTemplate/prop['major']
 	    scaledData.append(scnd.zoom(prop['orig'],scale))
-	
-
 	return scaledData
-
-
 
 def rotate(data, templateAngle):
 	rotatedData = []
@@ -40,9 +33,6 @@ def rotate(data, templateAngle):
 	
 	return rotatedData, angles	
 
-
-
-        
 def limits(img,angle):
     if angle > 0:
         cx, cy = np.nonzero(np.array(img.T))
@@ -53,7 +43,6 @@ def limits(img,angle):
     lower = (cx[-1], cy[-1])
     
     return upper,lower
-    
     
 def cropAndAlign(data,angles):
 	alignedData = []
