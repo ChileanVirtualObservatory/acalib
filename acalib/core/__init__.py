@@ -6,12 +6,12 @@ from . import utils
 from . import cube_spectra
 from . import gaussian_segmentation
 from . import vel_stacking
-from . import measure_shape
+from . import statistics
 
 #Stacking
 from . import props
-from . import stack
 from . import transforms
+from . import stack
 
 from .container import *
 from .indices import *
@@ -20,7 +20,7 @@ from .utils import *
 from .cube_spectra import *
 from .gaussian_segmentation import *
 from .vel_stacking import *
-from .measure_shape import *
+from .statistics import *
 
 from .props import *
 from .stack import *

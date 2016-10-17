@@ -4,7 +4,7 @@ import acalib
 from acalib.cupid import pycupid
 import astropy.units as u
 from astropy.nddata import *
-from algorithm import Algorithm
+from .algorithm import Algorithm
 import numpy as np
 
 

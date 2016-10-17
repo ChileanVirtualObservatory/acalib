@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from indices import *
 from astropy import log
 import astropy.units as u
 from astropy.nddata import *
@@ -56,50 +55,6 @@ def spectra(data,wcs=None,mask=None,unit=None,position=None,aperture=None):
         log.error("Not Implemented Yet!")
     specview=data[slab(data,lb,ub)]
     return specview.sum(axis=(1,2))
-
-def moment(data,order,wcs=None,mask=None,unit=None,restfrq=None):
-    if wcs is None:
-        log.error("A world coordinate system (WCS) is needed")
-        return None
-    data=fix_mask(data,mask)
-    dim=wcs.wcs.spec
-    rdim=data.ndim - 1 - dim
-    v=get_velocities(data,wcs,np.arange(data.shape[rdim]),restfrq)
-    v=v.value
-    #delta=np.mean(np.abs(v[:v.size-1] - v[1:v.size]))
-    #newdata=data.sum(axis=rdim)*delta
-    m0=data.sum(axis=rdim)
-    if order==0:
-        mywcs=wcs.dropaxis(dim)
-        return NDData(m0.data, uncertainty=None, mask=m0.mask,wcs=mywcs, meta=None, unit=unit)
-    #mu,alpha=np.average(data,axis=rdim,weights=v,returned=True)
-    mu,alpha=np.ma.average(data,axis=rdim,weights=v,returned=True)
-    m1=alpha*mu/m0
-    if order==1:
-        mywcs=wcs.dropaxis(dim)
-        return NDData(m1.data, uncertainty=None, mask=m1.mask,wcs=mywcs, meta=None, unit=u.km/u.s)
-    v2=v*v
-    var,beta=np.ma.average(data,axis=rdim,weights=v2,returned=True)
-    #var,beta=data.average(axis=rdim,weights=v2,returned=True)
-    m2=np.sqrt(beta*var/m0 - m1*m1)
-    if order==2:
-        mywcs=wcs.dropaxis(dim)
-        return NDData(m2.data, uncertainty=None, mask=m2.mask,wcs=mywcs, meta=None, unit=u.km*u.km/u.s/u.s)
-    log.error("Order not supported")
-    return None
-        
-# Should return a NDData
-@support_nddata
-def moment0(data,wcs=None,mask=None,unit=None,restfrq=None):
-    return moment(data,0,wcs,mask,unit,restfrq)
-
-@support_nddata
-def moment1(data,wcs=None,mask=None,unit=None,restfrq=None):
-    return moment(data,1,wcs,mask,unit,restfrq)
-
-@support_nddata
-def moment2(data,wcs=None,mask=None,unit=None,restfrq=None):
-    return moment(data,2,wcs,mask,unit,restfrq)
 
 
 @support_nddata
@@ -203,43 +158,6 @@ def create_mould(P,delta):
     mould=mould.reshape(*elms)
     return mould
 
-
-@support_nddata
-def rms(data,mask=None):
-    """A simple estimation of the noise level by computing the RMS. If mask != None, then 
-       we use that mask.
-    """
-    if mask is not None:
-        data=fix_mask(data,mask)
-    mm=data*data
-    #if mask is not None and not ismasked:
-    rms=np.sqrt(mm.sum()*1.0/mm.size)
-    return rms
-
-@support_nddata
-def snr_estimation(data,mask=None,noise=None,points=1000,full_output=False):
-    if noise is None:
-       noise=rms(data,mask)
-    x=[]
-    y=[]
-    n=[]
-    sdata=data[data>noise]
-    for i in range(1,int(points)):
-        val=1.0 + 2.0*i/points
-        sdata=sdata[sdata>val*noise]
-        if sdata.size < 2:
-            break
-        n.append(sdata.size)
-        yval=sdata.mean()/noise
-        x.append(val)
-        y.append(yval)
-    y=np.array(y)
-    v=y[1:]-y[0:-1]
-    p=v.argmax() + 1
-    snrlimit=x[p]
-    if full_output==True:
-       return snrlimit,noise,x,y,v,n,p 
-    return snrlimit
 
 @support_nddata
 def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):

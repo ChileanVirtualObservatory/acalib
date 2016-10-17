@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def fix_limits(data,vect):
     """ Fix vect index to be inside data """ 
     if isinstance(vect,(tuple,list)):

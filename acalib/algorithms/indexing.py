@@ -1,5 +1,5 @@
 import acalib
-from algorithm import Algorithm
+from .algorithm import Algorithm
 
 class Indexing(Algorithm):
 	def default_params(self):

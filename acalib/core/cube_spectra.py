@@ -2,7 +2,7 @@ from astropy.nddata import support_nddata, NDData
 from astropy import log 
 import numpy as np
 
-from _morph import *
+from acalib.core._morph import *
 
 @support_nddata
 def cube_spectra(data,samples, random_state = None):

@@ -1,7 +1,3 @@
-
-import props as pr
-import numpy as np
-
 import glob
 import scipy.ndimage as scnd
 
