@@ -46,6 +46,9 @@ def HDU_to_NDData(hdu):
    elif len(data.shape) == 3:
        log.info("3D data detected: assuming RA-DEC-FREQ")
        data=data*bscale+bzero
+   elif len(data.shape) == 2:
+       log.info("2D data detected: assuming RA-DEC")
+       data=data*bscale+bzero
    else:
        log.error("Only 3D data allowed (or 4D in case of polarization)")
        raise TypeError
