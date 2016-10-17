@@ -1,59 +1,5 @@
 import numpy as np
 
-def fix_limits(data,vect):
-    """ Fix vect index to be inside data """ 
-    if isinstance(vect,(tuple,list)):
-        vect=np.array(vect)
-    vect=vect.astype(int)
-    low=vect < 0
-    up=vect > data.shape
-    if vect.any():
-        vect[low]=0
-    if vect.any():
-        vect[up]=np.array(data.shape)[up]
-    return vect
-
-
-def slab(data,lower=None,upper=None):
-    """ Obtain the n-dimensional slab from lower to upper (i.e. slab is a vector of slices)""" 
-    if lower is None:
-        lower=np.zeros(data.ndim)
-    if upper is None:
-        upper=data.shape
-    lower=fix_limits(data,lower)
-    upper=fix_limits(data,upper)
-    m_slab=[]
-    for i in range(data.ndim):
-       m_slab.append(slice(lower[i],upper[i]))
-    return m_slab
-
-
-def matching_slabs(data,flux,lower,upper):
-    """ Obtain the matching data and flux slabs from lower to upper while fixing the limits"""
-    data_slab=slab(data,lower,upper)
-    flow=np.zeros(flux.ndim)
-    fup=np.array(flux.shape)
-    for i in range(data.ndim):
-       if data_slab[i].start == 0:
-#         print data_slab
-#          print flux.shape
-          flow[i] = flux.shape[i] - data_slab[i].stop 
-       if data_slab[i].stop == data.shape[i]:
-#          print data_slab
-#          print flux.shape
-          fup[i] = data_slab[i].stop - data_slab[i].start
-    flux_slab=slab(flux,flow,fup)
-    return data_slab,flux_slab
-
-def world_window_to_index(data,wcs,center,window):
-    ld=np.rint(wcs.wcs_world2pix([center-window],0))
-    lu=np.rint(wcs.wcs_world2pix([center+window],0))
-    lower=np.array([ld,lu]).min(axis=0)
-    upper=np.array([ld,lu]).max(axis=0)
-    lower=fix_limits(data,lower[0][::-1])
-    upper=fix_limits(data,upper[0][::-1])
-    return (lower,upper)
-
 def get_mesh(data,lower=None,upper=None):
     """ Create an index mesh """
     sl=slab(data,lower,upper)
@@ -71,6 +17,56 @@ def to_features(data,lower=None,upper=None):
     for i in range(dim):
        ii[dim-i-1]=msh[i].ravel()
     return ii
+
+support_nddata
+def get_velocities(data,wcs=None,fqi=None,restfrq=None):
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    if fqi is None:
+        return None
+    if restfrq is None:
+        restfrq=wcs.wcs.restfrq*u.Hz
+    dim=wcs.wcs.spec
+    idx=np.zeros((fqi.size,data.ndim))
+    idx[:,dim]=fqi
+    vals=wcs.all_pix2world(idx,0)
+    eq=u.doppler_radio(restfrq)
+    vec=vals[:,dim]*u.Hz
+    return vec.to(u.km/u.s, equivalencies=eq)
+
+# TODO: extend to n-dimensions (only works for 3)
+@support_nddata
+def axes_ranges(data,wcs=None,lower=None,upper=None):
+    """ Get axes extent (transforms freq to velocity!) """
+    if lower==None:
+        lower=[0,0,0]
+    if upper==None:
+        upper=data.shape
+    lower=lower[::-1]
+    lwcs=wcs.wcs_pix2world([lower], 0)
+    lwcs=lwcs[0]
+    upper=upper[::-1]
+    uwcs=wcs.wcs_pix2world([upper], 0)
+    uwcs=uwcs[0]
+    lfreq=lwcs[2]*u.Hz
+    ufreq=uwcs[2]*u.Hz
+    rfreq=wcs.wcs.restfrq*u.Hz
+    eq= u.doppler_radio(rfreq)
+    lvel=lfreq.to(u.km/u.s, equivalencies=eq)
+    uvel=ufreq.to(u.km/u.s, equivalencies=eq)
+    ranges=[lvel.value,uvel.value,lwcs[1],uwcs[1],lwcs[0],uwcs[0]]
+    return ranges
+
+#TODO: try to merge with axes_ranges and get_velocities!
+@support_nddata
+def axis_range(data,wcs,axis):
+    lower=wcs.wcs_pix2world([[0,0,0]], 0) - wcs.wcs.cdelt/2.0
+    shape=data.shape
+    shape=[shape[::-1]]
+    upper=wcs.wcs_pix2world(shape, 1) + wcs.wcs.cdelt/2.0
+    return (lower[0][axis],upper[0][axis])
+
 
 
 ### DEPRECATED ####

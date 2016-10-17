@@ -11,17 +11,6 @@ def slab(data,lower=None,upper=None):
 def matching_slabs(data,flux,lower,upper):
 def world_window_to_index(data,wcs,center,window):
 
-## models (use models base from astropy)
-def gaussian_function(mu,P,feat,peak):
-def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):
-def create_mould(P,delta):
-
-# Dimensionality reduction
-def spectra(data,wcs=None,mask=None,unit=None,position=None,aperture=None):
-def integrate(data, wcs=None, mask=None, unit=None, axis=(0)):
-def vel_stacking(data,data_slice, wcs=None, mask=None,uncertainty=None, meta=None, unit=None):
-def cube_spectra(data,samples, random_state = None):
-
 ### Getters
 def get_velocities(data,wcs=None,fqi=None,restfrq=None):
 def axes_ranges(data,wcs=None,lower=None,upper=None):
@@ -31,19 +20,6 @@ def world_features(data,wcs,lower=None,upper=None):
 def to_features(data,lower=None,upper=None):
 
 ### OO interface also
-
-# Flux Operations
-def standarize(data,wcs=None,unit=None,mask=None,meta=None):
-def unstandarize(data, y_min,y_fact):
-def add_flux(data,flux,lower=None,upper=None):
-def denoise(data,wcs=None,mask=None,unit=None,threshold=0.0):
-
-# Shape operations 
-def cut(data,wcs=None,mask=None,unit=None,lower=None,upper=None):
-def scale(inputDir, majorAxisTemplate):
-def rotate(data, templateAngle):
-def rotate(data,angle):
-def cropAndAlign(data,angles):
 
 
 
