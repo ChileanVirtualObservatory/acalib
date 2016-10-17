@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import signaltonoise
-from .utils import moment2
 from acalib.io.fits import load_fits_to_cont
 
 def stacking(template_data, data_cont):
