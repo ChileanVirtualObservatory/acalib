@@ -7,13 +7,11 @@ import scipy.ndimage as scnd
 
 
 
-def scale(inputDir, majorAxisTemplate):
-	data = glob.glob(inputDir+'/*.fits')
+def scale(inputCont, majorAxisTemplate):
 	scaledData = []
 
-	for i in np.arange(len(data)):
-	    prop = pr.fits_props(data[i])
-	    print prop
+	for i in np.arange(len(inputCont.images)):
+	    prop = pr.fits_props(inputCont.images[i].data)
 	    scale = majorAxisTemplate/prop['major']
 	    scaledData.append(scnd.zoom(prop['orig'],scale))
 	
@@ -59,7 +57,6 @@ def cropAndAlign(data,angles):
 
 		alignedData.append(crop)
 
-	print shapes
 	minShape = tuple(np.amin(shapes,axis = 0))
 	
 
