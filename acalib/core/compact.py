@@ -3,9 +3,9 @@ import numpy as np
 from astropy.table import Table
 from astropy import log
 from astropy import units as u
-from utils import *
+from .utils import *
 import matplotlib.pyplot as plt
-from convert import *
+from .indices import *
 
 def _eighth_mould(P,delta):
     """This function creates a Gaussian mould with precision matrix P, using the already computed values of delta
@@ -56,15 +56,15 @@ def _update_min_energy(energy,mat,ub,lb,delta):
     #print elb, eub, mlb, mub
     #print eview.shape,mview.shape
     # Update them in the energy matrix.
-    try:
-       cmat=mview < eview
-    except ValueError:
-       print energy.shape
-       print elb,eub
-       print eview.shape
-       print mview.shape
-       print mat.shape
-       print eslab,mslab
+    #try:
+    cmat=mview < eview
+    #except ValueError:
+    #   print energy.shape
+    #   print elb,eub
+    #   print eview.shape
+    #   print mview.shape
+    #   print mat.shape
+    #   print eslab,mslab
     eview[cmat]=mview[cmat]
 
 
@@ -153,7 +153,7 @@ def bubble_detect(data,wcs=None,meta=None,noise=None,threshold=None,delta=None,g
     if threshold is None:
         threshold=snr_estimation(data,mask=mask,noise=noise)*noise
     if verbose:
-        print threshold,noise,delta
+        print(threshold,noise,delta)
     P=_precision_from_delta(delta,gamma)
     mould=create_mould(P,delta)
     #equant=mould.sum()*noise
