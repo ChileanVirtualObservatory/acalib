@@ -3,7 +3,6 @@ def gaussian_function(mu,P,feat,peak):
     """ Generates an n-dimensional Gaussian using the feature matrix feat,
     centered at mu, with precision matrix P and with intensity peak.
     """
-    #print feat
     cent_feat=np.empty_like(feat)
     for i in range(len(mu)):
        cent_feat[i]=feat[i] - mu[i]
@@ -14,14 +13,17 @@ def gaussian_function(mu,P,feat,peak):
     return res
 
 @support_nddata
-def gaussflux_from_world_window(data,wcs,mu,P,peak,cutoff):
+def world_gaussian(data,wcs,mu,P,peak,cutoff):
+   """ Creates a gaussian flux at mu position (WCS), with P shape, with a maximum value equal to peak, 
+   and with compact support up to the cutoff contour """
    Sigma=np.linalg.inv(P)
    window=np.sqrt(2*np.log(peak/cutoff)*np.diag(Sigma))
-   lower,upper=world_window_to_index(data,wcs,mu,window)
+   lower,upper=fov_to_index(data,wcs,mu,window)
    if np.any(np.array(upper-lower)<=0):
        return None,lower,upper
    feat=world_features(data,wcs,lower,upper)
    res=gaussian_function(mu,P,feat,peak)
+   # TODO Not generic
    res=res.reshape(upper[0]-lower[0],upper[1]-lower[1],upper[2]-lower[2])
    return res,lower,upper
 
