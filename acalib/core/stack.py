@@ -5,12 +5,15 @@ import transforms as tr
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import signaltonoise
 
+from utils import moment2
+from acalib.io.fits import load_fits_to_cont
 
-def stacking(template_path, data_path):
-	tprops = pr.fits_props(template_path)
+def stacking(template_data, data_cont):
+	tprops = pr.fits_props(template_data)
 
-	scaled = tr.scale(data_path, tprops['major'])
+	scaled = tr.scale(data_cont, tprops['major'])
 
 	rotated, angles = tr.rotate(scaled, tprops['angle'])
 
@@ -18,8 +21,10 @@ def stacking(template_path, data_path):
 
 	result = np.mean(aligned, axis = 0)
 
-	plt.imshow(result)
-	plt.show()
+
+	return result, signaltonoise(result), moment2(result) 	
+	#plt.imshow(result)
+	#plt.show()
 
 
 
