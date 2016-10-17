@@ -2,6 +2,19 @@ import glob
 import scipy.ndimage as scnd
 
 
+@support_nddata
+def cut(data,wcs=None,mask=None,unit=None,lower=None,upper=None):
+    mslab=slab(data,lower,upper)
+    scube=data[mslab]
+    newwcs=wcs.slice(mslab,numpy_order=True)
+    return NDData(scube,wcs=newwcs,unit=unit)
+
+@support_nddata
+def rotate(data,angle):
+    return sni.rotate(data,angle)
+
+
+
 
 def scale(inputCont, majorAxisTemplate):
 	scaledData = []
