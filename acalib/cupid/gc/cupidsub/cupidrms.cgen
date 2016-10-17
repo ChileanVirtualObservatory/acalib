@@ -1,0 +1,240 @@
+#include "sae_par.h"
+#include "ast.h"
+#include "cupid.h"
+#include "../cupid_err.h"
+#include "prm_par.h"
+#include "mers.h"
+#include <math.h>
+
+
+double CGEN_FUNCTION(cupidRms)( CGEN_TYPE *array, int nel, int rowlen,
+         int *status ){
+/*
+*+
+*  Name:
+*     cupidRms<X>
+
+*  Purpose:
+*     Find the RMS noise in the supplied data array.
+
+*  Language:
+*     Starlink C
+
+*  Synopsis:
+*     double cupidRms<X>( CGEN_TYPE *array, int nel, int rowlen,
+*        int *status )
+
+*  Description:
+*     This functions finds an estimate of the RMS noise in the supplied
+*     data array. The algorithm first applies a 1D Laplace filter to each
+*     row of the data (this is equivalent to finding the difference between
+*     adjacent pixel values in the row, then finding the difference between
+*     the adjcent differences). It then estimates the RMS of the the
+*     filtered data, and rejects data values greater than 4*RMS. When a
+*     point is rejected, the 2 neighbouring points on either side are
+*     also rejected. It then forms the RMS of the remaining data, and
+*     does a new clipping iteration. This continues until the clipping
+*     results in no points being rejected. The final RMS is then scaled
+*     to take account of the effects of the Laplace filter and the 4*sigma
+*     clipping.
+
+*  Parameters:
+*     array
+*        Pointer to the data array. The elements should be stored in
+*        Fortran order.
+*     nel
+*        The number of elements in the supplied array.
+*     rowlen
+*        The number of elements spanned by the first pixel axis.
+*     status
+*        Pointer to the inherited status value.
+
+*  Returned Value:
+*     The RMS noise estimate
+
+*  Notes:
+*     - This function can be invoked using the generic cupidRms macro
+*     defined in cupid.h. This macro has the same parameter list as
+*     cupidRms<X> except that an extra parameter is added to the start
+*     of the parameter list indicating the data type of the specific
+*     cupidRms... function to be invoked. This extra parameter should
+*     be an integer and should be one of CUPID__DOUBLE, CUPID__FLOAT, etc.
+
+*  Copyright:
+*     Copyright (C) 2005 Particle Physics & Astronomy Research Council.
+*     All Rights Reserved.
+
+*  Licence:
+*     This program is free software; you can redistribute it and/or
+*     modify it under the terms of the GNU General Public License as
+*     published by the Free Software Foundation; either version 2 of
+*     the License, or (at your option) any later version.
+*
+*     This program is distributed in the hope that it will be
+*     useful, but WITHOUT ANY WARRANTY; without even the implied
+*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+*     PURPOSE. See the GNU General Public License for more details.
+*
+*     You should have received a copy of the GNU General Public License
+*     along with this program; if not, write to the Free Software
+*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
+*     02110-1301, USA
+
+*  Authors:
+*     DSB: David S. Berry
+*     {enter_new_authors_here}
+
+*  History:
+*     5-OCT-2005 (DSB):
+*        Original version.
+*     15-MAR-2013 (DSB):
+*        Ensure max and min data value sinclude *all* data - including
+*        values adjacent to bad values.
+*     7-JUN-2013 (DSB):
+*        Assign bad value to work values if a neigbouring input value is bad.
+*     {enter_further_changes_here}
+
+*  Bugs:
+*     {note_any_bugs_here}
+
+*-
+*/
+
+/* Local Variables: */
+
+   CGEN_TYPE *pr;         /* Pointer to next data value */
+   CGEN_TYPE *w;          /* Pointer to work array */
+   CGEN_TYPE *wr;         /* Pointer to next work value */
+   double ret;          /* Returned value */
+   double maxv;         /* Largest data value in supplied array */
+   double minv;         /* Smallest data value in supplied array */
+   double sum;          /* Sum of squared residuals */
+   double thresh;       /* The rejection threshold for residuals */
+   int i;               /* Element count */
+   int ipix;            /* Pixel count */
+   int irow;            /* Row counter */
+   int n;               /* Number of values summed in "sum" */
+   int nrej;            /* Number of rejections on previus loop */
+   int nrow;            /* Number of rows in supplied array */
+
+/* Initialise. */
+   ret = VAL__BADD;
+
+/* Abort if an error has already occurred. */
+   if( *status != SAI__OK ) return ret;
+
+/* How many rows in the entire data array? */
+   nrow = nel/rowlen;
+
+/* Allocate memory for a copy of the data array. */
+   w = astMalloc( sizeof( CGEN_TYPE )*nel );
+   if( w ) {
+
+/* Run a 1D Laplace filter (kernel = [-1,2,-1]) over the data, storing
+   the results in the work array. At the same time, find the RMS value of
+   the filtered data. A Laplace filter picks out the noise, but will also
+   include spikes due to sharp slopes (such as the edge of star profiles,
+   etc). */
+      pr = array;
+      wr = w;
+      sum = 0.0;
+      n = 0;
+      maxv = CGEN_MIN;
+      minv = CGEN_MAX;
+      for( irow = 0; irow < nrow; irow++ ){
+         *(wr++) = CGEN_BAD;
+         pr++;
+         for( ipix = 1; ipix < rowlen - 1; ipix++, wr++, pr++ ){
+            if( pr[ 0 ] != CGEN_BAD ) {
+
+               if( pr[ -1 ] != CGEN_BAD &&
+                   pr[ 1 ] != CGEN_BAD ){
+                  *wr = -pr[ -1 ] + 2*pr[ 0 ] - pr[ 1 ];
+                  sum += ( *wr )*( *wr );
+                  n++;
+               } else {
+                  *wr = CGEN_BAD;
+               }
+
+               if( *pr > maxv ) maxv = *pr;
+               if( *pr < minv ) minv = *pr;
+
+            } else {
+               *wr = CGEN_BAD;
+            }
+         }
+         *(wr++) = CGEN_BAD;
+         pr++;
+      }
+
+      if( n < 2 ) {
+         *status = CUPID__FWVAL;
+         errRep( "CUPIDRMS_ERR1", "The supplied data contains insufficient "
+                 "good values to continue.", status );
+         goto L999;
+
+      } else if( maxv == minv ) {
+         *status = SAI__ERROR;
+         errRep( "CUPIDRMS_ERR2", "All pixel values in the supplied data "
+                 "are equal.", status );
+         goto L999;
+
+      } else {
+         ret = sqrt( sum/n );
+      }
+
+/* We now get rid of spikes by doing a 4-sigma clip on the residuals
+   produced by the Laplace filter. In addition, set the two neighbouring
+   pixels on either side of each rejected pixel bad. We continue to do such
+   clipping until no further residuals are rejected. */
+      nrej = 1;
+      while( nrej ) {
+         sum = 0.0;
+         n = 0;
+         nrej = 0;
+         thresh = 4*ret;
+         wr = w + 2;
+         for( i = 2; i < nel - 2; i++, wr++ ){
+            if( *wr != CGEN_BAD ){
+               if( fabs( *wr ) >  thresh ) {
+                  wr[ -2 ] = CGEN_BAD;
+                  wr[ -1 ] = CGEN_BAD;
+                  wr[ 0 ] = CGEN_BAD;
+                  wr[ 1 ] = CGEN_BAD;
+                  wr[ 2 ] = CGEN_BAD;
+                  nrej++;
+               } else {
+                  sum += ( *wr )*( *wr );
+                  n++;
+               }
+            }
+         }
+
+         if( n == 0 ) {
+            *status = CUPID__FWVAL;
+            errRep( "CUPIDRMS_ERR3", "The supplied data contains insufficient "
+                    "good values to continue.", status );
+            goto L999;
+         } else {
+            ret = sqrt( sum/n );
+         }
+      }
+
+/* Scale the returned RMS error to take account of the effects of the
+   Laplace filter and the 4 sigma clipping. This assumes the noise is
+   Gaussian. */
+      ret /= 2.46182;
+
+/* Do not allow a value of zero to be returned- use 0.001 of the data
+   range instead. */
+      if( ret == 0.0 ) ret = 0.001*( maxv - minv );
+
+   }
+
+/* Free resources. */
+L999:;
+   w = astFree( w );
+
+/* Return the result. */
+   return ret;
+}
