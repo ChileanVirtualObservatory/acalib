@@ -1,0 +1,317 @@
+#include "sae_par.h"
+#include "cupid.h"
+#include "ast.h"
+#include "mers.h"
+#include "ndf.h"
+#include "star/hds.h"
+#include "star/ndg.h"
+
+HDSLoc *CGEN_FUNCTION(cupidNdfClump)( CGEN_TYPE *ipd, int *ipa, int nel,
+                                  int ndim, int dims[ 3 ], int skip[ 3 ],
+                                  int slbnd[ 3 ], int index, int clbnd[ 3 ],
+                                  int cubnd[ 3 ], AstKeyMap *extra,
+                                  HDSLoc *obj, double maxbad, int *status ){
+/*
+*+
+*  Name:
+*     cupidNdfClump<X>
+
+*  Purpose:
+*     Create an NDF containing a description of a single clump.
+
+*  Language:
+*     Starlink C
+
+*  Synopsis:
+*     HDSLoc *cupidNdfClump<X>( CGEN_TYPE *ipd, int *ipa, int nel, int ndim,
+*                            int dims[ 3 ], int skip[ 3 ], int slbnd[ 3 ],
+*                            int index, int clbnd[ 3 ], int cubnd[ 3 ],
+*                            AstKeyMap *extra, HDSLoc *obj, double maxbad,
+*                            int *status )
+
+*  Description:
+*     This function cannot be used with algorithms such as GaussClumps
+*     which support overlapping clumps. Each pixel must either be associated
+*     with a single clump, or with no clump. It creates a temporary NDF and
+*     stores the clump intensity in its Data component. The bounds of the NDF
+*     will be the smallest possible which still encompass the clump. In
+*     addition, if required it will create a Cupid extension in the NDF
+*     containing any supplied extra information.
+
+*  Parameters:
+*     ipd
+*        Pointer to the start of the supplied data array.
+*     ipa
+*        Pointer to the start of the array holding the integer index
+*        (if any) associated with each pixel in the data array. This
+*        shows which clump each pixel belongs to (each clump is identified
+*        by a unique integer index). The array should be the same shape and
+*        size as the data array. Pixels which have not yet been assigned
+*        to a clump are marked with the integer value CUPID__CFNULL.
+*     nel
+*        The total number of elements in the data array.
+*     ndim
+*        The number of pixel axes in the data array.
+*     dims
+*        The number of pixels on each pixel axis of the data array. This
+*        array should have 3 elements even if "ndim" is less than 3, and
+*        the extra elements should be filled with 1's.
+*     skip
+*        The increment in 1D vector index required to move a distance of 1
+*        pixel along each axis. This allows conversion between indexing
+*        the array using a single 1D vector index and using nD coords. This
+*        array should have 3 elements even if "ndim" is less than 3, and
+*        the extra elements should be filled with zero's.
+*     slbnd
+*        An array holding the lower pixel index bound of the data array on
+*        each axis, padded with trailing 1's.
+*     index
+*        The integer value used to represent the clump within "ipa".
+*     clbnd
+*        The lower grid index bounds of the clump.
+*     cubnd
+*        The upper grid index bounds of the clump.
+*     extra
+*        An AstKeyMap holding extra diagnositic information to add to the
+*        clump structure.
+*     obj
+*        A locator for an HDS array of NDF objects. The array will be
+*        extended to accomodate the new NDF. If NULL is supplied a new
+*        temporary HDS object is created.
+*     maxbad
+*        The maximum fraction of clump pixels which can border an area of
+*        bad pixels. If this fraction is exceeded the Unit component of the
+*        returned NDF is set to "BAD".
+*     status
+*        Pointer to the inherited status value.
+
+*  Returned Value:
+*     An HDS locator to the array of NDFs.
+
+*  Notes:
+*     - This function can be invoked using the generic cupidNdfClump macro
+*     defined in cupid.h. This macro has the same parameter list as
+*     cupidNdfClump<X> except that an extra parameter is added to the start
+*     of the parameter list indicating the data type of the specific
+*     cupidNdfClump... function to be invoked. This extra parameter should
+*     be an integer and should be one of CUPID__DOUBLE, CUPID__FLOAT, etc.
+
+*  Copyright:
+*     Copyright (C) 2006 Particle Physics & Astronomy Research Council.
+*     All Rights Reserved.
+
+*  Licence:
+*     This program is free software; you can redistribute it and/or
+*     modify it under the terms of the GNU General Public License as
+*     published by the Free Software Foundation; either version 2 of
+*     the License, or (at your option) any later version.
+*
+*     This program is distributed in the hope that it will be
+*     useful, but WITHOUT ANY WARRANTY; without even the implied
+*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+*     PURPOSE. See the GNU General Public License for more details.
+*
+*     You should have received a copy of the GNU General Public License
+*     along with this program; if not, write to the Free Software
+*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
+*     02110-1301, USA
+
+*  Authors:
+*     DSB: David S. Berry
+*     {enter_new_authors_here}
+
+*  History:
+*     3-FEB-2006 (DSB):
+*        Original version.
+*     19-MAR-2007 (DSB):
+*        Check each pixel in a clump to see if it is bad. If it is, do
+*        not include it in the NDF.
+*     8-MAY-2009 (DSB):
+*        AllowEdge may be set non-zero, so test if the clump touches the
+*        edge of the data array before accessing neighbouring pixels
+*        (which may potentially be off the edge of the array).
+*     2012-02-22 (TIMJ):
+*        Fix casting of int to size_t
+*     {enter_further_changes_here}
+
+*  Bugs:
+*     {note_any_bugs_here}
+
+*-
+*/
+
+/* Local Variables: */
+   HDSLoc *dloc;             /* Component locator */
+   HDSLoc *ret;              /* The returned HDS object */
+   HDSLoc *cloc;             /* Cell locator */
+   HDSLoc *xloc;             /* Extension locator */
+   const char *key;          /* KeyMap key name */
+   double *out;              /* Pointer to output NDF Data array */
+   double *pout;             /* Pointer to next output pixel */
+   double dval;              /* Double value to store */
+   int area;                 /* Total number of pixels in clump */
+   int bad;                  /* Does the clump touch any areas of bad pixels?*/
+   int el;                   /* Number of elements mapped */
+   int i;                    /* KeyMap index */
+   int indf;                 /* NDF identifier */
+   int ivinx;                /* Index of input pixel */
+   int iviny;                /* Index of start of input row */
+   int ivinz;                /* Index of start of input plane */
+   int ix;                   /* GRID axis 1 value of next clump element */
+   int iy;                   /* GRID axis 2 value of next clump element */
+   int iz;                   /* GRID axis 3 value of next clump element */
+   int lb[ 3 ];              /* Lower pixel index bounds of NDF */
+   int nex;                  /* No. of extra items of information */
+   int place;                /* NDF place holder */
+   hdsdim size[1];           /* No.of NDFs in array */
+   int ub[ 3 ];              /* Upper pixel index bounds of NDF */
+
+/* Initialise */
+   ret = obj;
+
+/* Abort if an error has already occurred. */
+   if( *status != SAI__OK ) return ret;
+
+/* If no array was supplied create one of length 1. */
+   if( !ret ) {
+      size[0] = 1;
+      datTemp( "NDF", 1, size, &ret, status );
+
+/* Otherwise, get the number of NDFs already in the supplied array of
+   NDFs, and increase it by 1. */
+   } else {
+      size_t nelems;
+      datSize( ret, &nelems, status );
+      size[0] = nelems + 1;
+      datAlter( ret, 1, size, status );
+   }
+
+/* Get a locator for the new cell. */
+   cloc = NULL;
+   datCell( ret, 1, size, &cloc, status );
+
+/* Begin an NDF context */
+   ndfBegin();
+
+/* Create a place holder for the new NDF within the new cell. The NDF will be
+   copied to its final resting place before the program exits. */
+   ndfPlace( cloc, " ", &place, status );
+
+/* Find the pixel index bounds of the NDF. */
+   for( i = 0; i < ndim; i++ ) {
+      lb[ i ] = clbnd[ i ] - 1 + slbnd[ i ];
+      ub[ i ] = cubnd[ i ] - 1 + slbnd[ i ];
+   }
+
+/* Create the NDF covering the clump bounding box to receive the clump
+   values. */
+   ndfNew( "_DOUBLE", ndim, lb, ub, &place, &indf, status );
+
+/* Map the NDFs Data array. */
+   ndfMap( indf, "DATA", "_DOUBLE", "WRITE", (void *) &out, &el, status );
+   if( out ) {
+
+/* Find the 1D vector index within the input array of the first pixel in the
+   clump bounding box. */
+      ivinz = ( clbnd[ 0 ] - 1 ) + dims[ 0 ]*( ( clbnd[ 1 ] - 1 ) +
+                                     dims[ 1 ]*( clbnd[ 2 ] - 1 ) );
+
+/* Store a pointer to the next output pixel value */
+      pout = out;
+
+/* Assume the clump does not touch any areas of bad pixels. */
+      bad = 0;
+
+/* Initialise count of pixels in the clump */
+      area = 0;
+
+/* Step round every pixel within the clump bounding box. (ix,iy,iz)
+   represent GRID indices within the input array. */
+      for( iz = clbnd[ 2 ]; iz <= cubnd[ 2 ]; iz++ ) {
+         iviny = ivinz;
+         for( iy = clbnd[ 1 ]; iy <= cubnd[ 1 ]; iy++ ) {
+            ivinx = iviny;
+            for( ix = clbnd[ 0 ]; ix <= cubnd[ 0 ]; ix++ ) {
+
+/* If this pixel is in the clump, increment the number of pixels in the
+   clump and store the input data (if good) in the output.*/
+               if( ipa[ ivinx ] == index ) {
+                  area++;
+
+                  if( ipd[ ivinx ] == CGEN_BAD ) {
+                     *pout = VAL__BADD;
+                     bad++;
+
+                  } else {
+                     *pout = ipd[ ivinx ];
+
+/* Check the input data pixel on either side of the current pixel on the
+   first pixel axis. If either is bad, increment the number of contacts
+   between the clump and and areas of bad pixels. If the AllowEdge
+   attribute has been set non-zero, then clumps may touch the edge of the
+   data array. So we need to check that grid index on the first pixel
+   axis to make sure that there are in fact pixels on either side of the
+   current pixel. */
+                     if( ix > 1 && ix < dims[ 0 ] ) {
+                        if( ipd[ ivinx - 1 ] == CGEN_BAD ||
+                            ipd[ ivinx + 1 ] == CGEN_BAD ) bad++;
+                     }
+                  }
+
+/* If this pixel is not in the clump, store a bad value in the output.*/
+               } else {
+                  *pout = VAL__BADD;
+               }
+
+/* Move on to the next output pixel. */
+               pout++;
+
+/* Move on to the next input pixel. */
+               ivinx++;
+            }
+            iviny += skip[ 1 ];
+         }
+         ivinz += skip[ 2 ];
+      }
+
+/* Unmap the NDFs Data array. */
+      ndfUnmap( indf, "DATA", status );
+
+/* If the number of contacts between the clump and any areas of bad
+   pixels is too high, set the NDFs Unit component to "BAD". */
+      if( bad > maxbad*area ) {
+         ndfCput( "BAD", indf, "Unit", status );
+      }
+   }
+
+/* If required, create a Cupid extension in the NDF, storing any extra
+   supplied diagnostic information. */
+   if( extra ) {
+      xloc = NULL;
+      dloc = NULL;
+      ndfXnew( indf, "CUPID", "CUPID_EXT", 0, NULL, &xloc, status );
+      nex = astMapSize( extra );
+      for( i = 0; i < nex; i++ ) {
+         key = astMapKey( extra, i );
+         if( astMapGet0D( extra, key, &dval ) ) {
+            datNew( xloc, (char *) key, "_DOUBLE", 0, NULL, status );
+            datFind( xloc, (char *) key, &dloc, status );
+            datPutD( dloc, 0, NULL, &dval, status );
+            datAnnul( &dloc, status );
+         }
+      }
+
+/* Release the extension locator. */
+      datAnnul( &xloc, status );
+   }
+
+/* End the NDF context */
+   ndfEnd( status );
+
+/* Release the cell locator. */
+   datAnnul( &cloc, status );
+
+/* Return the HDS locator. */
+   return ret;
+
+}
