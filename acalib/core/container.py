@@ -28,3 +28,6 @@ def load_fits(path):
     cont=Container()
     cont.load_fits(path)
     return cont
+
+def save_fits(cont):
+    cont.save_fits(path)

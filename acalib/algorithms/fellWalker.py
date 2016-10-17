@@ -4,9 +4,8 @@ import acalib
 from acalib.cupid import pycupid
 import astropy.units as u
 from astropy.nddata import *
-from algorithm import Algorithm
 import numpy as np
-
+from .algorithm import Algorithm
 
 # storing unusable pixels for now (-1)
 def _struct_builder(caa):
