@@ -9,10 +9,7 @@ import numpy as np
 from skimage.measure import regionprops
 
 
-def fits_props(path):
-    
-    img =  fits.open(path, ignore_missing_end = True )[0].data
-
+def fits_props(img):
     flt = threshold_otsu(img)
     otsu = img >= flt
     clr = clear_border(otsu)
