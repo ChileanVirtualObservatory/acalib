@@ -1,4 +1,6 @@
 import numpy as np
+import astropy.units as u
+from astropy.nddata import support_nddata, NDData
 
 def fix_limits(data,vect):
     """ Fix vect index to be inside data """
@@ -43,27 +45,28 @@ def matching_slabs(data,flux,lower,upper):
 
 
 @support_nddata
-def spectral_velocities(data,wcs=None,fqi=None,restfrq=None):
-    """ Get the spectral velocities from frequencies fqi given a rest frequency (by default search for it in the WCS)
+def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
+    """ Get the spectral velocities from frequencies fqs given a rest frequency (by default search for it in the WCS). If fqs is None, then frequencies indices (fqis) need to be given.
     """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
-    if fqi is None:
-        return None
     if restfrq is None:
         restfrq=wcs.wcs.restfrq*u.Hz
-    dim=wcs.wcs.spec
-    idx=np.zeros((fqi.size,data.ndim))
-    idx[:,dim]=fqi
-    vals=wcs.all_pix2world(idx,0)
+    if fqs is None:
+        if fqis is None:
+           return None
+        dim=wcs.wcs.spec
+        idx=np.zeros((fqis.size,data.ndim))
+        idx[:,dim]=fqis
+        vals=wcs.all_pix2world(idx,0)
+        fqs=vals[:,dim]*u.Hz
     eq=u.doppler_radio(restfrq)
-    vec=vals[:,dim]*u.Hz
-    return vec.to(u.km/u.s, equivalencies=eq)
+    return fqs.to(u.km/u.s, equivalencies=eq)
 
 
 @support_nddata
-def axes_ranges(data,wcs=None,lower=None,upper=None):
+def extent(data,wcs=None,lower=None,upper=None):
     """ Get axes extent  """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -72,18 +75,44 @@ def axes_ranges(data,wcs=None,lower=None,upper=None):
         lower=np.zeros(data.ndim)
     if upper==None:
         upper=data.shape
+    uvec=np.array(wcs.wcs.cunit)
     lower=lower[::-1]
-    lwcs=wcs.wcs_pix2world([lower], 0)
-    lwcs=lwcs[0]
     upper=upper[::-1]
+    lwcs=wcs.wcs_pix2world([lower], 0)
+    lwcs=lwcs[0]*uvec
     uwcs=wcs.wcs_pix2world([upper], 0)
-    uwcs=uwcs[0]
+    uwcs=uwcs[0]*uvec
     lwcs=lwcs[::-1]
     uwcs=uwcs[::-1]
     ranges=np.array([lwcs,uwcs]).T.ravel()
     return ranges
 
+@support_nddata
+def center(data,wcs=None):
+    """ Get center of the data"""
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    uvec=np.array(wcs.wcs.cunit)
+    val=np.array(wcs.wcs.crval)*uvec
+    return val[::-1]
 
+@support_nddata
+def resolution(data,wcs=None):
+    """ Get the resolution of data"""
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    uvec=np.array(wcs.wcs.cunit)
+    val=np.array(wcs.wcs.cdelt)*uvec
+    return val[::-1]
+
+@support_nddata
+def axes_names(data,wcs=None):
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    return np.array(wcs.axis_type_names)[::-1]
 
 @support_nddata
 def index_mesh(data,lower=None,upper=None):
@@ -108,24 +137,30 @@ def index_features(data,lower=None,upper=None):
 
 
 @support_nddata
-def world_features(data,wcs=None,lower=None,upper=None):
+def features(data,wcs=None,lower=None,upper=None):
     """ Creates an array with WCS axea in features format """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
     ii=index_features(data,lower,upper)
     f=wcs.wcs_pix2world(ii.T,0)
-    f=f.T
-    return f
+    ff=np.multiply(f,np.array(wcs.wcs.cunit))
+    return np.fliplr(ff)
+
 
 @support_nddata
-def fov_to_index(data,center,window,wcs=None):
+# TODO: Consider using "box" structure rather than up and low
+def opening(data,center,window,wcs=None):
     """ Field of view (center +- window) converted to indices """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
-    ld=np.rint(wcs.wcs_world2pix([center-window],0))
-    lu=np.rint(wcs.wcs_world2pix([center+window],0))
+    off_low=center-window
+    off_up = center+window
+    off_low = np.array([x.value for x in off_low])
+    off_up = np.array([x.value for x in off_up])
+    ld=np.rint(wcs.wcs_world2pix([off_low[::-1]],0))
+    lu=np.rint(wcs.wcs_world2pix([off_up[::-1]],0))
     lower=np.array([ld,lu]).min(axis=0)
     upper=np.array([ld,lu]).max(axis=0)
     lower=fix_limits(data,lower[0][::-1])

@@ -1,3 +1,5 @@
+from astropy.nddata import support_nddata, NDData
+import numpy as np
 
 def fix_mask(data,mask):
     ismasked=isinstance(data,np.ma.MaskedArray)

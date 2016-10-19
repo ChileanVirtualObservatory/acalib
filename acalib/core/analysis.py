@@ -3,7 +3,8 @@ from astropy.table import Table
 from skimage.measure import regionprops
 from astropy import log
 import numpy as np
-from .utils import *
+from .axes import *
+from .flux import *
 from acalib.core._morph import *
 
 
@@ -55,7 +56,7 @@ def _moment(data,order,wcs=None,mask=None,unit=None,restfrq=None):
     data=fix_mask(data,mask) 
     dim=wcs.wcs.spec 
     rdim=data.ndim - 1 - dim 
-    v=spectral_velocities(data,wcs,np.arange(data.shape[rdim]),restfrq) 
+    v=spectral_velocities(data,wcs,fqis=np.arange(data.shape[rdim]),restfrq=restfrq) 
     v=v.value 
     #delta=np.mean(np.abs(v[:v.size-1] - v[1:v.size])) 
     #newdata=data.sum(axis=rdim)*delta 
