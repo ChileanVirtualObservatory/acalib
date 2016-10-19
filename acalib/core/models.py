@@ -1,3 +1,4 @@
+from astropy.nddata import support_nddata, NDData
 
 def gaussian_function(mu,P,feat,peak):
     """ Generates an n-dimensional Gaussian using the feature matrix feat,

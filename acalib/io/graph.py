@@ -3,9 +3,7 @@ import numpy as np
 from astropy.wcs import wcs
 from astropy.nddata import support_nddata
 from acalib import *
-from acalib.core.indices import *
-from acalib.core.utils import *
-
+import matplotlib.pyplot as plt
 
 #TODO: complete the nddata support (i.e. data, meta...)
 #TODO: make animation possible again

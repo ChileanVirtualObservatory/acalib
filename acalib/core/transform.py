@@ -1,6 +1,7 @@
 import glob
 import scipy.ndimage as scnd
-
+from astropy.nddata import support_nddata, NDData
+from .axes import *
 
 @support_nddata
 def cut(data,wcs=None,mask=None,unit=None,lower=None,upper=None):
