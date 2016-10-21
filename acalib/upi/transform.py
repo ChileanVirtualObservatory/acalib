@@ -1,7 +1,15 @@
 import glob
 import scipy.ndimage as scnd
 from astropy.nddata import support_nddata, NDData
-import numpy as np
+from .axes import *
+
+@support_nddata
+def cut(data,wcs=None,mask=None,unit=None,lower=None,upper=None):
+    mslab=slab(data,lower,upper)
+    scube=data[mslab]
+    newwcs=wcs.slice(mslab,numpy_order=True)
+    return scube,wcs=newwcs,unit=unit
+
 
 def scale(inputCont, majorAxisTemplate):
 	scaledData = []
@@ -57,32 +65,4 @@ def cropAndAlign(data,angles):
 		alignedData[i] = alignedData[i][dxl:dxr, dyu:dyd]
 
 	return alignedData
-
-
-def fix_mask(data,mask):
-    ismasked=isinstance(data,np.ma.MaskedArray)
-    if ismasked and mask is None:
-        return data
-    else:
-       return np.ma.MaskedArray(data,mask)
-
-def standarize(data):
-    y_min=data.min()
-    res=data - y_min
-    y_fact=res.sum()
-    res=res/y_fact
-    return (res,y_fact,y_min)
-
-def unstandarize(data,a,b):
-    return data*a + b
-
-def add(data,flux,lower,upper):
-    data_slab,flux_slab=matching_slabs(data,flux,lower,upper)
-    data[data_slab]+=flux[flux_slab]
-
-def denoise(data,threshold):
-    elms=data>threshold
-    newdata=np.empty_like(data)
-    newdata[elms]=data[elms]
-    return newdata
 

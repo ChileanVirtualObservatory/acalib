@@ -15,6 +15,24 @@ def gaussian_function(mu,P,feat,peak):
     res=peak*(res/res.max())
     return res
 
+@support_nddata
+def world_gaussian(data,wcs,mu,P,peak,cutoff):
+   """ Creates a gaussian flux at mu position (WCS), with P shape, with a maximum value equal to peak, 
+   and with compact support up to the cutoff contour """
+   Sigma=np.linalg.inv(P)
+   window=np.sqrt(2*np.log(peak/cutoff)*np.diag(Sigma))*axes_units(data,wcs=wcs)
+   lower,upper=opening(data,mu,window,wcs=wcs)
+   if np.any(np.array(upper-lower)<=0):
+       return None,lower,upper
+   feat=features(data,wcs=wcs,lower=lower,upper=upper)
+   feat=np.array(feat.columns.values())
+   mu= np.array([x.value for x in mu])
+   res=gaussian_function(mu,P,feat,peak)
+   # TODO Not generic
+   res=res.reshape(upper[0]-lower[0],upper[1]-lower[1],upper[2]-lower[2])
+   return res,lower,upper
+
+
 def create_mould(P,delta):
     """This function creates a Gaussian mould with precision matrix P, using the already computed values of delta
     """

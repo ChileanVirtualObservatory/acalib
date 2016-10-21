@@ -63,7 +63,7 @@ def Table_to_HDU(tab):
    #    dtmp = [col.filled(None) for col in six.itervalues(self.columns)]
    hdu=fits.BinTableHDU.from_columns(np.array(tab))
    if tab.meta is not None:
-       for k, v in tab.meta.iteritems():
+       for k, v in tab.meta.items():
            hdu.header[k] = v
    return hdu
 
@@ -76,7 +76,7 @@ def NDData_to_HDU(cube,primary=False):
         hdu = fits.ImageHDU(cube.data,header=header)
 
     if cube.meta is not None:
-        for k, v in cube.meta.iteritems():
+        for k, v in cube.meta.items():
             hdu.header[k] = v
     return hdu
 

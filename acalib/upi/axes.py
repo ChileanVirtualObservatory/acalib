@@ -1,11 +1,15 @@
 import numpy as np
 import astropy.units as u
 from astropy.nddata import support_nddata, NDData
+from astropy.table import Table, Column
+from astropy import log
+
+
 
 def fix_limits(data,vect):
     """ Fix vect index to be inside data """
     if isinstance(vect,(tuple,list)):
-        vect=np.array(vect)
+       vect=np.array(vect)
     vect=vect.astype(int)
     low=vect < 0
     up=vect > data.shape
@@ -43,6 +47,78 @@ def matching_slabs(data,flux,lower,upper):
     flux_slab=slab(flux,flow,fup)
     return data_slab,flux_slab
 
+@support_nddata
+def axes_names(data,wcs=None):
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    return np.array(wcs.axis_type_names)[::-1]
+
+def _pix_table_creator(values,wcs):
+    tab = Table()
+    names=axes_names(None,wcs)
+    for i in range(names.size):
+       tab[names[i]]=Column(values[:,i],unit=u.pix)
+    return tab
+
+def _world_table_creator(values,wcs):
+    uvec=np.array(wcs.wcs.cunit)[::-1]
+    values=np.fliplr(values)
+    tab = Table()
+    names=axes_names(None,wcs)
+    for i in range(names.size):
+       tab[names[i]]=Column(values[:,i],unit=uvec[i])
+    return tab
+
+def _unitize(vec,wcs):
+    uvec=np.array(wcs.wcs.cunit)[::-1]
+    return vec*uvec
+
+@support_nddata
+def extent(data,wcs=None,lower=None,upper=None):
+    """ Get axes extent  """
+    #TODO: These can be a decorator (lets wait the bbox)
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    if lower==None:
+        lower=np.zeros(data.ndim)
+    if upper==None:
+        upper=data.shape
+    idx=[lower,upper]
+    idx_f  = np.fliplr(idx)
+    values = wcs.wcs_pix2world(idx_f, 0)
+    values = np.fliplr(values)
+    return (_unitize(values[0],wcs),_unitize(values[1],wcs))
+
+@support_nddata
+def center(data,wcs=None):
+    """ Get center of the data"""
+    #TODO: These can be a decorator (lets wait the bbox)
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    val=wcs.wcs.crval[::-1]
+    return _unitize(val,wcs)
+
+@support_nddata
+def axes_units(data,wcs=None):
+    """ Get units of the axes"""
+    #TODO: These can be a decorator (lets wait the bbox)
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    uvec=np.array(wcs.wcs.cunit)[::-1]
+    return uvec
+
+@support_nddata
+def resolution(data,wcs=None):
+    """ Get the resolution of data"""
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    val=wcs.wcs.cdelt[::-1]
+    return _unitize(val,wcs)
 
 @support_nddata
 def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
@@ -64,58 +140,9 @@ def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
     eq=u.doppler_radio(restfrq)
     return fqs.to(u.km/u.s, equivalencies=eq)
 
-
-@support_nddata
-def extent(data,wcs=None,lower=None,upper=None):
-    """ Get axes extent  """
-    if wcs is None:
-        log.error("A world coordinate system (WCS) is needed")
-        return None
-    if lower==None:
-        lower=np.zeros(data.ndim)
-    if upper==None:
-        upper=data.shape
-    uvec=np.array(wcs.wcs.cunit)
-    lower=lower[::-1]
-    upper=upper[::-1]
-    lwcs=wcs.wcs_pix2world([lower], 0)
-    lwcs=lwcs[0]*uvec
-    uwcs=wcs.wcs_pix2world([upper], 0)
-    uwcs=uwcs[0]*uvec
-    lwcs=lwcs[::-1]
-    uwcs=uwcs[::-1]
-    ranges=np.array([lwcs,uwcs]).T.ravel()
-    return ranges
-
-@support_nddata
-def center(data,wcs=None):
-    """ Get center of the data"""
-    if wcs is None:
-        log.error("A world coordinate system (WCS) is needed")
-        return None
-    uvec=np.array(wcs.wcs.cunit)
-    val=np.array(wcs.wcs.crval)*uvec
-    return val[::-1]
-
-@support_nddata
-def resolution(data,wcs=None):
-    """ Get the resolution of data"""
-    if wcs is None:
-        log.error("A world coordinate system (WCS) is needed")
-        return None
-    uvec=np.array(wcs.wcs.cunit)
-    val=np.array(wcs.wcs.cdelt)*uvec
-    return val[::-1]
-
-@support_nddata
-def axes_names(data,wcs=None):
-    if wcs is None:
-        log.error("A world coordinate system (WCS) is needed")
-        return None
-    return np.array(wcs.axis_type_names)[::-1]
-
 @support_nddata
 def index_mesh(data,lower=None,upper=None):
+    # Devel
     """ Create an meshgrid from indices """
     sl=slab(data,lower,upper)
     dim=data.ndim
@@ -144,8 +171,7 @@ def features(data,wcs=None,lower=None,upper=None):
         return None
     ii=index_features(data,lower,upper)
     f=wcs.wcs_pix2world(ii.T,0)
-    ff=np.multiply(f,np.array(wcs.wcs.cunit))
-    return np.fliplr(ff)
+    return _world_table_creator(f,wcs)
 
 
 @support_nddata
@@ -156,9 +182,12 @@ def opening(data,center,window,wcs=None):
         log.error("A world coordinate system (WCS) is needed")
         return None
     off_low=center-window
-    off_up = center+window
     off_low = np.array([x.value for x in off_low])
+    off_up = center+window
     off_up = np.array([x.value for x in off_up])
+    #dim = len(center.colnames)
+    #off_low = np.array([center[0][i] - window[0][i] for i in range(dim)])
+    #off_up  = np.array([center[0][i] + window[0][i] for i in range(dim)])
     ld=np.rint(wcs.wcs_world2pix([off_low[::-1]],0))
     lu=np.rint(wcs.wcs_world2pix([off_up[::-1]],0))
     lower=np.array([ld,lu]).min(axis=0)
@@ -166,6 +195,9 @@ def opening(data,center,window,wcs=None):
     lower=fix_limits(data,lower[0][::-1])
     upper=fix_limits(data,upper[0][::-1])
     return (lower,upper)
+    #values=np.vstack((lower,upper))
+    #return _pix_table_creator(values,wcs)
+    
 
 
 ### DEPRECATED ####

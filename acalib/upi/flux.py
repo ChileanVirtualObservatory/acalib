@@ -24,6 +24,7 @@ def _add(data,flux,lower,upper):
 
 def _denoise(data,threshold):
     elms=data>threshold
+    newdata=np.empty_like(data)
     data[elms]=data[elms]
 
 @support_nddata
@@ -58,8 +59,7 @@ def add(data,flux,lower=None,upper=None):
 @support_nddata
 def denoise(data,wcs=None,mask=None,unit=None,threshold=0.0):
       """ Simple denoising given a threshold (creates a new object) """
-      newdata=data.copy()
-      _denoise(newdata,threshold)
+      newdaya=_denoise(datathreshold)
       return NDData(newdata, uncertainty=None, mask=mask,wcs=wcs, meta=None, unit=unit)
 
 

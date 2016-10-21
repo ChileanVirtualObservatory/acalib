@@ -1,6 +1,6 @@
 from . import core
-from .core import *
-from . import algorithms
+from .algorithms import *
+from .api import *
 
 import warnings
 from astropy.utils.exceptions import AstropyWarning
