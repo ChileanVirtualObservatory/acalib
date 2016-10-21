@@ -2,7 +2,7 @@ from astropy import log
 import numpy as np
 from astropy.wcs import wcs
 from astropy.nddata import support_nddata
-from acalib import *
+from ..core.analysis import *
 import matplotlib.pyplot as plt
 
 #TODO: complete the nddata support (i.e. data, meta...)
@@ -47,9 +47,9 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
         cb=plt.colorbar()
         cb.ax.set_ylabel(unit)
     if contour:
-        rms=estimate_rms(data)
+        arms=rms(data)
         dmax=data.max()
-        crs=np.arange(1,dmax/rms)
-        plt.contour(data,levels=rms*crs,alpha=0.5)
+        crs=np.arange(1,dmax/arms)
+        plt.contour(data,levels=arms*crs,alpha=0.5)
     plt.show()
 

@@ -10,7 +10,7 @@ import datetime
 import copy
 
 from acalib import *
-from convert import * 
+from .convert import * 
 
 
 class Universe:
