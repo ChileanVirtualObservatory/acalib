@@ -1,16 +1,11 @@
+from astropy import nddata as ndd
 
-
-class Data(ndd.NDData):
+class Data(ndd.NDDataRef):
     """
     A generic represenation of astronomical n-dimensional data array. Extends NDData.
     
     """
 
-    def get_slab(self,lower=None,upper=None):
-       pass
-
-    def get_matching_slab(self,flux,lower,upper):
-       pass
 
     def get_spectral_velocities(self,fqi=None,restfrq=None):
        pass
@@ -18,16 +13,7 @@ class Data(ndd.NDData):
     def get_axes_ranges(self,lower=None,upper=None):
        pass
 
-    def get_index_mesh(self,lower=None,upper=None):
-       pass
-    
-    def get_index_features(self,lower=None,upper=None)
-       pass
-
-    def get_world_features(self,wcs=None,lower=None,upper=None):
-       pass
- 
-    def get_fov_to_index(self,center,window):
+    def get_features(self,wcs=None,lower=None,upper=None):
        pass
 
     def get_rms(self,mask=None):

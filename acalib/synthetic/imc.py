@@ -110,6 +110,7 @@ class IMC(Component):
     def get_meta_data(self):
         raise NotImplementedError("Get meta data not implemented.")
 
+
 class GaussianIMC(IMC):
     def get_model_name(self):
         return "Gaussian IMC"
@@ -129,7 +130,7 @@ class GaussianIMC(IMC):
         if mcub==None:
             return False
         else:
-            add_flux(cube.data,mcub, lower, upper)
+            cube.add_flux(cube.data,mcub, lower, upper)
             return True
 
     def info(self):

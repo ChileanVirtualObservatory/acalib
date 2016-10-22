@@ -3,7 +3,7 @@ import time
 import urllib
 import os
 
-import db
+from .db import *
 
 default_url = "http://www.csrg.cl/~maray/splatalogue.csv"
 default_csv_name = "lines2.csv"
@@ -12,7 +12,7 @@ csv = False
 URI = ""
 log = sys.stdout
 
-database = db.lineDB(default_db_name)
+database = lineDB(default_db_name)
 
 def reporthook(count, block_size, total_size):
     global start_time
