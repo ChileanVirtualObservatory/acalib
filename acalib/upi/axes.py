@@ -4,48 +4,16 @@ from astropy.nddata import support_nddata, NDData
 from astropy.table import Table, Column
 from astropy import log
 
+import core
+from upi.formatting import _unitize, _world_table_creator
 
-
-def fix_limits(data,vect):
-    """ Fix vect index to be inside data """
-    if isinstance(vect,(tuple,list)):
-       vect=np.array(vect)
-    vect=vect.astype(int)
-    low=vect < 0
-    up=vect > data.shape
-    if vect.any():
-        vect[low]=0
-    if vect.any():
-        vect[up]=np.array(data.shape)[up]
-    return vect
-
-
-def slab(data,lower=None,upper=None):
-    """ Obtain the n-dimensional slab from lower to upper (i.e. slab is a vector of slices)"""
-    if lower is None:
-        lower=np.zeros(data.ndim)
-    if upper is None:
-        upper=data.shape
-    lower=fix_limits(data,lower)
-    upper=fix_limits(data,upper)
-    m_slab=[]
-    for i in range(data.ndim):
-       m_slab.append(slice(lower[i],upper[i]))
-    return m_slab
-
-
-def matching_slabs(data,flux,lower,upper):
-    """ Obtain the matching data and flux slabs from lower to upper while fixing the limits"""
-    data_slab=slab(data,lower,upper)
-    flow=np.zeros(flux.ndim)
-    fup=np.array(flux.shape)
-    for i in range(data.ndim):
-       if data_slab[i].start == 0:
-          flow[i] = flux.shape[i] - data_slab[i].stop
-       if data_slab[i].stop == data.shape[i]:
-          fup[i] = data_slab[i].stop - data_slab[i].start
-    flux_slab=slab(flux,flow,fup)
-    return data_slab,flux_slab
+@support_nddata
+def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
+    # Check for NDDataSlicing... maybe this is already done by astropy.nddata package.
+    mslab = core.slab(data, lower, upper)
+    scube = data[mslab]
+    newwcs = wcs.slice(mslab, numpy_order=True)
+    return NDData(scube, wcs=newwcs, unit=unit)
 
 @support_nddata
 def axes_names(data,wcs=None):
@@ -54,30 +22,11 @@ def axes_names(data,wcs=None):
         return None
     return np.array(wcs.axis_type_names)[::-1]
 
-def _pix_table_creator(values,wcs):
-    tab = Table()
-    names=axes_names(None,wcs)
-    for i in range(names.size):
-       tab[names[i]]=Column(values[:,i],unit=u.pix)
-    return tab
-
-def _world_table_creator(values,wcs):
-    uvec=np.array(wcs.wcs.cunit)[::-1]
-    values=np.fliplr(values)
-    tab = Table()
-    names=axes_names(None,wcs)
-    for i in range(names.size):
-       tab[names[i]]=Column(values[:,i],unit=uvec[i])
-    return tab
-
-def _unitize(vec,wcs):
-    uvec=np.array(wcs.wcs.cunit)[::-1]
-    return vec*uvec
 
 @support_nddata
 def extent(data,wcs=None,lower=None,upper=None):
     """ Get axes extent  """
-    #TODO: These can be a decorator (lets wait the bbox)
+    #TODO: These can be a decorator
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -94,7 +43,7 @@ def extent(data,wcs=None,lower=None,upper=None):
 @support_nddata
 def center(data,wcs=None):
     """ Get center of the data"""
-    #TODO: These can be a decorator (lets wait the bbox)
+    #TODO: These can be a decorator
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -104,7 +53,7 @@ def center(data,wcs=None):
 @support_nddata
 def axes_units(data,wcs=None):
     """ Get units of the axes"""
-    #TODO: These can be a decorator (lets wait the bbox)
+    #TODO: These can be a decorator (
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -140,28 +89,6 @@ def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
     eq=u.doppler_radio(restfrq)
     return fqs.to(u.km/u.s, equivalencies=eq)
 
-@support_nddata
-def index_mesh(data,lower=None,upper=None):
-    # Devel
-    """ Create an meshgrid from indices """
-    sl=slab(data,lower,upper)
-    dim=data.ndim
-    slices=[]
-    for i in range(dim):
-       slices.append(slice(sl[i].start,sl[i].stop))
-    retval=np.mgrid[slices]
-    return retval
-
-@support_nddata
-def index_features(data,lower=None,upper=None):
-    """ Creates an array with indices in features format """
-    msh=index_mesh(data,lower,upper)
-    dim=data.ndim
-    ii=np.empty((dim,int(msh.size/dim)))
-    for i in range(dim):
-       ii[dim-i-1]=msh[i].ravel()
-    return ii
-
 
 @support_nddata
 def features(data,wcs=None,lower=None,upper=None):
@@ -169,7 +96,7 @@ def features(data,wcs=None,lower=None,upper=None):
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
-    ii=index_features(data,lower,upper)
+    ii=core.index_features(data,lower,upper)
     f=wcs.wcs_pix2world(ii.T,0)
     return _world_table_creator(f,wcs)
 
@@ -192,8 +119,8 @@ def opening(data,center,window,wcs=None):
     lu=np.rint(wcs.wcs_world2pix([off_up[::-1]],0))
     lower=np.array([ld,lu]).min(axis=0)
     upper=np.array([ld,lu]).max(axis=0)
-    lower=fix_limits(data,lower[0][::-1])
-    upper=fix_limits(data,upper[0][::-1])
+    lower=core.fix_limits(data,lower[0][::-1])
+    upper=core.fix_limits(data,upper[0][::-1])
     return (lower,upper)
     #values=np.vstack((lower,upper))
     #return _pix_table_creator(values,wcs)

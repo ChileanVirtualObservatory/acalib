@@ -1,7 +1,8 @@
 import numpy as np
 from collections import deque
+
+from astropy.table import Table
 from scipy.optimize import fmin_bfgs,check_grad,approx_fprime
-from acalib import ATable
 #from scipy.optimize.linesearch import (line_search_BFGS, line_search_wolfe1, line_search_wolfe2, line_search_wolfe2 as line_search)
 #from optimize import fmin_bfgs
 
@@ -470,8 +471,8 @@ class GaussClumps:
       try:
          off=np.min(vlow,vup) + rms
       except ValueError:
-        print vlow,vup,rms
-        print self.imax
+        print(vlow,vup,rms)
+        print(self.imax)
         self.data.data[self.imax]
         sys.exit()
       if vlow < vup:
@@ -480,8 +481,8 @@ class GaussClumps:
          try:
            cand=cand[0][0]
          except IndexError:
-           print cand
-           print plow, self.imax
+           print(cand)
+           print(plow, self.imax)
            sys.exit()
          cand-=vlow
          cand=cand[::-1]
@@ -546,7 +547,7 @@ class GaussClumps:
       fvel=self.fobs[2]/velres
       guess[8]=np.sqrt(fvel*fvel- 1.0 )*velres
       if np.isnan(guess[8]):
-         print fvel,self.fobs[2],fvel*fvel
+         print(fvel,self.fobs[2],fvel*fvel)
       guess[9]=0.0
       guess[10]=0.0
       
@@ -632,7 +633,7 @@ class GaussClumps:
       
       # peaks contains the last npeaks... 
       peaks=np.zeros(npeaks)
-      clist=ATable(names=("Intensity", "Offset", "RA mu", "RA std","DEC mu", "DEC std","Angle","FREQ mu","FREQ std","RA vel grad","DEC vel grad"),dtype=('f8','f8','f8','f8','f8','f8','f8','f8','f8','f8','f8'))
+      clist=Table(names=("Intensity", "Offset", "RA mu", "RA std","DEC mu", "DEC std","Angle","FREQ mu","FREQ std","RA vel grad","DEC vel grad"),dtype=('f8','f8','f8','f8','f8','f8','f8','f8','f8','f8','f8'))
       clist.meta=cube.meta
       # Loop round fitting a gaussian to the largest remaining peak in the
       # residuals array. */
