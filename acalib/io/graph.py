@@ -27,7 +27,7 @@ def visualize_plot(data,wcs=None,unit=None):
         plt.plot(data)
         plt.ylabel(unit)
         plt.xlabel(wcs.axis_type_names[0])
-    plt.show()
+    #plt.show()
          
 @support_nddata
 def visualize_image(data,wcs=None,unit=None,contour=False):
