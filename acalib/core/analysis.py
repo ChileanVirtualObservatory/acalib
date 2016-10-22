@@ -8,8 +8,9 @@ from skimage.morphology import disk
 from skimage.segmentation import clear_border
 
 from ._morph import *
-from core.utils import fix_mask, slab
 
+from .utils import fix_mask, slab
+from acalib.core import *
 
 def rms(data, mask=None):
     """Compute the RMS of data. If mask != None, then 

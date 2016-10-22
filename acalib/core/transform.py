@@ -1,7 +1,8 @@
 import scipy.ndimage as scnd
 import numpy as np
 
-from core import img_props, matching_slabs, fits_props
+from .stack import img_props, fits_props
+from .utils import matching_slabs
 
 
 def scale(inputCont, majorAxisTemplate):

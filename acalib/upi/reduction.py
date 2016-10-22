@@ -3,9 +3,8 @@ from astropy.table import Table
 from astropy import log
 import numpy as np
 import astropy.units as u
-import core
-from upi.axes import spectral_velocities
-
+from acalib import core
+from acalib.upi.axes import spectral_velocities
 
 
 
@@ -13,7 +12,7 @@ from upi.axes import spectral_velocities
 def _moment(data,order,wcs=None,mask=None,unit=None,restfrq=None): 
     # TODO: Decorator?
     if wcs is None:
-        log.error("A world coordinate system (WCS) is needed") 
+        log.error("A wo rld coordinate system (WCS) is needed")
         return None 
     data=core.fix_mask(data,mask)
     dim=wcs.wcs.spec 

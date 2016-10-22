@@ -1,8 +1,8 @@
 from astropy.nddata import support_nddata, NDData
-import core
+from acalib import core
 import numpy as np
 
-from upi.axes import opening, features, axes_units
+from acalib.upi.axes import opening, features, axes_units
 
 @support_nddata
 def rms(data,mask=None,unit=None):
