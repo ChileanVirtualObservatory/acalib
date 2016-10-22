@@ -5,7 +5,7 @@ import numpy as np
 from acalib.upi.axes import opening, features, axes_units
 
 @support_nddata
-def rms(data,mask=None,unit=None):
+def noise_level(data,mask=None,unit=None):
     """Compute the RMS of data.
     """
     #TODO: check photutils background estimation for using that if possible
@@ -35,7 +35,7 @@ def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
 
 
 @support_nddata
-def add(data, flux, lower=None, upper=None):
+def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=None):
     """ Create a new data with the new flux added. 
 
     Lower and upper are bounds for data. This operation is border-safe and creates a new object at each call.
@@ -43,18 +43,18 @@ def add(data, flux, lower=None, upper=None):
     """
     res = data.copy()
     core.add(res, flux, lower, upper)
-    return res
+    return NDData(res, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 
 
 @support_nddata
 def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
     """ Simple denoising given a threshold (creates a new object) """
-    newdata = core.denoise(data, threshold)
+    newdata = core.denoise(data, threshold.value)
     return NDData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 
 
 @support_nddata
-def world_gaussian(data, wcs, mu, P, peak, cutoff):
+def world_gaussian(data, mu, P, peak, cutoff, wcs=None):
     """ Creates a gaussian flux at mu position (WCS), with P shape, with a maximum value equal to peak,
     and with compact support up to the cutoff contour """
     Sigma = np.linalg.inv(P)

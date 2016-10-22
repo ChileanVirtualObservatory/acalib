@@ -71,7 +71,7 @@ def standarize(data):
 
 
 def unstandarize(data, a, b):
-    return data * a + b
+    return a*data  + b
 
 
 def add(data, flux, lower, upper):
@@ -80,6 +80,6 @@ def add(data, flux, lower, upper):
 
 def denoise(data, threshold):
     elms = data > threshold
-    newdata = np.empty_like(data)
+    newdata = np.zeros(data.shape)
     newdata[elms] = data[elms]
     return newdata
