@@ -11,6 +11,7 @@ import datetime
 import copy
 
 from acalib import *
+from .convert import * 
 
 
 
@@ -174,7 +175,7 @@ class Universe:
             # add all tables generated from each component of the source
             # on the complete components dictionary.
             tab+=gen_tables
-        add_flux(cube.data,2 * noise * (np.random.random(data.shape) - 0.5))
+        cube.add_flux(2 * noise * (np.random.random(data.shape) - 0.5))
         cont=Container()
         cont.primary=cube
 

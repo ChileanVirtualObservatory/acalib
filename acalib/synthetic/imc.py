@@ -1,5 +1,6 @@
 from numpy import random
 from . import db
+from .convert import *
 from .vu import Component
 import astropy.units as u
 import numpy as np
@@ -9,7 +10,6 @@ import urllib
 import shutil
 import os.path
 from acalib import *
-from acalib.core.gmr import *
 
 #INTEN_GROUP = [('default'), ('COv=0'), ('13COv=0'), ('HCO+, HC3N, CS, C18O, CH3OH, N2H, HDO')]
 #INTEN_VALUES = [[0.1, 2], [20, 60], [5, 20], [1, 10]]
@@ -22,6 +22,13 @@ from acalib.core.gmr import *
 
 
 DEFAULT_DBPATH= '../../bindata/db/ASYDO'
+
+def axis_range(data,wcs,axis):
+    lower=wcs.wcs_pix2world([[0,0,0]], 0) - wcs.wcs.cdelt/2.0
+    shape=data.shape
+    shape=[shape[::-1]]
+    upper=wcs.wcs_pix2world(shape, 1) + wcs.wcs.cdelt/2.0
+    return (lower[0][axis],upper[0][axis])
 
 
 class IMC(Component):
@@ -103,6 +110,7 @@ class IMC(Component):
     def get_meta_data(self):
         raise NotImplementedError("Get meta data not implemented.")
 
+
 class GaussianIMC(IMC):
     def get_model_name(self):
         return "Gaussian IMC"
@@ -118,11 +126,11 @@ class GaussianIMC(IMC):
     def _draw(self, cube, flux, freq, cutoff):
         new_pos = self.pos + self.offset
         mu, p = gclump_to_wcsgauss(new_pos, self.std, self.angle, freq, self.fwhm, self.gradient)
-        mcub, lower, upper =gaussflux_from_world_window(cube.data,cube.wcs, mu, p, flux, cutoff)
+        mcub, lower, upper =world_gaussian(cube.data,cube.wcs, mu, p, flux, cutoff)
         if mcub==None:
             return False
         else:
-            add_flux(cube.data,mcub, lower, upper)
+            cube.add_flux(cube.data,mcub, lower, upper)
             return True
 
     def info(self):

@@ -3,10 +3,8 @@ import numpy as np
 from astropy.wcs import wcs
 #from mayavi import mlab
 from astropy.nddata import support_nddata
-from acalib import *
-from acalib.core.indices import *
-from acalib.core.utils import *
-
+from ..core.analysis import *
+import matplotlib.pyplot as plt
 
 #TODO: complete the nddata support (i.e. data, meta...)
 #TODO: make animation possible again
@@ -60,7 +58,6 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
          dmax=data.max()
          crs=np.arange(1,dmax/rms)
          plt.contour(data,levels=rms*crs,alpha=0.5)
-
      plt.show()
 
 # TODO: Remove hardocded stuff
@@ -97,36 +94,6 @@ def visualize_contour3D(data,wcs=None,unit=None):
      mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
      mlab.show()
 
-#def stacked(data):
-#     figure = mlab.figure('Stacked Plot')
-#     ranges=data.get_ranges()
-#     ranges=[ranges[2],ranges[3],ranges[4],ranges[5],ranges[0],ranges[1]]
-#     img=data.stack()
-#     mlab.imshow(img)
-#     ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="VEL [km/s] ",ranges=ranges,nb_labels=5)
-#     ax.axes.label_format='%.3f'
-#     mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
-#     mlab.show()
-
-
-#def velocity(data):
-#     figure = mlab.figure('Velocity Map')
-#     ranges=data.get_ranges()
-#     nn=data.data.shape[0]
-#     ranges=[ranges[2],ranges[3],ranges[4],ranges[5],-nn/2,nn/2]
-#     #nn=data.data.shape[0]
-#     #vect=np.linspace(0.0,1.0,nn)
-#     #vfield=np.average(data.data,axis=0,weights=vect)
-#     rms=data.estimate_rms()
-#     afield=np.argmax(data.data,axis=0) - nn/2
-#     vfield=np.max(data.data,axis=0)
-#     afield[vfield<1.5*rms]=0
-#     afield[afield==-20]=0
-#     mlab.surf(afield,warp_scale="auto")
-#     ax=mlab.axes(xlabel="DEC [deg]",ylabel="RA [deg]",zlabel="PIX",ranges=ranges,nb_labels=5)
-#     ax.axes.label_format='%.3f'
-#     mlab.colorbar(title='Pix', orientation='vertical', nb_labels=5)
-#     mlab.show()
 
 
 
@@ -144,5 +111,4 @@ def visualize_contour3D(data,wcs=None,unit=None):
 #               ani = animation.FuncAnimation(fig, self._updatefig, frames=range(len(self.freq_axis)), interval=inte, blit=True,
 #                                                                                                                                       repeat=rep)
 #               plt.show()
-
 
