@@ -1,7 +1,8 @@
 import scipy.ndimage as scnd
 import numpy as np
 
-from core import img_props, matching_slabs, fits_props
+from .stack import img_props, fits_props
+from .utils import matching_slabs
 
 
 def scale(inputCont, majorAxisTemplate):
@@ -70,7 +71,7 @@ def standarize(data):
 
 
 def unstandarize(data, a, b):
-    return data * a + b
+    return a*data  + b
 
 
 def add(data, flux, lower, upper):
@@ -79,6 +80,6 @@ def add(data, flux, lower, upper):
 
 def denoise(data, threshold):
     elms = data > threshold
-    newdata = np.empty_like(data)
+    newdata = np.zeros(data.shape)
     newdata[elms] = data[elms]
     return newdata

@@ -25,15 +25,15 @@ def visualize(data,wcs=None,unit=None,contour=False):
 
 @support_nddata
 def visualize_plot(data,wcs=None,unit=None):
-     if wcs is None:
-         plt.plot(data)
-         plt.ylabel(unit)
-     else:
-         #TODO: Implement x vector, but check why the wcs cannot be onedimensional!
-         plt.plot(data)
-         plt.ylabel(unit)
-         plt.xlabel(wcs.axis_type_names[0])
-     plt.show()
+    if wcs is None:
+        plt.plot(data)
+        plt.ylabel(unit)
+    else:
+        #TODO: Implement x vector, but check why the wcs cannot be onedimensional!
+        plt.plot(data)
+        plt.ylabel(unit)
+        plt.xlabel(wcs.axis_type_names[0])
+    #plt.show()
          
 @support_nddata
 def visualize_image(data,wcs=None,unit=None,contour=False):

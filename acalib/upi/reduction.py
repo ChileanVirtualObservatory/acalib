@@ -3,9 +3,8 @@ from astropy.table import Table
 from astropy import log
 import numpy as np
 import astropy.units as u
-import core
-from upi.axes import spectral_velocities
-
+from acalib import core
+from acalib.upi.axes import spectral_velocities
 
 
 
@@ -13,7 +12,7 @@ from upi.axes import spectral_velocities
 def _moment(data,order,wcs=None,mask=None,unit=None,restfrq=None): 
     # TODO: Decorator?
     if wcs is None:
-        log.error("A world coordinate system (WCS) is needed") 
+        log.error("A wo rld coordinate system (WCS) is needed")
         return None 
     data=core.fix_mask(data,mask)
     dim=wcs.wcs.spec 
@@ -54,20 +53,22 @@ def moment2(data,wcs=None,mask=None,unit=None,restfrq=None):
     return _moment(data,2,wcs,mask,unit,restfrq) 
 
 
-# TODO: Fix this function, is not working...
+# TODO: Fix this function, is not working correctly
 @support_nddata
-def spectra(data,wcs=None,mask=None,unit=None,position=None,aperture=None):
-    if position is None:
-        # Get celestial center
-        position=wcs.celestial.wcs.crval*u.deg
-    if aperture is None:
-        # Get 1 pixel aperture
-        aperture=np.abs(wcs.celestial.wcs.cdelt[0])*u.deg
-    if position.unit == u.pix and aperture.unit == u.pix:
-        # TODO:  Here is the nasty part
-        lb=np.array([0,            position[1].value - aperture.value, position[0].value - aperture.value])
-        ub=np.array([data.shape[2],position[1].value + aperture.value, position[0].value + aperture.value])
+def spectra(data,wcs=None,mask=None,unit=None,restrict=None):
+    if restrict is None:
+        #Create NDD and WCS change...
+        return core.integrate(data,axis=(1,2))
     else:
         log.error("Not Implemented Yet!")
-    specview=data[slab(data,lb,ub)]
-    return specview.sum(axis=(1,2))
+
+        # Get 1 pixel aperture
+        aperture=np.abs(wcs.celestial.wcs.cdelt[0])*u.deg
+    #if position.unit == u.pix and aperture.unit == u.pix:
+    #    # TODO:  Here is the nasty part
+    #    lb=np.array([0,            position[1].value - aperture.value, position[0].value - aperture.value])
+    #    ub=np.array([data.shape[2],position[1].value + aperture.value, position[0].value + aperture.value])
+    #else:
+    #    log.error("Not Implemented Yet!")
+    #specview=data[slab(data,lb,ub)]
+    #return specview.sum(axis=(1,2))
