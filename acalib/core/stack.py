@@ -5,7 +5,7 @@ from skimage.measure import label
 from skimage.segmentation import clear_border
 from skimage.measure import regionprops
 
-from core import crop_and_align, scale, rotate
+from acalib.core import *
 
 
 def stacking(template_data, data_cont):

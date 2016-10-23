@@ -1,11 +1,10 @@
 import numpy as np
 import astropy.units as u
 from astropy.nddata import support_nddata, NDData
-from astropy.table import Table, Column
 from astropy import log
 
-import core
-from upi.formatting import _unitize, _world_table_creator
+from acalib import core
+from acalib.upi.formatting import _unitize, _world_table_creator
 
 @support_nddata
 def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):

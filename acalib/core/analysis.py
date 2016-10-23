@@ -1,5 +1,6 @@
 import numpy as np
 from astropy import log
+from astropy.nddata import support_nddata, NDData
 from skimage.filter import threshold_adaptive
 from skimage.measure import label
 from skimage.measure import regionprops
@@ -8,8 +9,11 @@ from skimage.morphology import disk
 from skimage.segmentation import clear_border
 
 from ._morph import *
-from core.utils import fix_mask, slab
 
+from astropy.table import Table
+
+from .utils import fix_mask, slab
+from acalib.core import *
 
 def rms(data, mask=None):
     """Compute the RMS of data. If mask != None, then 
@@ -84,6 +88,35 @@ def get_shape(data, intensity_image, wcs=None):
                                 obj.mean_intensity))
 
     return objs_properties
+
+
+#TODO: try not to use nddata and Table
+@support_nddata
+def measure_shape(data, labeled_images, min_freq=None, max_freq=None, wcs=None):
+    """ Measure a few statistics from labeled images """
+    # TODO: Document this function
+    objects = list()
+    intensity_image = data
+    for image in labeled_images:
+        objs_properties = _get_shape(image, intensity_image)
+        objects.extend(objs_properties)
+
+    if len(objects) == 0:
+        return Table()
+
+    names = ["CentroidRa", "CentroidDec", "MajorAxisLength", "MinorAxisLength",
+             "Area", "Eccentricity", "Solidity", "FilledPercentaje", "MaxIntensity", "MinIntensity", "AverageIntensity"]
+
+    meta = {"name": "Object Shapes"}
+
+    if min_freq is not None:
+        meta["min_freq_hz"] = min_freq
+
+    if max_freq is not None:
+        meta["max_freq_hz"] = max_freq
+
+    t = Table(rows=objects, names=names, meta=meta)
+    return t
 
 
 def spectra_sketch(data, samples, random_state=None):
@@ -188,7 +221,8 @@ def index_features(data, lower=None, upper=None):
         ii[dim - i - 1] = msh[i].ravel()
     return ii
 
-
+#Remove NDData support!
+@support_nddata
 def gaussian_mix(data, prob=0.05, precision=0.02, wcs=None):
     """
     Using a mixture of gaussians make an multiscale segmentation to get the region of interest of a 2D astronomical image.
@@ -368,27 +402,29 @@ def _kernel_shift(back, kernel, x, y):
 
     return back
 
+#Remove NDData support!
+@support_nddata
+def vel_stacking(data,data_slice, wcs=None, mask=None,uncertainty=None, meta=None, unit=None):
+    """
+       Create an image collapsing the frecuency axis
+        :param data_slice: Sector to be collapsed
+        :type data_slice: slice
+        :returns: image (NDData): 2D-Array with the stacked cube.
+
+    """
+    if len(data.shape) != 3:
+        log.error("Cube needs to be a 3D array")
+        raise ValueError("Cube needs to be a 3D array")
+    dims = data.shape
+    subcube = data[data_slice, :,:]
+    stacked = np.sum(subcube,axis=0)
+    wcs = wcs.dropaxis(2)
+
+    return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+
+
 ### DEPRECATED ####
 
-# def vel_stacking(data,data_slice, wcs=None, mask=None,uncertainty=None, meta=None, unit=None):
-#    """
-#        Create an image collapsing the frecuency axis
-#
-#        :param data_slice: Sector to be collapsed
-#        :type data_slice: slice
-#        :returns: image (NDData): 2D-Array with the stacked cube.
-
-#    """
-#    if len(data.shape) != 3:
-#        log.error("Cube needs to be a 3D array")
-#        raise ValueError("Cube needs to be a 3D array")
-#
-#    dims = data.shape
-#    subcube = data[data_slice, :,:]
-#    stacked = np.sum(subcube,axis=0)
-#    wcs = wcs.dropaxis(2)
-
-#    return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
 
 # def ndslice(ndd, lower, upper):
 #    """
