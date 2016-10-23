@@ -1,10 +1,10 @@
 import sys
 sys.path.append('../../')
-import acalib
 from acalib.cupid import pycupid
 import astropy.units as u
 from astropy.nddata import *
 from .algorithm import Algorithm
+import acalib.core as core
 import numpy as np
 
 
@@ -59,7 +59,7 @@ class ClumpFind(Algorithm):
     def run(self, data):
         # if rms not in config, estimate it
         if 'RMS' not in self.config:
-            rms = acalib.rms(data)
+            rms = core.rms(data.data)
         else:
             rms = self.config['RMS']
 

@@ -53,7 +53,7 @@ def moment2(data,wcs=None,mask=None,unit=None,restfrq=None):
     return _moment(data,2,wcs,mask,unit,restfrq) 
 
 
-# TODO: Fix this function, is not working...
+# TODO: Fix this function, is not working correctly
 @support_nddata
 def spectra(data,wcs=None,mask=None,unit=None,restrict=None):
     if restrict is None:
