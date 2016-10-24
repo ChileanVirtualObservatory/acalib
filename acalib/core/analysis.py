@@ -98,7 +98,7 @@ def measure_shape(data, labeled_images, min_freq=None, max_freq=None, wcs=None):
     objects = list()
     intensity_image = data
     for image in labeled_images:
-        objs_properties = _get_shape(image, intensity_image)
+        objs_properties = get_shape(image, intensity_image)
         objects.extend(objs_properties)
 
     if len(objects) == 0:
@@ -402,9 +402,9 @@ def _kernel_shift(back, kernel, x, y):
 
     return back
 
-#Remove NDData support!
-@support_nddata
-def vel_stacking(data,data_slice, wcs=None, mask=None,uncertainty=None, meta=None, unit=None):
+
+# TODO: This is non-generic, uses the axis=0!
+def vel_stacking(data, data_slice):
     """
        Create an image collapsing the frecuency axis
         :param data_slice: Sector to be collapsed
@@ -418,9 +418,9 @@ def vel_stacking(data,data_slice, wcs=None, mask=None,uncertainty=None, meta=Non
     dims = data.shape
     subcube = data[data_slice, :,:]
     stacked = np.sum(subcube,axis=0)
-    wcs = wcs.dropaxis(2)
+    # wcs = wcs.dropaxis(2)
 
-    return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+    return stacked  #NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
 
 
 ### DEPRECATED ####
