@@ -98,7 +98,7 @@ def measure_shape(data, labeled_images, min_freq=None, max_freq=None, wcs=None):
     objects = list()
     intensity_image = data
     for image in labeled_images:
-        objs_properties = _get_shape(image, intensity_image)
+        objs_properties = get_shape(image, intensity_image)
         objects.extend(objs_properties)
 
     if len(objects) == 0:
