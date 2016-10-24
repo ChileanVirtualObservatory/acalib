@@ -12,7 +12,7 @@ from acalib.upi.axes import spectral_velocities
 def _moment(data,order,wcs=None,mask=None,unit=None,restfrq=None): 
     # TODO: Decorator?
     if wcs is None:
-        log.error("A wo rld coordinate system (WCS) is needed")
+        log.error("A world coordinate system (WCS) is needed")
         return None 
     data=core.fix_mask(data,mask)
     dim=wcs.wcs.spec 
