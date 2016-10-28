@@ -1,6 +1,6 @@
 from astropy.table import Table, Column
 import numpy as np
-from . import axes
+import axes
 
 def _pix_table_creator(values,wcs):
     tab = Table()
