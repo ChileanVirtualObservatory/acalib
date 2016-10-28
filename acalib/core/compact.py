@@ -1,28 +1,9 @@
-
-import numpy as np
-from astropy.table import Table
 from astropy import log
-from astropy import units as u
-from .utils import *
-import matplotlib.pyplot as plt
-from .indices import *
+from astropy.table import Table
+import numpy as np
+from . import matching_slabs, fix_limits, slab, snr_estimation, create_mould, add
+from .models import _eighth_mould
 
-def _eighth_mould(P,delta):
-    """This function creates a Gaussian mould with precision matrix P, using the already computed values of delta
-    """
-    n=len(delta)
-    ax=[]
-    elms=[]
-    for i in range(n):
-        lin=np.linspace(0,delta[i],delta[i]+1)
-        elms.append(len(lin))
-        ax.append(lin)
-    grid=np.meshgrid(*ax,indexing='ij')
-    feat=np.empty((n,np.product(elms)))
-    for i in range(n):
-        feat[i]=grid[i].ravel()
-    mould=gaussian_function(np.zeros(n),P,feat,1)
-    return mould,feat.T
 
 def _update_min_energy(energy,mat,ub,lb,delta):
     """Updates the minimum energies of energy from mat defaced by delta. 
@@ -91,8 +72,7 @@ def _precision_from_delta(delta,clev):
     P=np.diag(sq_delta)
     return(-2*np.log(clev)*P)
 
-@support_nddata
-def scatpix_detect(data,wcs=None,meta=None,threshold=None,noise=None,upper=None,lower=None,full_output=False):
+def scatpix_detect(data,threshold=None,noise=None,upper=None,lower=None,full_output=False):
     """ Obtain an homogeneous representation using the scattered pixels over a threshold.
 
     This function generates an homogeneous representation by using only those pixels above the threshold. 
@@ -140,8 +120,7 @@ def scatpix_detect(data,wcs=None,meta=None,threshold=None,noise=None,upper=None,
         return rep,synthetic,residual
     return rep
 
-@support_nddata
-def bubble_detect(data,wcs=None,meta=None,noise=None,threshold=None,delta=None,gamma=0.1,full_output=False,verbose=False):
+def bubble_detect(data,meta=None,noise=None,threshold=None,delta=None,gamma=0.1,full_output=False,verbose=False):
     if delta is None:
         if meta is None:
             delta=[1,1,1]
@@ -162,7 +141,7 @@ def bubble_detect(data,wcs=None,meta=None,noise=None,threshold=None,delta=None,g
     if full_output:
         synthetic=np.zeros(residual.shape)
         elist=[]
-    (ev,ef)=_eighth_mould(P,delta)
+    (ev,ef)= _eighth_mould(P, delta)
     _update_energies_sym(residual,energy,ev,ef,lb=(0,0,0),ub=residual.shape)
     positions=[]
     niter=0
@@ -193,9 +172,9 @@ def bubble_detect(data,wcs=None,meta=None,noise=None,threshold=None,delta=None,g
             break
         ub=idx + delta + 1
         lb=idx - delta
-        add_flux(residual,-noise*mould,lb,ub)
+        add(residual,-noise*mould,lb,ub)
         if full_output:
-            add_flux(synthetic,noise*mould,lb,ub)
+            add(synthetic,noise*mould,lb,ub)
             elist.append(max_ener)
         _update_energies_sym(residual,energy,ev,ef,lb,ub)
         positions.append(idx)

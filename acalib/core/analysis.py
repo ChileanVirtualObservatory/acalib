@@ -30,6 +30,7 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
     """Heurustic that uses the inflexion point of the thresholded RMS to estimate 
        where signal is dominant w.r.t. noise
     """
+    data=fix_mask(data,mask)
     if noise is None:
         noise = rms(data, mask)
     x = []
