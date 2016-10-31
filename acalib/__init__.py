@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from .algorithms import *
 from .upi import *
 from .io import *
