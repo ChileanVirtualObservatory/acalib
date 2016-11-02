@@ -22,8 +22,12 @@ def build_and_move(path):
     rel_module = path
     module_dir = os.path.join(cwd, rel_module)
     os.chdir(module_dir)
+	
+    try:
+        subprocess.call(["python2","setup.py", "build"])
 
-    subprocess.call(["python","setup.py", "build"])
+    except:
+        subprocess.call(["python","setup.py", "build"])
 
     for fbuilded in glob.glob("build/lib*/*.so"):
         dest_directory = os.getcwd() + '/' + os.path.basename(fbuilded)

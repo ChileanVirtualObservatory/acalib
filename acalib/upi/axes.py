@@ -4,6 +4,16 @@ from astropy.nddata import support_nddata, NDData
 from astropy import log
 
 from acalib import core
+
+# axes_names used in formatting
+@support_nddata
+def axes_names(data,wcs=None):
+    if wcs is None:
+        log.error("A world coordinate system (WCS) is needed")
+        return None
+    return np.array(wcs.axis_type_names)[::-1]
+
+
 from acalib.upi.formatting import _unitize, _world_table_creator
 
 @support_nddata
@@ -13,14 +23,6 @@ def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
     scube = data[mslab]
     newwcs = wcs.slice(mslab, numpy_order=True)
     return NDData(scube, wcs=newwcs, unit=unit)
-
-@support_nddata
-def axes_names(data,wcs=None):
-    if wcs is None:
-        log.error("A world coordinate system (WCS) is needed")
-        return None
-    return np.array(wcs.axis_type_names)[::-1]
-
 
 @support_nddata
 def extent(data,wcs=None,lower=None,upper=None):

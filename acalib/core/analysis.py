@@ -1,11 +1,12 @@
 import numpy as np
 from astropy import log
 from astropy.nddata import support_nddata, NDData
-from skimage.filter import threshold_adaptive
-from skimage.measure import label
-from skimage.measure import regionprops
-from skimage.morphology import binary_opening
-from skimage.morphology import disk
+try:
+    from skimage.filters import threshold_adaptive
+except:
+    from skimage.filter import threshold_adaptive
+from skimage.measure import label,regionprops
+from skimage.morphology import binary_opening, disk
 from skimage.segmentation import clear_border
 
 from ._morph import *
