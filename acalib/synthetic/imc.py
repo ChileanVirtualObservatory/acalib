@@ -94,7 +94,6 @@ class IMC(Component):
                 used = True
 
                 # add line to the table.
-                # TODO: modificar ultimo valor, que corresponde a la intensidad.
                 table.add_row((self.comp_name + "-l" + str(counter), mol, str(lin[2]), str(lin[3]),freq, flux))
 
         dba.disconnect()
