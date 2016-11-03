@@ -44,7 +44,7 @@ def setup_package():
 
     setup(
         name = "acalib",
-        version = "1.0.0",
+        version = "0.1.0",
         description = "Advanced Computing for Astronomy Library",
         url = "https://github.com/ChileanVirtualObservatory/ACALIB",
         author = "LIRAE",
