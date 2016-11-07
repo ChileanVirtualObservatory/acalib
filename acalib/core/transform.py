@@ -1,8 +1,14 @@
 import scipy.ndimage as scnd
 import numpy as np
 
-from .stack import img_props, fits_props
-from .utils import matching_slabs
+
+from skimage.filters import threshold_otsu
+from skimage.measure import label
+from skimage.segmentation import clear_border
+from skimage.measure import regionprops
+
+
+from . import utils
 
 
 def scale(inputCont, majorAxisTemplate):
@@ -10,8 +16,8 @@ def scale(inputCont, majorAxisTemplate):
 
     for i in np.arange(len(inputCont.images)):
         prop = fits_props(inputCont.images[i].data)
-        scale = majorAxisTemplate / prop['major']
-        scaledData.append(scnd.zoom(prop['orig'], scale))
+        sc = majorAxisTemplate / prop['major']
+        scaledData.append(scnd.zoom(prop['orig'], sc))
     return scaledData
 
 
@@ -83,3 +89,67 @@ def denoise(data, threshold):
     newdata = np.zeros(data.shape)
     newdata[elms] = data[elms]
     return newdata
+
+
+def fits_props(img):
+    flt = threshold_otsu(img)
+    otsu = img >= flt
+    clr = clear_border(otsu)
+
+    # label image regions
+    label_image, nlabel = label(clr, return_num=True)
+    borders = np.logical_xor(otsu, clr)
+    label_image[borders] = -1
+
+    props = regionprops(label_image)
+
+    ratios = []
+    areas = []
+
+    for i in props:
+        ratios.append(i.minor_axis_length / i.major_axis_length)
+        areas.append(i.area)
+
+    if len(props) > 1:
+        pos = areas.index(max(areas))
+    else:
+        pos = 0
+
+    properties = {'centroid': props[pos].centroid, 'major': props[pos].major_axis_length,
+                  'minor': props[pos].minor_axis_length, 'ratio': ratios[pos],
+                  'angle': props[pos].orientation, 'area': props[pos].area, 'img': props[pos].image,
+                  'clr': clr, 'label': label_image, 'orig': img}
+
+    return properties
+
+
+def img_props(img):
+    flt = threshold_otsu(img)
+    otsu = img >= flt
+    clr = clear_border(otsu)
+
+    # label image regions
+    label_image, nlabel = label(clr, return_num=True)
+    borders = np.logical_xor(otsu, clr)
+    label_image[borders] = -1
+
+    props = regionprops(label_image)
+
+    ratios = []
+    areas = []
+
+    for i in props:
+        ratios.append(i.minor_axis_length / i.major_axis_length)
+        areas.append(i.area)
+
+    if len(props) > 1:
+        pos = areas.index(max(areas))
+    else:
+        pos = 0
+
+    properties = {'centroid': props[pos].centroid, 'major': props[pos].major_axis_length,
+                  'minor': props[pos].minor_axis_length, 'ratio': ratios[pos],
+                  'angle': props[pos].orientation, 'area': props[pos].area, 'img': props[pos].image,
+                  'clr': clr, 'label': label_image, 'orig': img}
+
+    return properties
