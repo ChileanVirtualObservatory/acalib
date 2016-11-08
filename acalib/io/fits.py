@@ -40,7 +40,7 @@ def HDU_to_NDData(hdu):
    if len(data.shape) == 4:
        # Put data in physically-meaninful values, and remove stokes
        # TODO: Stokes is removed by summing (is this correct? maybe is averaging?)
-       log.info("4D data detected: assuming RA-DEC-FREQ-STOKES (like CASA-generated ones), and dropping STOKES")
+       #log.info("4D data detected: assuming RA-DEC-FREQ-STOKES (like CASA-generated ones), and dropping STOKES")
        data=data.sum(axis=0)*bscale+bzero
        mywcs=mywcs.dropaxis(3)
    elif len(data.shape) == 3:
