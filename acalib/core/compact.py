@@ -53,9 +53,9 @@ def _update_energies_sym(residual,energy,ev,ef,lb,ub):
       """Update the energies, only from the lb to the ub points. 
       """
       #TODO: I do now know if get_slice actually states that we are making a copy...
-      lb=fix_limits(residual,lb)
-      ub=fix_limits(residual,ub)
-      mcb=residual[slab(residual,lb,ub)]
+      lb=fix_limits(residual, lb)
+      ub=fix_limits(residual, ub)
+      mcb=residual[slab(residual, lb, ub)]
       #Obtain the reference of the eighth of the bubble.
       # Iterates for every point in the eighth of the bubble
       for i in range(0,ev.size):
@@ -184,7 +184,19 @@ def bubble_detect(data,meta=None,noise=None,threshold=None,delta=None,gamma=0.1,
         return rep,synthetic,residual,energy,elist
     return rep
 
-    
+    # DO THIS FOR BUBBLE
+def synthesize_bubbles(syn,pos,mould,nlevel,delta):
+    for idx in pos:
+        ub=idx + delta + 1
+        lb=idx - delta
+        add(syn,nlevel*mould,lb,ub)
+    return syn
+
+def precision_from_delta(delta,clev):
+    delta=np.array(delta)
+    sq_delta=1./(delta*delta)
+    P=np.diag(sq_delta)
+    return(-2*np.log(clev)*P)
 
 
 #def gmr_from_mould(data,threshold,nlevel,P,upper=None,lower=None,max_iter=None,full_output=False):
