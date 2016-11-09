@@ -50,7 +50,7 @@ try:
     np.set_printoptions(threshold=astropy.units.quantity.conf.latex_array_threshold)
     fmt.for_type(np.array, jovial_array_makeup)
     fmt.for_type(np.ndarray, jovial_array_makeup)
-    #fmt.for_type(tuple, jovial_tuple_makeup)
+    fmt.for_type(tuple, jovial_tuple_makeup)
 except NameError:
     print("Note: Using acalib outside a Jupyter Notebook")
     pass
