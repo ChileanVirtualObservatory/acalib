@@ -58,6 +58,7 @@ def setup_package():
             'Programming Language :: Python :: 3.6'
             ],
         
+        zip_safe = False,
         packages = find_packages(),
         include_package_data = True,
         setup_requires = ['numpy>=1.11', 'cython>=0.18'],
