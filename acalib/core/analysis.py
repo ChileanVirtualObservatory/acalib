@@ -6,8 +6,6 @@ try:
 except:
     from skimage.filter import threshold_adaptive
 from skimage.measure import label,regionprops
-from skimage.morphology import binary_opening, disk
-from skimage.segmentation import clear_border
 
 from ._morph import *
 
@@ -221,81 +219,6 @@ def index_features(data, lower=None, upper=None):
     for i in range(dim):
         ii[dim - i - 1] = msh[i].ravel()
     return ii
-
-#Remove NDData support!
-@support_nddata
-def gaussian_mix(data, prob=0.05, precision=0.02, wcs=None):
-    """
-    Using a mixture of gaussians make an multiscale segmentation to get the region of interest of a 2D astronomical image.
-    
-    :param image: Velocity collapsed image
-    :returns: list of skimage.measure.regionprops Objects, with detected regions properties
-    """
-    #TODO: check for wcs != None
-    if len(data.shape) > 2:
-        log.error("Only 2D images supported")
-        raise ValueError("Only 2D images supported")
-
-    image_list = []
-
-    image = data
-    image[np.isnan(image)] = 0
-
-    prob = prob
-    dims = image.shape
-    rows = dims[0]
-    cols = dims[1]
-    size = np.min([rows, cols])
-    precision = size * precision
-
-    image = image.astype('float64')
-
-    w_max = _optimal_w(image, prob)
-    diff = (image - np.min(image)) / (np.max(image) - np.min(image))
-
-    tt = w_max * w_max
-    if tt % 2 == 0:
-        tt += 1
-    g = threshold_adaptive(diff, tt, method='mean', offset=0)
-
-    r = w_max / 2
-    rMin = 2 * np.round(precision)
-
-    while (r > rMin):
-        background = np.zeros((rows, cols))
-        selem = disk(r)
-        sub = binary_opening(g, selem)
-        sub = clear_border(sub)
-        sub = label(sub)
-        fts = regionprops(sub)
-
-        #image_list.append(NDData(sub, wcs=wcs))
-        # Non NNData version (without wcs... lets check if it pass)
-        image_list.append(sub)
-
-        if len(fts) > 0:
-            for props in fts:
-                C_x, C_y = props.centroid
-
-                radius = props.equivalent_diameter / 2.
-                kern = 0.01 * np.ones((2 * radius, 2 * radius))
-                krn = _kernelsmooth(x=np.ones((2 * radius, 2 * radius)), kern=kern)
-                krn = np.exp(np.exp(krn))
-                if np.max(krn) > 0:
-                    krn = (krn - np.min(krn)) / (np.max(krn) - np.min(krn))
-                    background = _kernel_shift(background, krn, C_x, C_y)
-        if np.max(background) > 0:
-            background = (background - np.min(background)) / (np.max(background) - np.min(background))
-            diff = diff - background
-        diff = (diff - np.min(diff)) / (np.max(diff) - np.min(diff))
-        tt = r * r
-        if tt % 2 == 0:
-            tt += 1
-        g = threshold_adaptive(diff, tt, method='mean', offset=0)
-        r = np.round(r / 2.)
-
-    return image_list
-
 
 def _optimal_w(image, p=0.05):
     # radiusMin, radius Max and inc in percentages of the image size, p as [0,1] value, image is the original version

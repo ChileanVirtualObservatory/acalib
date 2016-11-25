@@ -1,5 +1,6 @@
 import acalib
 from .algorithm import Algorithm
+from .gms import GMS
 
 
 class Indexing(Algorithm):
@@ -57,14 +58,16 @@ class Indexing(Algorithm):
             wcs = None
 
         c = acalib.Container()
+        params = {"P":self.config["P"], "PRECISION":self.config["PRECISION"]}
+        gms = GMS(params)
+
 
         spectra, slices = acalib.core.spectra_sketch(data.data, self.config["SAMPLES"], self.config["RANDOM_STATE"])
 
         pp_slices = []
         for slice in slices:
             pp_slice = acalib.core.vel_stacking(data, slice)
-            labeled_images = acalib.core.gaussian_mix(pp_slice, prob=self.config["P"],
-                                                      precision=self.config["PRECISION"])
+            labeled_images = gms.run(pp_slice)
 
             if wcs is not None:
                 freq_min = float(wcs.all_pix2world(0, 0, slice.start, 1)[2])
