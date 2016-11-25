@@ -3,6 +3,29 @@ from .algorithm import Algorithm
 
 
 class Indexing(Algorithm):
+    """
+    Perform an unsupervised region of interest detection and extract shape features.
+
+    Parameters
+    ----------
+    params: dict (default = None)
+    Algorithm parameters, allowed keys:    
+        P : float (default = 0.05)
+            Thresholding quantile for multiscale segmentation.
+        PRECISION : float (default = 0.02)
+            Smallest scale percentage for the multiscale segmentation.
+        SAMPLES : int (default = 1000)
+            Number of pixels used to generate the spectra sketch.
+        RANDOM_STATE : int (default = None)
+            Seed for random smpling. 
+
+
+    References
+    ----------
+    .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. 
+    Astronomy and Computing, 14, 23-34.
+
+    """
     def default_params(self):
         if 'P' not in self.config:
             self.config['P'] = 0.05
@@ -14,6 +37,19 @@ class Indexing(Algorithm):
             self.config["SAMPLES"] = 1000
 
     def run(self, data):
+        """
+            Run the indexing algorithm on a given data cube.
+
+            Parameters
+            ----------            
+            data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+                Astronomical data cube.
+
+            Returns
+            -------
+            result: :class:`~acalib.Container` with the cube slices, segmentated images and region of interest tables for each scale analyzed.
+
+        """
 
         if data.wcs:
             wcs = data.wcs
