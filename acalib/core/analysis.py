@@ -221,6 +221,10 @@ def index_features(data, lower=None, upper=None):
     return ii
 
 def _optimal_w(image, p=0.05):
+    # Calculate the optimal window size for the image segmentation given a quantile.
+    # It expand the radious until it reaches the best segmentation.
+
+
     # radiusMin, radius Max and inc in percentages of the image size, p as [0,1] value, image is the original version
     radiusMin = 5
     radiusMax = 40
@@ -262,6 +266,8 @@ def _optimal_w(image, p=0.05):
 
 
 def _bg_fg(f, g, bg, fg):
+    # Calculate the backgorund and foreground distribution
+    #
     dims = f.shape
     rows = dims[0]
     cols = dims[1]

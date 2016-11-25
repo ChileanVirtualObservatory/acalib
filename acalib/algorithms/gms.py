@@ -82,19 +82,30 @@ class GMS(Algorithm):
 
         image = image.astype('float64')
 
+        #Getting optimal radius for first step segmentation
         w_max = _optimal_w(image, prob)
         diff = (image - np.min(image)) / (np.max(image) - np.min(image))
 
         tt = w_max * w_max
+
+        # Initial segmentation
         if tt % 2 == 0:
             tt += 1
         g = threshold_adaptive(diff, tt, method='mean', offset=0)
 
         r = w_max / 2
+
+        #Smallest radious for region
         rMin = 2 * np.round(precision)
 
+        #Iterate over radious dividing it by 2 
+        # in each iteration
         while (r > rMin):
             background = np.zeros((rows, cols))
+            
+            #Label the previous segmentation
+            #calculate shape features for each 
+            #connected region.
             selem = disk(r)
             sub = binary_opening(g, selem)
             sub = clear_border(sub)
@@ -105,6 +116,10 @@ class GMS(Algorithm):
             # Non NNData version (without wcs... lets check if it pass)
             image_list.append(sub)
 
+            #Uses a gaussian mix to fit the region 
+            #then smooth it and remove the gaussian mixture
+            #from the image, uses this new image to continue in next 
+            #iteration
             if len(fts) > 0:
                 for props in fts:
                     C_x, C_y = props.centroid
