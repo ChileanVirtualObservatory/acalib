@@ -5,12 +5,16 @@ from astrodendro import Dendrogram
 class Astrodendro(Algorithm):
     
     def default_params(self):
-        pass
+        self.config["min_delta"] = 0
+        self.config["min_npix"] = 0
     
     def run(self,data):
         self.dendrogram = Dendrogram.compute(data, **self.config)
         return self.dendrogram
    
+    def data(self):
+        return self.dendrogram.data
+
     def trunk(self):
         return self.dendrogram.trunk
     
