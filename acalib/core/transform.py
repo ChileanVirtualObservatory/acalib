@@ -156,19 +156,42 @@ def unstandarize(data, a, b):
 
 def add(data, flux, lower, upper):
     """
+    Adds flux to a sub-cube of an astronomical data cube.
 
+
+    Parameters
+    ----------
+    data: numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+    flux: numpy.ndarray
+        Flux added to the cube.
+    lower: float
+        Lower bound of the sub-cube to which flux will be added. 
+    upper: float
+        Upper bound of the sub-cube to which flux will be added.
     """
+
     data_slab, flux_slab = matching_slabs(data, flux, lower, upper)
     data[data_slab] += flux[flux_slab]
 
+
 def denoise(data, threshold):
     """
+    Performs denoising of data cube, thresholding over the threshold value.
+
     Parameters
     ----------
+    data: numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+    threshold: float
+        Threshold value used for denoising.
 
     Returns
     -------
+    result: numpy.ndarray
+        Denoised (thresholded) astronomical data cube.
     """
+
     elms = data > threshold
     newdata = np.zeros(data.shape)
     newdata[elms] = data[elms]
@@ -177,12 +200,17 @@ def denoise(data, threshold):
 
 def fits_props(img):
     """
+    Extracts properties information of the astronomical data cube.
 
     Parameters
     ----------
+    img: numpy.ndarray
+        Astronomical data cube.
 
     Returns
     -------
+    result: dict
+        Dictionary with properties of the image: *centroid*, *major*, *minor*, *ratio*, *angle*, *area*, *img*, *clr*, *label*, *orig*.
     """
     flt = threshold_otsu(img)
     otsu = img >= flt
@@ -220,10 +248,12 @@ def img_props(img):
 
     Parameters
     ----------
+    img: numpy.ndarray
+
 
     Returns
     -------
-    result:
+    result: dict
     """
     flt = threshold_otsu(img)
     otsu = img >= flt
