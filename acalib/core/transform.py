@@ -76,6 +76,19 @@ def _rotation_limits(img, angle):
 
 
 def crop_and_align(data, angles):
+    """
+    Parameters
+    ----------
+    data: list
+        
+
+    angles: list
+
+
+    Returns
+    -------
+    result: 
+    """
     alignedData = []
     shapes = []
 
@@ -100,6 +113,19 @@ def crop_and_align(data, angles):
 
 
 def standarize(data):
+    """
+    Standarize astronomical data cubes in the 0-1 range.
+
+    Parameters
+    ----------
+    data: numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    Returns
+    -------
+    result: tuple
+        Tuple containing the standarized numpy.ndarray or astropy.nddata.NDData cube, the factor scale y_fact and the shift y_min.
+    """
     y_min = data.min()
     res = data - y_min
     y_fact = res.sum()
@@ -108,14 +134,41 @@ def standarize(data):
 
 
 def unstandarize(data, a, b):
-    return a*data  + b
+    """
+    Unstandarize the astronomical data cube: :math:`a \cdot data + b`.
+
+    Parameters
+    ----------
+    data: numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+    a: float
+        Scale value.
+    b: float
+        Shift value.
+
+    Returns
+    ------- 
+    result: numpy.ndarray or astropy.nddata.NDData
+        Unstandarized astronomical cube.
+    """
+    return a*data+b
 
 
 def add(data, flux, lower, upper):
+    """
+
+    """
     data_slab, flux_slab = matching_slabs(data, flux, lower, upper)
     data[data_slab] += flux[flux_slab]
 
 def denoise(data, threshold):
+    """
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
     elms = data > threshold
     newdata = np.zeros(data.shape)
     newdata[elms] = data[elms]
@@ -123,6 +176,14 @@ def denoise(data, threshold):
 
 
 def fits_props(img):
+    """
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
     flt = threshold_otsu(img)
     otsu = img >= flt
     clr = clear_border(otsu)
@@ -155,6 +216,15 @@ def fits_props(img):
 
 
 def img_props(img):
+    """
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    result:
+    """
     flt = threshold_otsu(img)
     otsu = img >= flt
     clr = clear_border(otsu)
