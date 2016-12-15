@@ -13,6 +13,7 @@ Contents:
 
    core
    algorithms
+   io
 
 Indices and tables
 ==================
