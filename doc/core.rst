@@ -1,3 +1,6 @@
-Automatic Region of Interest Detection
+Core functions
 ======================================
+
+.. automodule:: acalib.core.transform
+    :members:
 
