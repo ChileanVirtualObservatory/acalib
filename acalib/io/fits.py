@@ -114,8 +114,8 @@ def load_fits_to_cont(filePath,acont):
                 if isinstance(hdu,fits.PrimaryHDU):
                     acont.primary = ndd
                 acont.images.append(ndd)
-                except TypeError:
-                    log.info(str(counter)+" (Image) wasn't an Image")
+            except TypeError:
+                log.info(str(counter)+" (Image) wasn't an Image")
         if isinstance(hdu, fits.BinTableHDU):
             table = HDU_to_Table(hdu)
             acont.tables.append(table)
