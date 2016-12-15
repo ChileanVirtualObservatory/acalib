@@ -47,7 +47,7 @@ def moment0(data,wcs=None,mask=None,unit=None,restfrq=None):
 
         Parameters
         ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
@@ -61,7 +61,7 @@ def moment0(data,wcs=None,mask=None,unit=None,restfrq=None):
         Returns
         -------
         result: astropy.nddata.NDData
-            Moment 0 from the data cube
+            Moment 0 of the data cube
 
     """
     return _moment(data,0,wcs,mask,unit,restfrq)
@@ -73,7 +73,7 @@ def moment1(data,wcs=None,mask=None,unit=None,restfrq=None):
 
         Parameters
         ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use
@@ -87,7 +87,7 @@ def moment1(data,wcs=None,mask=None,unit=None,restfrq=None):
         Returns
         -------
         result: astropy.nddata.NDData
-            Moment 1 from the data cube
+            Moment 1 of the data cube
 
     """
     return _moment(data,1,wcs,mask,unit,restfrq) 
@@ -99,7 +99,7 @@ def moment2(data,wcs=None,mask=None,unit=None,restfrq=None):
 
         Parameters
         ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use
@@ -113,7 +113,7 @@ def moment2(data,wcs=None,mask=None,unit=None,restfrq=None):
         Returns
         -------
         result: astropy.nddata.NDData
-            Moment 2 from the data cube
+            Moment 2 of the data cube
 
     """
     return _moment(data,2,wcs,mask,unit,restfrq) 
