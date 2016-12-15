@@ -25,7 +25,8 @@ def scale(inputCont, majorAxisTemplate):
 
     Returns
     -------
-    result: Python list with the scaled images. 
+    result: list
+        List with the scaled images. 
     """
     scaledData = []
 
@@ -38,8 +39,7 @@ def scale(inputCont, majorAxisTemplate):
 
 def rotate(data, angle):
     """
-    Performs an angle rotation over a list of images
-    
+    Performs an angle rotation over a list of images 
 
     Parameters
     ----------
@@ -77,17 +77,20 @@ def _rotation_limits(img, angle):
 
 def crop_and_align(data, angles):
     """
+    Performs crop and alignment of a list of data cubes.
+
     Parameters
     ----------
     data: list
+        List of astronomical data cubes (numpy.ndarray).
         
-
     angles: list
-
+        List of angles (float) to perform alignment.
 
     Returns
     -------
-    result: 
+    result: list
+        List of *aligned* astronomical data cubes (numpy.ndarray).
     """
     alignedData = []
     shapes = []
@@ -157,7 +160,6 @@ def unstandarize(data, a, b):
 def add(data, flux, lower, upper):
     """
     Adds flux to a sub-cube of an astronomical data cube.
-
 
     Parameters
     ----------
