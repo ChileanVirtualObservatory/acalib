@@ -86,9 +86,21 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
 
 def integrate(data, mask=None, axis=(0)):
     """ 
+    Sums the slices of a cube of data given an axis.
+   
+    Parameters
+    ----------    
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask: numpy.ndarray (default = None)
+
+    axis: (default=(0))
     
-    Returns a numpy array with the integration results. 
-    
+    Returns
+    -------
+     A numpy array with the integration results.
+
     """
     if mask is not None:
         data = fix_mask(data, mask)
@@ -157,9 +169,18 @@ def spectra_sketch(data, samples, random_state=None):
     """
     Create the sketch spectra using pixel samples.
     
-    :param samples: Number of pixel samples used for the sketch.
-    :type samples: int
-    :returns: ( spectra (array), slices  (list)).
+    Parameters
+    ----------
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    samples: Number of pixel samples(int) used for the sketch.
+
+    random_state: (default=None)
+    
+    Returns: 
+     spectra: (array) 
+     slices:  (list)
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
