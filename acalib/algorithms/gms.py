@@ -37,10 +37,7 @@ class GMS(Algorithm):
 
     References
     ----------
-    .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. 
-    Astronomy and Computing, 14, 23-34.
-
-    
+    .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. Astronomy and Computing, 14, 23-34.   
     """
     def default_params(self):
         if 'P' not in self.config:
@@ -58,8 +55,7 @@ class GMS(Algorithm):
         
         Returns
         ----------
-        List of labeled images.
-        
+        List of labeled images. 
         """
         data,wcs = get_data(data)
 

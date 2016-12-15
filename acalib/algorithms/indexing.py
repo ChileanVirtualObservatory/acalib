@@ -23,9 +23,9 @@ class Indexing(Algorithm):
 
     References
     ----------
-    .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. 
-    Astronomy and Computing, 14, 23-34.
-
+    
+    .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. Astronomy and Computing, 14, 23-34.
+    
     """
     def default_params(self):
         if 'P' not in self.config:
@@ -49,7 +49,6 @@ class Indexing(Algorithm):
             Returns
             -------
             result: :class:`~acalib.Container` with the cube slices, segmentated images and region of interest tables for each scale analyzed.
-
         """
 
         if data.wcs:
