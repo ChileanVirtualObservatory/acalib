@@ -42,14 +42,80 @@ def _moment(data,order,wcs=None,mask=None,unit=None,restfrq=None):
 # Should return a NDData 
 @support_nddata 
 def moment0(data,wcs=None,mask=None,unit=None,restfrq=None): 
-    return _moment(data,0,wcs,mask,unit,restfrq) 
+    """
+        Calculate moment 0 from a data cube.
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        mask : numpy.ndarray
+            Mask for data.
+        unit : astropy.units.Unit
+            Astropy unit (http://docs.astropy.org/en/stable/units/).
+        restfrq : float
+            
+
+        Returns
+        -------
+        result: astropy.nddata.NDData
+            Moment 0 from the data cube
+
+    """
+    return _moment(data,0,wcs,mask,unit,restfrq)
  
 @support_nddata 
 def moment1(data,wcs=None,mask=None,unit=None,restfrq=None): 
+    """
+        Calculate moment 1 from a data cube.
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use
+        mask : numpy.ndarray
+            Mask for data.
+        unit : astropy.units.Unit
+            Astropy unit (http://docs.astropy.org/en/stable/units/)
+        restfrq : float
+            
+
+        Returns
+        -------
+        result: astropy.nddata.NDData
+            Moment 1 from the data cube
+
+    """
     return _moment(data,1,wcs,mask,unit,restfrq) 
  
 @support_nddata 
-def moment2(data,wcs=None,mask=None,unit=None,restfrq=None): 
+def moment2(data,wcs=None,mask=None,unit=None,restfrq=None):
+    """
+        Calculate moment 2 from a data cube.
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use
+        mask : numpy.ndarray
+            Mask for data.
+        unit : astropy.units.Unit
+            Astropy unit (http://docs.astropy.org/en/stable/units/)
+        restfrq : float
+            restfrq
+
+        Returns
+        -------
+        result: astropy.nddata.NDData
+            Moment 2 from the data cube
+
+    """
     return _moment(data,2,wcs,mask,unit,restfrq) 
 
 
