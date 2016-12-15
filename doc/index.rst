@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 4
 
    core
+   algorithms
 
 Indices and tables
 ==================
