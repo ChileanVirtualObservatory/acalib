@@ -23,11 +23,33 @@ class Container:
 
 
 def load_fits(path):
-    """ Loads a fits into a container """
+    """
+    Load a fits into a container.
+
+    Parameters
+    ----------
+    path : str
+        Path to fits file in local disk.
+
+    Returns
+    -------
+    result: :class:`~acalib.Container` with the fits loaded.
+
+    """
     cont=Container()
     cont.load_fits(path)
     return cont
 
 def save_fits(cont,path):
-    """ Save a fits from a container"""
+    """
+    Save a fits from a container.
+
+    Parameters
+    ----------
+    cont : :class:`~acalib.Container`
+
+    path : str
+    	Path to new fits file to be created from the container.
+
+    """
     cont.save_fits(path)
