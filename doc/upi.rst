@@ -1,4 +1,4 @@
-ACALIB User P Interface (UPI)
+ACALIB User Programming Interface (UPI)
 ======================================
 
 .. automodule:: acalib.upi.axes
