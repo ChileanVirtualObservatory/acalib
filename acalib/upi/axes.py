@@ -80,9 +80,10 @@ def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
     if restfrq is None:
         restfrq=wcs.wcs.restfrq*u.Hz
     if fqs is None:
+        dim = wcs.wcs.spec
         if fqis is None:
-           return None
-        dim=wcs.wcs.spec
+            # Semi Hardconded...
+            fqis=np.arange(data.shape[2-dim])
         idx=np.zeros((fqis.size,data.ndim))
         idx[:,dim]=fqis
         vals=wcs.all_pix2world(idx,0)

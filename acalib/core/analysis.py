@@ -60,7 +60,7 @@ def integrate(data, mask=None, axis=(0)):
     """ Returns a numpy array with the integration results. """
     if mask is not None:
         data = fix_mask(data, mask)
-    newdata = np.sum(data, axis=axis)
+    newdata = np.nansum(data, axis=axis)
     mask = np.isnan(newdata)
     return newdata
 
