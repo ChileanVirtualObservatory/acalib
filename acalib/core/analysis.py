@@ -15,8 +15,19 @@ from .utils import fix_mask, slab
 from acalib.core import *
 
 def rms(data, mask=None):
-    """Compute the RMS of data. If mask != None, then 
-       we use that mask.
+    """
+    Compute the RMS of data. If mask != None, then we use that mask.
+
+    Parameters
+    ----------
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask: numpy.ndarray (default = None)
+
+    Returns
+    -------
+    RMS of the data (float)
     """
     # TODO: check photutils background estimation for using that if possible
     if mask is not None:
@@ -26,8 +37,28 @@ def rms(data, mask=None):
     return rms
 
 def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
-    """Heurustic that uses the inflexion point of the thresholded RMS to estimate 
-       where signal is dominant w.r.t. noise
+    """
+    Heurustic that uses the inflexion point of the thresholded RMS to estimate where signal is dominant w.r.t. noise
+    
+    Parameters
+    ---------- 
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask: numpy.ndarray (default = None)
+
+    noise: float (default=None)
+        Noise level, if not given will use rms of the data.
+    
+    points: (default=1000)
+
+    full_output: boolean (default=False)
+        Gives verbose results if True
+
+    Returns
+    "Signal to Noise Radio"
+    -------
+    
     """
     if noise is None:
         noise = rms(data, mask)
@@ -54,7 +85,23 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
 
 
 def integrate(data, mask=None, axis=(0)):
-    """ Returns a numpy array with the integration results. """
+    """ 
+    Sums the slices of a cube of data given an axis.
+   
+    Parameters
+    ----------    
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask: numpy.ndarray (default = None)
+
+    axis: (default=(0))
+    
+    Returns
+    -------
+     A numpy array with the integration results.
+
+    """
     if mask is not None:
         data = fix_mask(data, mask)
     newdata = np.sum(data, axis=axis)
@@ -122,9 +169,18 @@ def spectra_sketch(data, samples, random_state=None):
     """
     Create the sketch spectra using pixel samples.
     
-    :param samples: Number of pixel samples used for the sketch.
-    :type samples: int
-    :returns: ( spectra (array), slices  (list)).
+    Parameters
+    ----------
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    samples: Number of pixel samples(int) used for the sketch.
+
+    random_state: (default=None)
+    
+    Returns: 
+     spectra: (array) 
+     slices:  (list)
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
