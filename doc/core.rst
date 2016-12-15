@@ -6,3 +6,6 @@ Core functions
 
 .. automodule:: acalib.core.models
     :members:
+
+.. automodule:: acalib.core.utils
+    :members:
