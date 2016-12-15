@@ -55,8 +55,8 @@ def moment0(data,wcs=None,mask=None,unit=None,restfrq=None):
             Mask for data.
         unit : astropy.units.Unit
             Astropy unit (http://docs.astropy.org/en/stable/units/).
-        restfrq : float
-            
+        restfrq : astropy.units.quantity.Quantity
+            Rest frequency
 
         Returns
         -------
@@ -81,8 +81,8 @@ def moment1(data,wcs=None,mask=None,unit=None,restfrq=None):
             Mask for data.
         unit : astropy.units.Unit
             Astropy unit (http://docs.astropy.org/en/stable/units/)
-        restfrq : float
-            
+        restfrq : astropy.units.quantity.Quantity
+            Rest frequency
 
         Returns
         -------
@@ -107,8 +107,8 @@ def moment2(data,wcs=None,mask=None,unit=None,restfrq=None):
             Mask for data.
         unit : astropy.units.Unit
             Astropy unit (http://docs.astropy.org/en/stable/units/)
-        restfrq : float
-            restfrq
+        restfrq : astropy.units.quantity.Quantity
+            Rest frequency
 
         Returns
         -------
@@ -122,6 +122,28 @@ def moment2(data,wcs=None,mask=None,unit=None,restfrq=None):
 # TODO: Fix this function, is not working correctly
 @support_nddata
 def spectra(data,wcs=None,mask=None,unit=None,restrict=None):
+    """
+        
+
+        Parameters
+        ----------            
+        data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use
+        mask : numpy.ndarray
+            Mask for data.
+        unit : astropy.units.Unit
+            Astropy unit (http://docs.astropy.org/en/stable/units/)
+        restrict : boolean
+            
+
+        Returns
+        -------
+        result: astropy.nddata.NDData
+            Moment 2 of the data cube
+
+    """
     if restrict is None:
         #Create NDD and WCS change...
         return core.integrate(data,axis=(1,2))
