@@ -12,6 +12,21 @@ from . import utils
 
 
 def scale(inputCont, majorAxisTemplate):
+    """
+    Performs an scale of the images in the container acording to the indicated mayor axis.
+
+    Parameters
+    ----------
+    inputCont: acalib.Container
+        Container with the images to be scaled.
+
+    mayorAxisTemplate: float
+        Axis respect the scale will be performed on all the images of the container.
+
+    Returns
+    -------
+    result: Python list with the scaled images. 
+    """
     scaledData = []
 
     for i in np.arange(len(inputCont.images)):
@@ -22,6 +37,22 @@ def scale(inputCont, majorAxisTemplate):
 
 
 def rotate(data, angle):
+    """
+    Performs an angle rotation over a list of images
+    
+
+    Parameters
+    ----------
+    data: list
+        List of (M,N,Z) numpy.ndarray images.
+    angle: float
+        Rotation reference angle that will be applied to all the images.
+
+    Returns
+    -------
+    result: tuple
+        Tuple with the list of rotated images and the list of rotation angles applied to each one.  
+    """
     rotatedData = []
     angles = []
 
