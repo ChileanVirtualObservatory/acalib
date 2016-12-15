@@ -34,7 +34,6 @@ def load_fits(path):
     Returns
     -------
     result: :class:`~acalib.Container` with the fits loaded.
-
     """
     cont=Container()
     cont.load_fits(path)
@@ -50,6 +49,5 @@ def save_fits(cont,path):
 
     path : str
     	Path to new fits file to be created from the container.
-
     """
     cont.save_fits(path)
