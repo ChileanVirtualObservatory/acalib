@@ -49,7 +49,7 @@ def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=Non
 @support_nddata
 def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
     """ Simple denoising given a threshold (creates a new object) """
-    newdata = core.denoise(data, threshold.value)
+    newdata = core.denoise(data, threshold)
     return NDData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 
 

@@ -54,10 +54,10 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
          cb=plt.colorbar()
          cb.ax.set_ylabel(unit)
      if contour:
-         rms=estimate_rms(data)
+         rrms=rms(data)
          dmax=data.max()
-         crs=np.arange(1,dmax/rms)
-         plt.contour(data,levels=rms*crs,alpha=0.5)
+         crs=np.arange(1,dmax/rrms)
+         plt.contour(data,levels=rrms*crs,alpha=0.5)
      plt.show()
 
 # TODO: Remove hardocded stuff
@@ -95,6 +95,28 @@ def visualize_contour3D(data,wcs=None,unit=None):
      mlab.show()
 
 
+
+def plot_snr_estimation(target,snr_results):
+    fig = plt.figure(figsize=(10,4))
+    # Unpack results
+    (slimit,rms,x,y,v,n,p)=snr_results
+    # Plot
+    ax = fig.add_subplot(1,1,1)
+    ax.plot(x,y,color='b')
+    ax.plot(x,x,color='b',linestyle="--")
+    ax.axvline(x=slimit,color='r',label="$"+str(slimit)+" \sigma$")
+    ax.legend(loc=7)
+    ax.set_title(target)
+    ax.set_xlabel("SNR ($ \\tau / \sigma$)")
+    ax.set_ylabel('RMS', color='b')
+    for tl in ax.get_yticklabels():
+        tl.set_color('b')
+    axp = ax.twinx()
+    axp.plot(x[:-1],v,color='grey')
+    axp.set_ylabel('$\Delta$RMS', color='grey')
+    for tl in axp.get_yticklabels():
+        tl.set_color('grey')
+    plt.show()
 
 
 #    def animate(self, inte, rep=True):
