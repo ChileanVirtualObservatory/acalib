@@ -1,21 +1,58 @@
 import scipy.ndimage as scnd
 import numpy as np
 
-from .stack import img_props, fits_props
-from .utils import matching_slabs
+
+from skimage.filters import threshold_otsu
+from skimage.measure import label
+from skimage.segmentation import clear_border
+from skimage.measure import regionprops
+
+
+from . import utils
 
 
 def scale(inputCont, majorAxisTemplate):
+    """
+    Performs an scale of the images in the container acording to the indicated mayor axis.
+
+    Parameters
+    ----------
+    inputCont: acalib.Container
+        Container with the images to be scaled.
+
+    mayorAxisTemplate: float
+        Axis respect the scale will be performed on all the images of the container.
+
+    Returns
+    -------
+    result: list
+        List with the scaled images. 
+    """
     scaledData = []
 
     for i in np.arange(len(inputCont.images)):
         prop = fits_props(inputCont.images[i].data)
-        scale = majorAxisTemplate / prop['major']
-        scaledData.append(scnd.zoom(prop['orig'], scale))
+        sc = majorAxisTemplate / prop['major']
+        scaledData.append(scnd.zoom(prop['orig'], sc))
     return scaledData
 
 
 def rotate(data, angle):
+    """
+    Performs an angle rotation over a list of images 
+
+    Parameters
+    ----------
+    data: list
+        List of (M,N,Z) numpy.ndarray images.
+    angle: float
+        Rotation reference angle that will be applied to all the images.
+
+    Returns
+    -------
+    result: tuple
+        Tuple with the list of rotated images and the list of rotation angles applied to each one.  
+    """
     rotatedData = []
     angles = []
 
@@ -39,6 +76,22 @@ def _rotation_limits(img, angle):
 
 
 def crop_and_align(data, angles):
+    """
+    Performs crop and alignment of a list of data cubes.
+
+    Parameters
+    ----------
+    data: list
+        List of astronomical data cubes (numpy.ndarray).
+        
+    angles: list
+        List of angles (float) to perform alignment.
+
+    Returns
+    -------
+    result: list
+        List of *aligned* astronomical data cubes (numpy.ndarray).
+    """
     alignedData = []
     shapes = []
 
@@ -63,6 +116,19 @@ def crop_and_align(data, angles):
 
 
 def standarize(data):
+    """
+    Standarize astronomical data cubes in the 0-1 range.
+
+    Parameters
+    ----------
+    data: numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    Returns
+    -------
+    result: tuple
+        Tuple containing the standarized numpy.ndarray or astropy.nddata.NDData cube, the factor scale y_fact and the shift y_min.
+    """
     y_min = data.min()
     res = data - y_min
     y_fact = res.sum()
@@ -71,15 +137,110 @@ def standarize(data):
 
 
 def unstandarize(data, a, b):
-    return a*data  + b
+    """
+    Unstandarize the astronomical data cube: :math:`a \cdot data + b`.
+
+    Parameters
+    ----------
+    data: numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+    a: float
+        Scale value.
+    b: float
+        Shift value.
+
+    Returns
+    ------- 
+    result: numpy.ndarray or astropy.nddata.NDData
+        Unstandarized astronomical cube.
+    """
+    return a*data+b
 
 
 def add(data, flux, lower, upper):
+    """
+    Adds flux to a sub-cube of an astronomical data cube.
+
+    Parameters
+    ----------
+    data: numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+    flux: numpy.ndarray
+        Flux added to the cube.
+    lower: float
+        Lower bound of the sub-cube to which flux will be added. 
+    upper: float
+        Upper bound of the sub-cube to which flux will be added.
+    """
+
     data_slab, flux_slab = matching_slabs(data, flux, lower, upper)
     data[data_slab] += flux[flux_slab]
 
+
 def denoise(data, threshold):
+    """
+    Performs denoising of data cube, thresholding over the threshold value.
+
+    Parameters
+    ----------
+    data: numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+    threshold: float
+        Threshold value used for denoising.
+
+    Returns
+    -------
+    result: numpy.ndarray
+        Denoised (thresholded) astronomical data cube.
+    """
+
     elms = data > threshold
     newdata = np.zeros(data.shape)
     newdata[elms] = data[elms]
     return newdata
+
+
+def fits_props(img):
+    """
+    Extracts properties information of the astronomical data cube.
+
+    Parameters
+    ----------
+    img: numpy.ndarray
+        Astronomical data cube.
+
+    Returns
+    -------
+    result: dict
+        Dictionary with properties of the image: *centroid*, *major*, *minor*, *ratio*, *angle*, *area*, *img*, *clr*, *label*, *orig*.
+    """
+    flt = threshold_otsu(img)
+    otsu = img >= flt
+    clr = clear_border(otsu)
+
+    # label image regions
+    label_image, nlabel = label(clr, return_num=True)
+    borders = np.logical_xor(otsu, clr)
+    label_image[borders] = -1
+
+    props = regionprops(label_image)
+
+    ratios = []
+    areas = []
+
+    for i in props:
+        ratios.append(i.minor_axis_length / i.major_axis_length)
+        areas.append(i.area)
+
+    if len(props) > 1:
+        pos = areas.index(max(areas))
+    else:
+        pos = 0
+
+    properties = {'centroid': props[pos].centroid, 'major': props[pos].major_axis_length,
+                  'minor': props[pos].minor_axis_length, 'ratio': ratios[pos],
+                  'angle': props[pos].orientation, 'area': props[pos].area, 'img': props[pos].image,
+                  'clr': clr, 'label': label_image, 'orig': img}
+
+    return properties
+

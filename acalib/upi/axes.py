@@ -8,6 +8,22 @@ from acalib import core
 # axes_names used in formatting
 @support_nddata
 def axes_names(data,wcs=None):
+    """
+        Get the axes's names.
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+
+        Returns
+        -------
+        result: numpy.ndarray
+            Numpy ndarray with the axes's names from the WCS.
+
+    """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -18,6 +34,30 @@ from acalib.upi.formatting import _unitize, _world_table_creator
 
 @support_nddata
 def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
+    """
+        Get the axes's names.
+
+        Parameters
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        mask : numpy.ndarray
+            Mask for data.
+        unit : astropy.units.Unit
+            Astropy unit (http://docs.astropy.org/en/stable/units/).
+        lower : tuple
+            Start coordinate from where to cut.
+        upper : tuple
+            Coordinate to end cut.
+
+        Returns
+        -------
+        result: astropy.nddata.NDData.
+            data cut from lower to upper.
+
+    """
     # Check for NDDataSlicing... maybe this is already done by astropy.nddata package.
     mslab = core.slab(data, lower, upper)
     scube = data[mslab]
@@ -26,7 +66,26 @@ def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
 
 @support_nddata
 def extent(data,wcs=None,lower=None,upper=None):
-    """ Get axes extent  """
+    """
+        Get the axes extent.
+
+        Parameters
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        lower : (M,N) or (M,N,Z) tuple of int
+            Start coordinate in data
+        upper : (M,N) or (M,N,Z) tuple of int
+            End coordinate in data
+        
+        Returns
+        -------
+        result: (M, N) tuple of astropy.units.quantity.Quantity
+            Axes extent
+
+    """
     #TODO: These can be a decorator
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -43,7 +102,22 @@ def extent(data,wcs=None,lower=None,upper=None):
 
 @support_nddata
 def center(data,wcs=None):
-    """ Get center of the data"""
+    """
+        Get center of the data
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        
+        Returns
+        -------
+        result: astropy.units.quantity.Quantity
+            Center of the data
+
+    """
     #TODO: These can be a decorator
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -53,7 +127,22 @@ def center(data,wcs=None):
 
 @support_nddata
 def axes_units(data,wcs=None):
-    """ Get units of the axes"""
+    """
+        Get units of the axes
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        
+        Returns
+        -------
+        result: (M,N) or (M,N,Z) numpy.ndarray
+            Vector with the units of the axes
+
+    """
     #TODO: These can be a decorator (
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -63,7 +152,22 @@ def axes_units(data,wcs=None):
 
 @support_nddata
 def resolution(data,wcs=None):
-    """ Get the resolution of data"""
+    """
+        Get the resolution of data
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        
+        Returns
+        -------
+        result: (M,N) or (M,N,Z) numpy.ndarray
+            Resolution of the data
+
+    """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -72,7 +176,30 @@ def resolution(data,wcs=None):
 
 @support_nddata
 def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
-    """ Get the spectral velocities from frequencies fqs given a rest frequency (by default search for it in the WCS). If fqs is None, then frequencies indices (fqis) need to be given.
+    """
+        Get the spectral velocities from frequencies fqs given a rest
+        frequency (by default search for it in the WCS). If fqs is None,
+        then frequencies indices (fqis) need to be given.
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        fqs : astropy.units.quantity.Quantity
+            Array of frequencies with units.
+        fqis : list of integers
+            Array of frequencies indices
+        restfrq : astropy.units.quantity.Quantity
+            Rest frequency
+        
+        Returns
+        -------
+        result: astropy.units.quantity.Quantity
+            Array of Spectral velocities.
+
+
     """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -94,7 +221,26 @@ def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
 
 @support_nddata
 def features(data,wcs=None,lower=None,upper=None):
-    """ Creates an array with WCS axea in features format """
+    """
+        Creates an array with WCS axea in features format
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        lower : (M,N) or (M,N,Z) tuple of integers
+            Start coordinate in data.
+        upper : (M,N) or (M,N,Z) tuple of integers
+            End coordinate in data.
+        
+        Returns
+        -------
+        result: astropy.table.Table
+            Table with WCS information of a section from the data.
+
+    """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -106,7 +252,26 @@ def features(data,wcs=None,lower=None,upper=None):
 @support_nddata
 # TODO: Consider using "box" structure rather than up and low
 def opening(data,center,window,wcs=None):
-    """ Field of view (center +- window) converted to indices """
+    """
+        Field of view (center +- window) converted to indices
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        center : astropy.units.quantity.Quantity
+            Center of the field of view in WCS.
+        window : astropy.units.quantity.Quantity
+            Window for the field in WCS.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        
+        Returns
+        -------
+        result: ((M1,N1,Z1),(M2,N2,Z2)) tuple of tuple of ints
+            
+
+    """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
