@@ -47,7 +47,7 @@ def setup_package():
         version = "0.1.0",
         description = "Advanced Computing for Astronomy Library",
         url = "https://github.com/ChileanVirtualObservatory/ACALIB",
-        author = "LIRAE",
+        author = "CSRG",
         author_email = 'contact@lirae.cl',
         classifiers = [
             'Intended Audience :: Science/Research',
