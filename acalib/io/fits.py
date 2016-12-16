@@ -9,6 +9,18 @@ from astropy.vo.samp import SAMPIntegratedClient
 import os
 
 def HDU_to_NDData(hdu):
+    """
+    Create an N-dimensional dataset from an HDU component.
+
+    Parameters
+    ----------
+    hdu : HDU object
+        HDU to transform into an N-dimensional dataset.
+
+    Returns
+    -------
+    result: numpy.ndarray or astropy.nddata.NDData with data from the HDU object.
+    """
     data=hdu.data
     meta=hdu.header
     mask=np.isnan(data)
@@ -55,10 +67,34 @@ def HDU_to_NDData(hdu):
     return ndd.NDData(data, uncertainty=None, mask=mask,wcs=mywcs, meta=meta, unit=bunit)
 
 def HDU_to_Table(hdu):
+    """
+    Create a data table from a HDU component.
+
+    Parameters
+    ----------
+    hdu : HDU object
+        HDU to transform into a data table.
+
+    Returns
+    -------
+    result: astropy.table.Table with data from the HDU.
+    """
     log.warning("FITS Table ---> AstroPy Table not implemented Yet")
     #return atable.ATable(data=hdu.data,meta=hdu.header)
 
 def Table_to_HDU(tab):
+    """
+    Create a HDU object from a data table.
+
+    Parameters
+    ----------
+    tab : astropy.table.Table
+        Table to transform into a HDU object.
+
+    Returns
+    -------
+    result: HDU object with data from the data table.
+    """
     #if tab.data.masked:???
     #    dtmp = [col.filled(None) for col in six.itervalues(self.columns)]
     hdu=fits.BinTableHDU.from_columns(np.array(tab))
@@ -68,6 +104,20 @@ def Table_to_HDU(tab):
     return hdu
 
 def NDData_to_HDU(cube,primary=False):
+    """
+    Create a HDU object from an N-dimensional dataset.
+
+    Parameters
+    ----------
+    cube : numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+    primary : bool
+        Whether to pick the primary or an image HDU.
+
+    Returns
+    -------
+    result: HDU object with data from the data cube.
+    """
     header = cube.wcs.to_header()
     if primary==True:
         hdu = fits.PrimaryHDU(cube.data,header=header)
