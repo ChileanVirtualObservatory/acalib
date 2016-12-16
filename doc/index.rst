@@ -14,6 +14,7 @@ Contents:
    core
    algorithms
    io
+   upi
 
 Indices and tables
 ==================
