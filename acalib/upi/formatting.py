@@ -1,6 +1,7 @@
 from astropy.table import Table, Column
 import numpy as np
-from acalib.upi.axes import axes_names
+from .axes import axes_names
+
 
 def _pix_table_creator(values,wcs):
     tab = Table()
@@ -8,6 +9,7 @@ def _pix_table_creator(values,wcs):
     for i in range(names.size):
        tab[names[i]]=Column(values[:,i],unit=u.pix)
     return tab
+
 
 def _world_table_creator(values,wcs):
     uvec=np.array(wcs.wcs.cunit)[::-1]

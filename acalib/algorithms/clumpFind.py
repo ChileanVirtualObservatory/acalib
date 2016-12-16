@@ -1,11 +1,9 @@
-import sys
-sys.path.append('../../')
-from acalib.cupid import pycupid
-import astropy.units as u
-from astropy.nddata import *
-from .algorithm import Algorithm
-import acalib.core as core
+from .. import core
 import numpy as np
+from acalib.cupid import pycupid
+from astropy.nddata import *
+
+from .algorithm import Algorithm
 
 
 # storing unusable pixels for now (-1)

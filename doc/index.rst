@@ -12,6 +12,9 @@ Contents:
    :maxdepth: 4
 
    core
+   algorithms
+   io
+   upi
 
 Indices and tables
 ==================

@@ -6,8 +6,6 @@ try:
 except:
     from skimage.filter import threshold_adaptive
 from skimage.measure import label,regionprops
-from skimage.morphology import binary_opening, disk
-from skimage.segmentation import clear_border
 
 from ._morph import *
 
@@ -17,8 +15,19 @@ from .utils import fix_mask, slab
 from acalib.core import *
 
 def rms(data, mask=None):
-    """Compute the RMS of data. If mask != None, then 
-       we use that mask.
+    """
+    Compute the RMS of data. If mask != None, then we use that mask.
+
+    Parameters
+    ----------
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask: numpy.ndarray (default = None)
+
+    Returns
+    -------
+    RMS of the data (float)
     """
     # TODO: check photutils background estimation for using that if possible
     if mask is not None:
@@ -28,8 +37,28 @@ def rms(data, mask=None):
     return rms
 
 def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
-    """Heurustic that uses the inflexion point of the thresholded RMS to estimate 
-       where signal is dominant w.r.t. noise
+    """
+    Heurustic that uses the inflexion point of the thresholded RMS to estimate where signal is dominant w.r.t. noise
+    
+    Parameters
+    ---------- 
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask: numpy.ndarray (default = None)
+
+    noise: float (default=None)
+        Noise level, if not given will use rms of the data.
+    
+    points: (default=1000)
+
+    full_output: boolean (default=False)
+        Gives verbose results if True
+
+    Returns
+    "Signal to Noise Radio"
+    -------
+    
     """
     data=fix_mask(data,mask)
     if noise is None:
@@ -57,7 +86,23 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
 
 
 def integrate(data, mask=None, axis=(0)):
-    """ Returns a numpy array with the integration results. """
+    """ 
+    Sums the slices of a cube of data given an axis.
+   
+    Parameters
+    ----------    
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask: numpy.ndarray (default = None)
+
+    axis: (default=(0))
+    
+    Returns
+    -------
+     A numpy array with the integration results.
+
+    """
     if mask is not None:
         data = fix_mask(data, mask)
     newdata = np.nansum(data, axis=axis)
@@ -125,9 +170,18 @@ def spectra_sketch(data, samples, random_state=None):
     """
     Create the sketch spectra using pixel samples.
     
-    :param samples: Number of pixel samples used for the sketch.
-    :type samples: int
-    :returns: ( spectra (array), slices  (list)).
+    Parameters
+    ----------
+    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    samples: Number of pixel samples(int) used for the sketch.
+
+    random_state: (default=None)
+    
+    Returns: 
+     spectra: (array) 
+     slices:  (list)
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
@@ -223,82 +277,11 @@ def index_features(data, lower=None, upper=None):
         ii[dim - i - 1] = msh[i].ravel()
     return ii
 
-#Remove NDData support!
-@support_nddata
-def gaussian_mix(data, prob=0.05, precision=0.02, wcs=None):
-    """
-    Using a mixture of gaussians make an multiscale segmentation to get the region of interest of a 2D astronomical image.
-    
-    :param image: Velocity collapsed image
-    :returns: list of skimage.measure.regionprops Objects, with detected regions properties
-    """
-    #TODO: check for wcs != None
-    if len(data.shape) > 2:
-        log.error("Only 2D images supported")
-        raise ValueError("Only 2D images supported")
-
-    image_list = []
-
-    image = data
-    image[np.isnan(image)] = 0
-
-    prob = prob
-    dims = image.shape
-    rows = dims[0]
-    cols = dims[1]
-    size = np.min([rows, cols])
-    precision = size * precision
-
-    image = image.astype('float64')
-
-    w_max = _optimal_w(image, prob)
-    diff = (image - np.min(image)) / (np.max(image) - np.min(image))
-
-    tt = w_max * w_max
-    if tt % 2 == 0:
-        tt += 1
-    g = threshold_adaptive(diff, tt, method='mean', offset=0)
-
-    r = w_max / 2
-    rMin = 2 * np.round(precision)
-
-    while (r > rMin):
-        background = np.zeros((rows, cols))
-        selem = disk(r)
-        sub = binary_opening(g, selem)
-        sub = clear_border(sub)
-        sub = label(sub)
-        fts = regionprops(sub)
-
-        #image_list.append(NDData(sub, wcs=wcs))
-        # Non NNData version (without wcs... lets check if it pass)
-        image_list.append(sub)
-
-        if len(fts) > 0:
-            for props in fts:
-                C_x, C_y = props.centroid
-
-                radius = props.equivalent_diameter / 2.
-                kern = 0.01 * np.ones((2 * radius, 2 * radius))
-                krn = _kernelsmooth(x=np.ones((2 * radius, 2 * radius)), kern=kern)
-                krn = np.exp(np.exp(krn))
-                if np.max(krn) > 0:
-                    krn = (krn - np.min(krn)) / (np.max(krn) - np.min(krn))
-                    background = _kernel_shift(background, krn, C_x, C_y)
-        if np.max(background) > 0:
-            background = (background - np.min(background)) / (np.max(background) - np.min(background))
-            diff = diff - background
-        diff = (diff - np.min(diff)) / (np.max(diff) - np.min(diff))
-        tt = r * r
-        if tt % 2 == 0:
-            tt += 1
-        g = threshold_adaptive(diff, tt, method='mean', offset=0)
-        r = np.round(r / 2.)
-
-    return image_list
-
-
 def _optimal_w(image, p=0.05):
+    # Calculate the optimal window size for the image segmentation given a quantile.
+    # It expand the radious until it reaches the best segmentation.
+
+
     # radiusMin, radius Max and inc in percentages of the image size, p as [0,1] value, image is the original version
     radiusMin = 5
     radiusMax = 40
@@ -340,6 +323,8 @@ def _optimal_w(image, p=0.05):
 
 
 def _bg_fg(f, g, bg, fg):
+    # Calculate the backgorund and foreground distribution
+    #
     dims = f.shape
     rows = dims[0]
     cols = dims[1]
