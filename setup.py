@@ -62,7 +62,7 @@ def setup_package():
         packages = find_packages(),
         include_package_data = True,
         setup_requires = ['numpy>=1.8', 'cython>=0.18'],
-        install_requires = ['numpy>=1.8', 'astropy>=1.2', 'cython>=0.24',
+        install_requires = ['numpy>=1.8', 'astropy>=1.2', 'cython>=0.18',
                             'matplotlib>=1.5', 'scipy>=0.18',
                             'scikit-image>=0.12']
     )
