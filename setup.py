@@ -18,6 +18,7 @@ def check_build():
             return True
 
 def build_and_move(path):
+    print("Building: {}".format(path))
     cwd = os.getcwd()
     rel_module = path
     module_dir = os.path.join(cwd, rel_module)
@@ -32,8 +33,12 @@ def build_and_move(path):
 
 
 def setup_package():
+    if "--force" in sys.argv:
+        run_build = True
+    else:
+        run_build = False
     #Building packages
-    if check_build():
+    if check_build() or run_build:
         build_and_move('acalib/cupid')
         build_and_move('acalib/core/_morph')
 
@@ -61,6 +66,7 @@ def setup_package():
                             'matplotlib>=1.5', 'scipy>=0.18',
                             'scikit-image>=0.12']
     )
+
 
 
 
