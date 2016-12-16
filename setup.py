@@ -22,12 +22,7 @@ def build_and_move(path):
     rel_module = path
     module_dir = os.path.join(cwd, rel_module)
     os.chdir(module_dir)
-	
-    try:
-        subprocess.call(["python2","setup.py", "build"])
-
-    except:
-        subprocess.call(["python","setup.py", "build"])
+    subprocess.call(["python","setup.py", "build"])
 
     for fbuilded in glob.glob("build/lib*/*.so"):
         dest_directory = os.getcwd() + '/' + os.path.basename(fbuilded)
@@ -61,8 +56,8 @@ def setup_package():
         zip_safe = False,
         packages = find_packages(),
         include_package_data = True,
-        setup_requires = ['numpy>=1.11', 'cython>=0.18'],
-        install_requires = ['numpy>=1.11', 'astropy>=1.2', 'cython>=0.24',
+        setup_requires = ['numpy>=1.8', 'cython>=0.18'],
+        install_requires = ['numpy>=1.8', 'astropy>=1.2', 'cython>=0.24',
                             'matplotlib>=1.5', 'scipy>=0.18',
                             'scikit-image>=0.12']
     )
