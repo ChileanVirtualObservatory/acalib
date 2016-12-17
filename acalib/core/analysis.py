@@ -20,10 +20,10 @@ def rms(data, mask=None):
 
     Parameters
     ----------
-    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
-    mask: numpy.ndarray (default = None)
+    mask : numpy.ndarray (default = None)
 
     Returns
     -------
@@ -42,22 +42,23 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
     
     Parameters
     ---------- 
-    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
-    mask: numpy.ndarray (default = None)
+    mask : numpy.ndarray (default = None)
 
-    noise: float (default=None)
+    noise : float (default=None)
         Noise level, if not given will use rms of the data.
     
-    points: (default=1000)
+    points : (default=1000)
 
-    full_output: boolean (default=False)
+    full_output : boolean (default=False)
         Gives verbose results if True
 
     Returns
-    "Signal to Noise Radio"
-    -------
+    --------
+
+    "Signal to Noise Radio" value
     
     """
     if noise is None:
@@ -90,12 +91,12 @@ def integrate(data, mask=None, axis=(0)):
    
     Parameters
     ----------    
-    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
-    mask: numpy.ndarray (default = None)
+    mask : numpy.ndarray (default = None)
 
-    axis: (default=(0))
+    axis : int (default=(0))
     
     Returns
     -------
@@ -171,16 +172,18 @@ def spectra_sketch(data, samples, random_state=None):
     
     Parameters
     ----------
-    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
-    samples: Number of pixel samples(int) used for the sketch.
+    samples : Number of pixel samples(int) used for the sketch.
 
-    random_state: (default=None)
+    random_state : (default=None)
     
-    Returns: 
-     spectra: (array) 
-     slices:  (list)
+    Returns
+    -------
+
+     spectra (array) and slices (list)
+
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
@@ -392,10 +395,19 @@ def _kernel_shift(back, kernel, x, y):
 @support_nddata
 def vel_stacking(data,data_slice, wcs=None, mask=None,uncertainty=None, meta=None, unit=None):
     """
-       Create an image collapsing the frecuency axis
-        :param data_slice: Sector to be collapsed
-        :type data_slice: slice
-        :returns: image (NDData): 2D-Array with the stacked cube.
+    Create an image collapsing the frecuency axis
+   
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Astronomical 2D image 
+
+    slice : slice object
+        Sector to be collapsed
+    
+    Returns
+    -------
+    image (NDData): 2D-Array with the stacked cube.
 
     """
     if len(data.shape) != 3:

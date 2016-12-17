@@ -5,14 +5,14 @@ def fix_mask(data, mask):
 
     Parameters
     ----------
-    data: numpy.ndarray or numpy.ma.MaskedArray
+    data : numpy.ndarray or numpy.ma.MaskedArray
         Astronomical data cube.
-    mask: numpy.ndarray
+    mask : numpy.ndarray
         Boolean that will be applied.
     
     Returns
     -------
-    result: numpy.ma.MaskedArray
+    result : numpy.ma.MaskedArray
         Masked astronomical data cube.
     """
 
@@ -28,14 +28,14 @@ def fix_limits(data, vect):
 
     Parameters
     ----------
-    data: numpy.ndarray or numpy.ma.MaskedArray
+    data : numpy.ndarray or numpy.ma.MaskedArray
         Astronomical data cube.
-    vect: tuple, list or numpy.ndarray
+    vect : tuple, list or numpy.ndarray
         Array with the indexes to be fixed.
 
     Returns
     -------
-    result: numpy.ndarray
+    result : numpy.ndarray
         Fixed array of indexes.
     """
 
@@ -57,16 +57,19 @@ def slab(data, lower=None, upper=None):
     
     Parameters
     ----------
-    data: numpy.ndarray
+    data : numpy.ndarray
         Atronomical data cube.
-    lower: 3-tuple (default=None)
-    upper: 3-tuple (default=None)
+    lower : 3-tuple (default=None)
+        Lower coordinates for the subcube.
+
+    upper : 3-tuple (default=None)
+        Upper coordinates for the subcube.
 
 
     Returns
     -------
-    result: list
-       Sub-cube.
+    result : list
+       list of slices using lower and upper coordinates to create a subcube.
     """
 
     if lower is None:
@@ -83,19 +86,26 @@ def slab(data, lower=None, upper=None):
 
 def matching_slabs(data, flux, lower, upper):
     """
-    Obtain the matching data and flux slabs from lower to upper while fixing the limits
-    
+    Obtain the matching subcube inside the lower and upper points.
+
     Paramters
     ---------
-    data: numpy.ndarray
-    flux: numpy.ndarray
-    lower: tuple
-    upper: tuple
+    data : numpy.ndarray
+        First data cube
+
+    flux : numpy.ndarray
+        Second data cubse
+
+    lower : tuple
+        Lower coordinates for the subcube.
+
+    upper : tuple
+        Upper coordinates for the subcube.
 
 
     Returns
     -------
-    result: tuple
+    The subcube inside the lower and upper points that matches both data cube dimensions.
     """
 
     data_slab = slab(data, lower, upper)

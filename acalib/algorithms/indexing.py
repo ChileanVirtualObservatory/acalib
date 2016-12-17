@@ -9,8 +9,9 @@ class Indexing(Algorithm):
 
     Parameters
     ----------
-    params: dict (default = None)
-    Algorithm parameters, allowed keys:    
+    params : dict (default = None)
+        Algorithm parameters, allowed keys:    
+        
         P : float (default = 0.05)
             Thresholding quantile for multiscale segmentation.
         PRECISION : float (default = 0.02)
@@ -48,7 +49,7 @@ class Indexing(Algorithm):
 
             Returns
             -------
-            result: :class:`~acalib.Container` with the cube slices, segmentated images and region of interest tables for each scale analyzed.
+            :class:`~acalib.Container` with the cube slices, segmentated images and region of interest tables for each scale analyzed.
         """
 
         if data.wcs:

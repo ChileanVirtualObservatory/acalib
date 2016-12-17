@@ -11,15 +11,15 @@ def noise_level(data,mask=None,unit=None):
 
         Parameters
         ----------
-        data: (M,N) numpy.ndarray
-        mask: numpy.ndarray
+        data : (M,N) numpy.ndarray
+        mask : numpy.ndarray
             mask for the data
-        unit: astropy.units.Unit
+        unit : astropy.units.Unit
             Astropy Unit (http://docs.astropy.org/en/stable/units/)
 
         Returns
         -------
-        rms: float 
+        rms : float 
             RMS of data
     """
 
@@ -37,13 +37,13 @@ def standarize(data, wcs=None, unit=None, mask=None, meta=None):
 
         Parameters
         ----------
-        data: (M,N) numpy.ndarray
-        wcs: World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
-        mask: numpy.ndarray
+        data : (M,N) numpy.ndarray
+        wcs : World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
+        mask : numpy.ndarray
             mask for the data
-        unit: astropy.units.Unit
+        unit : astropy.units.Unit
             Astropy Unit (http://docs.astropy.org/en/stable/units/)
-        meta: FITS metadata
+        meta : FITS metadata
 
         Returns
         -------
@@ -64,17 +64,17 @@ def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
 
         Parameters
         ----------
-        data: (M,N) numpy.ndarray
-        a: float
+        data : (M,N) numpy.ndarray
+        a : float
             slope of straight
-        b: float
+        b : float
             Intercept of straight
-        wcs: World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
-        mask: numpy.ndarray
+        wcs : World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
+        mask : numpy.ndarray
             mask for the data
-        unit: astropy.units.Unit
+        unit : astropy.units.Unit
             Astropy Unit (http://docs.astropy.org/en/stable/units/)
-        meta: FITS metadata
+        meta : FITS metadata
 
         Returns
         -------
@@ -96,18 +96,18 @@ def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=Non
 
         Parameters
         ----------
-        data: (M,N) numpy.ndarray
-        flux: float
+        data : (M,N) numpy.ndarray
+        flux : float
             Flux of data
-        lower: numpy.ndarray
-        upper: numpy.ndarray
+        lower : numpy.ndarray
+        upper : numpy.ndarray
             Bounds for data
-        wcs: World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
-        mask: numpy.ndarray
+        wcs : World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
+        mask : numpy.ndarray
             mask for the data
-        unit: astropy.units.Unit
+        unit : astropy.units.Unit
             Astropy Unit (http://docs.astropy.org/en/stable/units/)
-        meta: FITS metadata
+        meta : FITS metadata
 
         Returns
         -------
@@ -128,18 +128,18 @@ def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
 
         Parameters
         ----------
-        data: (M,N) numpy.ndarray
-        wcs: World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
-        mask: numpy.ndarray
+        data : (M,N) numpy.ndarray
+        wcs : World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
+        mask : numpy.ndarray
             mask for the data
-        unit: astropy.units.Unit
+        unit : astropy.units.Unit
             Astropy Unit (http://docs.astropy.org/en/stable/units/)
-        threshold: float
+        threshold : float
 
         Returns
         -------
         Data denoised
-        -------        
+                
     """
     newdata = core.denoise(data, threshold.value)
     return NDData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
@@ -153,15 +153,16 @@ def world_gaussian(data, mu, P, peak, cutoff, wcs=None):
 
         Parameters
         ----------
-        data: (M,N) numpy.ndarray
-        mu: float
-        P: tuple
+        data : (M,N) numpy.ndarray
+        mu : float
+        P : tuple
             Shape of result
-        peak: float
+        peak : float
             maximum value
-        cutoff:
+        
+        cutoff :
 
-        wcs: World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
+        wcs : World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
 
         Returns
         -------
