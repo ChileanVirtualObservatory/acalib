@@ -9,7 +9,7 @@ class Algorithm(object):
 
         Parameters
         ----------            
-            params: dict (default = None)
+            params : dict (default = None)
                 Dictionary with algorithm's parameters
         """
         self.config = dict()
@@ -32,7 +32,7 @@ class Algorithm(object):
             ----------     
             key : string
                 algorithm internal config dictionary key.
-            value: 
+            value :  
                 value to set.
         """
         self.config[key] = value

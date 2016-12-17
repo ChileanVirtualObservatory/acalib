@@ -8,13 +8,13 @@ def gaussian_function(mu, P, feat, peak):
 
     Parameters
     ----------
-    mu: numpy.ndarray
+    mu : numpy.ndarray
         Centers of gaussians array.
-    P: numpy.ndarray
+    P : numpy.ndarray
         Precision matrix.
-    feat: numpy.ndarray.
+    feat : numpy.ndarray.
         Features matrix.
-    peak: float
+    peak : float
         Peak value of the resulting evaluation.
 
     Returns
@@ -39,14 +39,14 @@ def create_mould(P, delta):
 
     Parameters
     ----------
-    P: numpy.ndarray
+    P : numpy.ndarray
         Precision matrix.
-    delta: list or numpy.ndarray
+    delta : list or numpy.ndarray
         Delta values used to generate the mould.
 
     Returns
     -------
-    result: numpy.ndarray
+    result : numpy.ndarray
         Mould matrix.
     """
     n = len(delta)
