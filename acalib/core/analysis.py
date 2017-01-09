@@ -20,10 +20,10 @@ def rms(data, mask=None):
 
     Parameters
     ----------
-    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
-    mask: numpy.ndarray (default = None)
+    mask : numpy.ndarray (default = None)
 
     Returns
     -------
@@ -42,22 +42,23 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
     
     Parameters
     ---------- 
-    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
-    mask: numpy.ndarray (default = None)
+    mask : numpy.ndarray (default = None)
 
-    noise: float (default=None)
+    noise : float (default=None)
         Noise level, if not given will use rms of the data.
     
-    points: (default=1000)
+    points : (default=1000)
 
-    full_output: boolean (default=False)
+    full_output : boolean (default=False)
         Gives verbose results if True
 
     Returns
-    "Signal to Noise Radio"
-    -------
+    --------
+
+    "Signal to Noise Radio" value
     
     """
     data=fix_mask(data,mask)
@@ -91,12 +92,12 @@ def integrate(data, mask=None, axis=(0)):
    
     Parameters
     ----------    
-    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
-    mask: numpy.ndarray (default = None)
+    mask : numpy.ndarray (default = None)
 
-    axis: (default=(0))
+    axis : int (default=(0))
     
     Returns
     -------
@@ -172,16 +173,18 @@ def spectra_sketch(data, samples, random_state=None):
     
     Parameters
     ----------
-    data: (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
-    samples: Number of pixel samples(int) used for the sketch.
+    samples : Number of pixel samples(int) used for the sketch.
 
-    random_state: (default=None)
+    random_state : (default=None)
     
-    Returns: 
-     spectra: (array) 
-     slices:  (list)
+    Returns
+    -------
+
+     spectra (array) and slices (list)
+
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
@@ -393,10 +396,19 @@ def _kernel_shift(back, kernel, x, y):
 # TODO: This is non-generic, uses the axis=0!
 def vel_stacking(data, data_slice):
     """
-       Create an image collapsing the frecuency axis
-        :param data_slice: Sector to be collapsed
-        :type data_slice: slice
-        :returns: image (NDData): 2D-Array with the stacked cube.
+    Create an image collapsing the frecuency axis
+   
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Astronomical 2D image 
+
+    slice : slice object
+        Sector to be collapsed
+    
+    Returns
+    -------
+    image (NDData): 2D-Array with the stacked cube.
 
     """
     if len(data.shape) != 3:
@@ -407,82 +419,4 @@ def vel_stacking(data, data_slice):
     stacked = np.sum(subcube,axis=0)
     # wcs = wcs.dropaxis(2)
 
-    return stacked  #NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
-
-
-### DEPRECATED ####
-
-
-# def ndslice(ndd, lower, upper):
-#    """
-#    N-Dimensional slicing.
-#
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#
-#    Returns:
-#        A sliced astropy.nddata.NDDataArray object.
-#
-#    """
-#    lower = lower if lower is not None else np.zeros(ndd.ndim)
-#    upper = upper if upper is not None else ndd.shape
-#    return ndd[[slice(min(a,b), max(a,b)+1) for a,b in zip(lower, upper)]]
-#
-# def adjust_index(relative, origin):
-#    """
-#    Adjusts an index relative to a subarray to an absolute
-#    index in the superarray.
-#
-#    Arguments:
-#        origin   -- an n-dimensional index of a point as an n-tuple.
-#                    It should be the origin from which the relative
-#                    index was computed.
-#        relative -- an n-dimensional index of a point as an n-tuple.
-#                    The index to be adjusted.
-#
-#    Returns:
-#        The relative index adjusted to the superarray as an n-tuple.
-#    """
-#    return tuple(np.array(origin) + np.array(relative))
-
-# def index_of_max(ndd, lower=None, upper=None):
-#    """
-#    Index of maximum value in an m-dimensional subarray from
-#    an n-dimensional array, specified by lower and upper.
-#
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#
-#    Returns:
-#        A tuple with the maximum value found in the m-dimensional
-#        subarray and its index in the n-dimensional superarray.
-#
-#    """
-#    ndd = ndslice(ndd, lower, upper)
-#    index = np.unravel_index(ndd.data.argmax(), ndd.data.shape)
-#    value = ndd.data[index]
-#    return (value, adjust_index(index, lower))
-
-# def index_of_min(ndd, lower=None, upper=None):
-#    """
-#    Index of minimum value in an m-dimensional subarray from
-#    an n-dimensional array, specified by lower and upper.
-#
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#
-#    Returns:
-#        A tuple with the minimum value found in the m-dimensional
-#        subarray and its index in the n-dimensional superarray.
-#
-#    """
-#    ndd = ndslice(ndd, lower, upper)
-#    index = np.unravel_index(ndd.data.argmin(), ndd.data.shape)
-#    value = ndd.data[index]
-#    return (value, adjust_index(index, lower))
+    return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)

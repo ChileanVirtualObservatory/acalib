@@ -19,14 +19,14 @@ class Stacking(Algorithm):
 
             Parameters
             ----------
-            template_data: (M,N) numpy.ndarray
+            template_data : (M,N) numpy.ndarray
                 Astronomical image.
-            data_cont: acalib.container
+            data_cont : acalib.container
                 An images set container
 
             Returns
             -------
-            result: (M,N) numpy.ndarray
+            result : (M,N) numpy.ndarray
                 Image stacked
         """
 
