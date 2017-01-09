@@ -1,5 +1,5 @@
-ACALIB Algorithms
-======================================
+Algorithms
+===========================
 
 .. automodule:: acalib.algorithms
     :members:
