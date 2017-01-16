@@ -18,11 +18,11 @@ def check_build():
             return True
 
 def build_and_move(path):
+    print("Building: {}".format(path))
     cwd = os.getcwd()
     rel_module = path
     module_dir = os.path.join(cwd, rel_module)
     os.chdir(module_dir)
-
     subprocess.call(["python","setup.py", "build"])
 
     for fbuilded in glob.glob("build/lib*/*.so"):
@@ -33,17 +33,21 @@ def build_and_move(path):
 
 
 def setup_package():
+    if "--force" in sys.argv:
+        run_build = True
+    else:
+        run_build = False
     #Building packages
-    if check_build():
+    if check_build() or run_build:
         build_and_move('acalib/cupid')
         build_and_move('acalib/core/_morph')
 
     setup(
         name = "acalib",
-        version = "1.0.0",
+        version = "0.1.0",
         description = "Advanced Computing for Astronomy Library",
         url = "https://github.com/ChileanVirtualObservatory/ACALIB",
-        author = "LIRAE",
+        author = "CSRG",
         author_email = 'contact@lirae.cl',
         classifiers = [
             'Intended Audience :: Science/Research',
@@ -54,13 +58,15 @@ def setup_package():
             'Programming Language :: Python :: 3.6'
             ],
         
+        zip_safe = False,
         packages = find_packages(),
         include_package_data = True,
-        setup_requires = ['numpy>=1.11', 'cython>=0.18'],
-        install_requires = ['numpy>=1.11', 'astropy>=1.2', 'cython>=0.24',
+        setup_requires = ['numpy>=1.8', 'cython>=0.18'],
+        install_requires = ['numpy>=1.8', 'astropy>=1.2', 'cython>=0.18',
                             'matplotlib>=1.5', 'scipy>=0.18',
-                            'scikit-image>=0.12']
+                            'scikit-image>=0.12', 'urllib3']
     )
+
 
 
 

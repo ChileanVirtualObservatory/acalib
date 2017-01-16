@@ -1,12 +1,11 @@
 import numpy as np
 from astropy import log
 from astropy.nddata import support_nddata, NDData
-from skimage.filter import threshold_adaptive
-from skimage.measure import label
-from skimage.measure import regionprops
-from skimage.morphology import binary_opening
-from skimage.morphology import disk
-from skimage.segmentation import clear_border
+try:
+    from skimage.filters import threshold_adaptive
+except:
+    from skimage.filter import threshold_adaptive
+from skimage.measure import label,regionprops
 
 from ._morph import *
 
@@ -16,8 +15,19 @@ from .utils import fix_mask, slab
 from acalib.core import *
 
 def rms(data, mask=None):
-    """Compute the RMS of data. If mask != None, then 
-       we use that mask.
+    """
+    Compute the RMS of data. If mask != None, then we use that mask.
+
+    Parameters
+    ----------
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask : numpy.ndarray (default = None)
+
+    Returns
+    -------
+    RMS of the data (float)
     """
     # TODO: check photutils background estimation for using that if possible
     if mask is not None:
@@ -27,8 +37,29 @@ def rms(data, mask=None):
     return rms
 
 def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
-    """Heurustic that uses the inflexion point of the thresholded RMS to estimate 
-       where signal is dominant w.r.t. noise
+    """
+    Heurustic that uses the inflexion point of the thresholded RMS to estimate where signal is dominant w.r.t. noise
+    
+    Parameters
+    ---------- 
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask : numpy.ndarray (default = None)
+
+    noise : float (default=None)
+        Noise level, if not given will use rms of the data.
+    
+    points : (default=1000)
+
+    full_output : boolean (default=False)
+        Gives verbose results if True
+
+    Returns
+    --------
+
+    "Signal to Noise Radio" value
+    
     """
     if noise is None:
         noise = rms(data, mask)
@@ -55,7 +86,23 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
 
 
 def integrate(data, mask=None, axis=(0)):
-    """ Returns a numpy array with the integration results. """
+    """ 
+    Sums the slices of a cube of data given an axis.
+   
+    Parameters
+    ----------    
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    mask : numpy.ndarray (default = None)
+
+    axis : int (default=(0))
+    
+    Returns
+    -------
+     A numpy array with the integration results.
+
+    """
     if mask is not None:
         data = fix_mask(data, mask)
     newdata = np.sum(data, axis=axis)
@@ -123,9 +170,20 @@ def spectra_sketch(data, samples, random_state=None):
     """
     Create the sketch spectra using pixel samples.
     
-    :param samples: Number of pixel samples used for the sketch.
-    :type samples: int
-    :returns: ( spectra (array), slices  (list)).
+    Parameters
+    ----------
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        Astronomical data cube.
+
+    samples : Number of pixel samples(int) used for the sketch.
+
+    random_state : (default=None)
+    
+    Returns
+    -------
+
+     spectra (array) and slices (list)
+
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
@@ -221,82 +279,11 @@ def index_features(data, lower=None, upper=None):
         ii[dim - i - 1] = msh[i].ravel()
     return ii
 
-#Remove NDData support!
-@support_nddata
-def gaussian_mix(data, prob=0.05, precision=0.02, wcs=None):
-    """
-    Using a mixture of gaussians make an multiscale segmentation to get the region of interest of a 2D astronomical image.
-    
-    :param image: Velocity collapsed image
-    :returns: list of skimage.measure.regionprops Objects, with detected regions properties
-    """
-    #TODO: check for wcs != None
-    if len(data.shape) > 2:
-        log.error("Only 2D images supported")
-        raise ValueError("Only 2D images supported")
-
-    image_list = []
-
-    image = data
-    image[np.isnan(image)] = 0
-
-    prob = prob
-    dims = image.shape
-    rows = dims[0]
-    cols = dims[1]
-    size = np.min([rows, cols])
-    precision = size * precision
-
-    image = image.astype('float64')
-
-    w_max = _optimal_w(image, prob)
-    diff = (image - np.min(image)) / (np.max(image) - np.min(image))
-
-    tt = w_max * w_max
-    if tt % 2 == 0:
-        tt += 1
-    g = threshold_adaptive(diff, tt, method='mean', offset=0)
-
-    r = w_max / 2
-    rMin = 2 * np.round(precision)
-
-    while (r > rMin):
-        background = np.zeros((rows, cols))
-        selem = disk(r)
-        sub = binary_opening(g, selem)
-        sub = clear_border(sub)
-        sub = label(sub)
-        fts = regionprops(sub)
-
-        #image_list.append(NDData(sub, wcs=wcs))
-        # Non NNData version (without wcs... lets check if it pass)
-        image_list.append(sub)
-
-        if len(fts) > 0:
-            for props in fts:
-                C_x, C_y = props.centroid
-
-                radius = props.equivalent_diameter / 2.
-                kern = 0.01 * np.ones((2 * radius, 2 * radius))
-                krn = _kernelsmooth(x=np.ones((2 * radius, 2 * radius)), kern=kern)
-                krn = np.exp(np.exp(krn))
-                if np.max(krn) > 0:
-                    krn = (krn - np.min(krn)) / (np.max(krn) - np.min(krn))
-                    background = _kernel_shift(background, krn, C_x, C_y)
-        if np.max(background) > 0:
-            background = (background - np.min(background)) / (np.max(background) - np.min(background))
-            diff = diff - background
-        diff = (diff - np.min(diff)) / (np.max(diff) - np.min(diff))
-        tt = r * r
-        if tt % 2 == 0:
-            tt += 1
-        g = threshold_adaptive(diff, tt, method='mean', offset=0)
-        r = np.round(r / 2.)
-
-    return image_list
-
-
 def _optimal_w(image, p=0.05):
+    # Calculate the optimal window size for the image segmentation given a quantile.
+    # It expand the radious until it reaches the best segmentation.
+
+
     # radiusMin, radius Max and inc in percentages of the image size, p as [0,1] value, image is the original version
     radiusMin = 5
     radiusMax = 40
@@ -338,6 +325,8 @@ def _optimal_w(image, p=0.05):
 
 
 def _bg_fg(f, g, bg, fg):
+    # Calculate the backgorund and foreground distribution
+    #
     dims = f.shape
     rows = dims[0]
     cols = dims[1]
@@ -406,10 +395,19 @@ def _kernel_shift(back, kernel, x, y):
 # TODO: This is non-generic, uses the axis=0!
 def vel_stacking(data, data_slice):
     """
-       Create an image collapsing the frecuency axis
-        :param data_slice: Sector to be collapsed
-        :type data_slice: slice
-        :returns: image (NDData): 2D-Array with the stacked cube.
+    Create an image collapsing the frecuency axis
+   
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Astronomical 2D image 
+
+    slice : slice object
+        Sector to be collapsed
+    
+    Returns
+    -------
+    image (NDData): 2D-Array with the stacked cube.
 
     """
     if len(data.shape) != 3:
@@ -420,82 +418,4 @@ def vel_stacking(data, data_slice):
     stacked = np.sum(subcube,axis=0)
     # wcs = wcs.dropaxis(2)
 
-    return stacked  #NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
-
-
-### DEPRECATED ####
-
-
-# def ndslice(ndd, lower, upper):
-#    """
-#    N-Dimensional slicing.
-#
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#
-#    Returns:
-#        A sliced astropy.nddata.NDDataArray object.
-#
-#    """
-#    lower = lower if lower is not None else np.zeros(ndd.ndim)
-#    upper = upper if upper is not None else ndd.shape
-#    return ndd[[slice(min(a,b), max(a,b)+1) for a,b in zip(lower, upper)]]
-#
-# def adjust_index(relative, origin):
-#    """
-#    Adjusts an index relative to a subarray to an absolute
-#    index in the superarray.
-#
-#    Arguments:
-#        origin   -- an n-dimensional index of a point as an n-tuple.
-#                    It should be the origin from which the relative
-#                    index was computed.
-#        relative -- an n-dimensional index of a point as an n-tuple.
-#                    The index to be adjusted.
-#
-#    Returns:
-#        The relative index adjusted to the superarray as an n-tuple.
-#    """
-#    return tuple(np.array(origin) + np.array(relative))
-
-# def index_of_max(ndd, lower=None, upper=None):
-#    """
-#    Index of maximum value in an m-dimensional subarray from
-#    an n-dimensional array, specified by lower and upper.
-#
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#
-#    Returns:
-#        A tuple with the maximum value found in the m-dimensional
-#        subarray and its index in the n-dimensional superarray.
-#
-#    """
-#    ndd = ndslice(ndd, lower, upper)
-#    index = np.unravel_index(ndd.data.argmax(), ndd.data.shape)
-#    value = ndd.data[index]
-#    return (value, adjust_index(index, lower))
-
-# def index_of_min(ndd, lower=None, upper=None):
-#    """
-#    Index of minimum value in an m-dimensional subarray from
-#    an n-dimensional array, specified by lower and upper.
-#
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#
-#    Returns:
-#        A tuple with the minimum value found in the m-dimensional
-#        subarray and its index in the n-dimensional superarray.
-#
-#    """
-#    ndd = ndslice(ndd, lower, upper)
-#    index = np.unravel_index(ndd.data.argmin(), ndd.data.shape)
-#    value = ndd.data[index]
-#    return (value, adjust_index(index, lower))
+    return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
