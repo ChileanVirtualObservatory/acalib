@@ -3,15 +3,44 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ACALIB's documentation!
+Welcome to ACALib's documentation!
 ==================================
 
-Contents:
+Welcome to the **Advanced Computing for Astronomy Library** (ACALib) documentation. ACALib is a package with state of the art Algorithms for Astronomers. It is intended to have a simple interface and compatibility with Jupyter Notebooks.
+
+For examples look into our `Ipython Notebooks Repository`_ .
+
+.. _Ipython Notebooks Repository: https://github.com/ChileanVirtualObservatory/notebooks
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 4
 
    core
+   algorithms
+   io
+   upi
+   synthetic
+
+
+Installation
+------------
+
+To install ACALIB clone the `project repository`_ and run
+
+.. _project repository: https://github.com/ChileanVirtualObservatory/acalib
+
+.. code-block:: bash
+
+	python setup.py build install
+
+or install using **pip**
+
+.. code-block:: bash
+
+	pip install acalib
 
 Indices and tables
 ==================

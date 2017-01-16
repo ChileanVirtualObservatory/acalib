@@ -1,11 +1,9 @@
-import sys
-sys.path.append('../../')
-import acalib
-from acalib.cupid import pycupid
-import astropy.units as u
-from astropy.nddata import *
 import numpy as np
+from acalib.cupid import pycupid
+from astropy.nddata import *
+
 from .algorithm import Algorithm
+
 
 # storing unusable pixels for now (-1)
 def _struct_builder(caa):
@@ -50,7 +48,7 @@ class FellWalker(Algorithm):
     def run(self, data):
         # if rms not in config, estimate it
         if 'RMS' not in self.config:
-            rms = acalib.rms(data)
+            rms = rms(data)
         else:
             rms = self.config['RMS']
 
