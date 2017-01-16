@@ -393,7 +393,8 @@ def _kernel_shift(back, kernel, x, y):
 
 
 # TODO: This is non-generic, uses the axis=0!
-def vel_stacking(data, data_slice):
+@support_nddata
+def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None, unit=None):
     """
     Create an image collapsing the frecuency axis
    
@@ -416,6 +417,6 @@ def vel_stacking(data, data_slice):
     dims = data.shape
     subcube = data[data_slice, :,:]
     stacked = np.sum(subcube,axis=0)
-    # wcs = wcs.dropaxis(2)
+    wcs = wcs.dropaxis(2)
 
     return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
