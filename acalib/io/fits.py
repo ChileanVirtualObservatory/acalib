@@ -9,6 +9,7 @@ from astropy.vo.samp import SAMPIntegratedClient
 import os
 
 def HDU_to_NDData(hdu):
+   hdu.verify("fix")
    data=hdu.data
    meta=hdu.header
    mask=np.isnan(data)
