@@ -131,7 +131,7 @@ def NDData_to_HDU(cube,primary=False):
 
 def save_fits_from_cont(filepath,acont):
     if isinstance(acont.primary,Table):
-        raise NotImplementedError("FITS Format do now support tables as primary HDU! You can set primary = None")        
+        raise NotImplementedError("FITS Format do now support tables as primary HDU! You can set primary = None")
     if acont.primary == None:
         phdu=fits.PrimaryHDU()
     else:
@@ -174,6 +174,46 @@ def load_fits_to_cont(filePath,acont):
             acont.primary = acont.tables[0]
         else:
             acont.primary = acont.images[0]
+
+def loadFITS_PrimmaryOnly(fitsfile):
+    hduobject = None
+    hdulist = fits.open(fitsfile)
+    for idx, hdu in enumerate(hdulist):
+        if isinstance(hdu, fits.PrimaryHDU):
+            log.info('Processing PrimaryHDU Object '+str(idx))
+            hduobject = hdu
+            break
+    #Check if hduobject is None??
+    bscale = 1.0
+    bunit = u.Unit('u.Jy/u.beam')
+    bzero = 0.0
+    mask = np.isnan(hduobject.data)
+    if 'BSCALE' in hduobject.header:
+        bscale = hduobject.header['BSCALE']
+    if 'BZERO' in hduobject.header:
+        bzero = hduobject.header['BZERO']
+    if 'BUNIT' in hduobject.header:
+        unit = hduobject.header['BUNIT'].lower().replace('jy','Jy')
+        bunit = u.Unit(unit, format='fits')
+    for item in hduobject.header.items():
+        if item[0].startswith('PC00'):
+            hduobject.header.remove(item[0])
+    coordinateSystem = wcs.WCS(hduobject.header)
+    if len(hduobject.data.shape) == 4:
+        log.info('4D Detected: Assuming RA-DEC-FREQ-STOKES, and dropping STOKES')
+        coordinateSystem.dropaxis(3)
+        hduobject.data = hduobject.data[:, :, :, 0]
+        hduobject.data = (hduobject.data*bscale) + bzero
+    elif len(hduobject.data.shape) == 3:
+        log.info('3D Detected: Assuming RA-DEC-FREQ')
+        hduobject.data = (hduobject.data*bscale) + bzero
+    elif len(hduobject.data.shape) == 2:
+        log.info('2D Detected: Assuming RA-DEC')
+        hduobject.data = (hduobject.data*bscale) + bzero
+    else:
+        log.error('Only 2-4D data allowed')
+        raise TypeError
+    return ndd.NDData(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit)
 
 
 def SAMP_send_fits(filename,longname):
