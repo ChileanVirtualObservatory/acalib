@@ -63,10 +63,50 @@ static PyObject* morphology_differenceImpl(PyObject* self, PyObject* args)
 
 static PyObject* morphology_segmentationImpl(PyObject* self, PyObject* args)
 {
-    return Py_BuildValue("");
+    PyObject* input;
+    if(!PyArg_ParseTuple(args, "O", &input))
+    {
+        return NULL;
+    }
+    PyObject* input_array = PyArray_FROM_OTF(input, NPY_FLOAT64, NPY_IN_ARRAY);
+    if(input_array == NULL)
+    {
+        Py_XDECREF(input_array);
+        return NULL;
+    }
+    int length = (int)PyArray_DIM(input_array, 0);
+    double* input_data = (double*)PyArray_DATA(input_array);
+    double* result = malloc(length*sizeof(double));
+    segmentationImpl(input_data, result, length);
+    Py_DECREF(input_array);
+    long dimensions[1];
+    dimensions[0] = length;
+    PyObject* returnValue = PyArray_SimpleNewFromData(1, dimensions, NPY_FLOAT64, result);
+    ((PyArrayObject*)returnValue)->flags |= NPY_ARRAY_OWNDATA;
+    return returnValue;
 }
 
 static PyObject* morphology_erosionImpl(PyObject* self, PyObject* args)
 {
-    return Py_BuildValue("");
+    PyObject* input;
+    if(!PyArg_ParseTuple(args, "O", &input))
+    {
+        return NULL;
+    }
+    PyObject* input_array = PyArray_FROM_OTF(input, NPY_FLOAT64, NPY_IN_ARRAY);
+    if(input_array == NULL)
+    {
+        Py_XDECREF(input_array);
+        return NULL;
+    }
+    int length = (int)PyArray_DIM(input_array, 0);
+    double* input_data = (double*)PyArray_DATA(input_array);
+    double* result = malloc(length*sizeof(double));
+    erosionImpl(input_data, result, length);
+    Py_DECREF(input_array);
+    long dimensions[1];
+    dimensions[0] = length;
+    PyObject* returnValue = PyArray_SimpleNewFromData(1, dimensions, NPY_FLOAT64, result);
+    ((PyArrayObject*)returnValue)->flags |= NPY_ARRAY_OWNDATA;
+    return returnValue;
 }
