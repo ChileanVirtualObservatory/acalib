@@ -19,7 +19,7 @@ def noise_level(data,mask=None,unit=None):
 
         Returns
         -------
-        rms : float
+        rms : float 
             RMS of data
     """
 
@@ -33,7 +33,7 @@ def noise_level(data,mask=None,unit=None):
 @support_nddata
 def standarize(data, wcs=None, unit=None, mask=None, meta=None):
     """
-        Standarize data:
+        Standarize data: 
 
         Parameters
         ----------
@@ -60,7 +60,7 @@ def standarize(data, wcs=None, unit=None, mask=None, meta=None):
 def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
     """
         Unstandarize data: res = a * data + b
-
+        
 
         Parameters
         ----------
@@ -89,8 +89,8 @@ def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
 
 @support_nddata
 def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=None):
-    """
-        Create a new data with the new flux added.
+    """ 
+        Create a new data with the new flux added. 
 
         Lower and upper are bounds for data. This operation is border-safe and creates a new object at each call.
 
@@ -112,7 +112,7 @@ def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=Non
         Returns
         -------
         NDData structure with new flux added
-
+    
     """
 
     #Please use the OO version data.add(flux) for modifying the data itself.
@@ -124,7 +124,7 @@ def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=Non
 @support_nddata
 def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
     """
-        Simple denoising given a threshold (creates a new object)
+        Simple denoising given a threshold (creates a new object) 
 
         Parameters
         ----------
@@ -139,15 +139,15 @@ def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
         Returns
         -------
         Data denoised
-
+                
     """
-    newdata = core.denoise(data, threshold)
+    newdata = core.denoise(data, threshold.value)
     return NDData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 
 
 @support_nddata
 def world_gaussian(data, mu, P, peak, cutoff, wcs=None):
-    """
+    """ 
         Creates a gaussian flux at mu position (WCS), with P shape, with a maximum value equal to peak,
         and with compact support up to the cutoff contour
 
@@ -159,16 +159,16 @@ def world_gaussian(data, mu, P, peak, cutoff, wcs=None):
             Shape of result
         peak : float
             maximum value
-
+        
         cutoff :
 
         wcs : World Coordinate System data (http://docs.astropy.org/en/stable/wcs/)
 
         Returns
         -------
-
+        
         Tuple of gaussian flux and borders
-
+    
     """
     Sigma = np.linalg.inv(P)
     window = np.sqrt(2 * np.log(peak / cutoff) * np.diag(Sigma)) * axes_units(data, wcs=wcs)
