@@ -7,7 +7,7 @@ except:
     from skimage.filter import threshold_adaptive
 from skimage.measure import label,regionprops
 
-from ._morph import *
+from ._morph import differenceImpl, segmentationImpl, erosionImpl
 
 from astropy.table import Table
 
@@ -39,9 +39,9 @@ def rms(data, mask=None):
 def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
     """
     Heurustic that uses the inflexion point of the thresholded RMS to estimate where signal is dominant w.r.t. noise
-    
+
     Parameters
-    ---------- 
+    ----------
     data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
@@ -49,7 +49,7 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
 
     noise : float (default=None)
         Noise level, if not given will use rms of the data.
-    
+
     points : (default=1000)
 
     full_output : boolean (default=False)
@@ -59,7 +59,7 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
     --------
 
     "Signal to Noise Radio" value
-    
+
     """
     if noise is None:
         noise = rms(data, mask)
@@ -86,18 +86,18 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
 
 
 def integrate(data, mask=None, axis=(0)):
-    """ 
+    """
     Sums the slices of a cube of data given an axis.
-   
+
     Parameters
-    ----------    
+    ----------
     data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
 
     mask : numpy.ndarray (default = None)
 
     axis : int (default=(0))
-    
+
     Returns
     -------
      A numpy array with the integration results.
@@ -169,7 +169,7 @@ def measure_shape(data, labeled_images, min_freq=None, max_freq=None, wcs=None):
 def spectra_sketch(data, samples, random_state=None):
     """
     Create the sketch spectra using pixel samples.
-    
+
     Parameters
     ----------
     data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
@@ -178,7 +178,7 @@ def spectra_sketch(data, samples, random_state=None):
     samples : Number of pixel samples(int) used for the sketch.
 
     random_state : (default=None)
-    
+
     Returns
     -------
 
@@ -240,18 +240,18 @@ def _accumulating(pixels):
 
 
 def _differenting(cumPixels):
-    d = diff(cumPixels)
+    d = differenceImpl(cumPixels)
     return d
 
 
 def _segmenting(diff):
-    boxing = seg(diff)
+    boxing = segmentationImpl(diff)
 
     return boxing
 
 
 def _erosing(boxing):
-    boxing = eros(boxing)
+    boxing = erosionImpl(boxing)
 
     return boxing
 
@@ -397,15 +397,15 @@ def _kernel_shift(back, kernel, x, y):
 def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None, unit=None):
     """
     Create an image collapsing the frecuency axis
-   
+
     Parameters
     ----------
     data : numpy.ndarray
-        Astronomical 2D image 
+        Astronomical 2D image
 
     slice : slice object
         Sector to be collapsed
-    
+
     Returns
     -------
     image (NDData): 2D-Array with the stacked cube.
