@@ -11,7 +11,8 @@ static PyMethodDef module_methods[] =
 {
     {"differenceImpl", morphology_differenceImpl, METH_VARARGS, NULL},
     {"segmentationImpl", morphology_segmentationImpl, METH_VARARGS, NULL},
-    {"erosionImpl", morphology_erosionImpl, METH_VARARGS, NULL}
+    {"erosionImpl", morphology_erosionImpl, METH_VARARGS, NULL},
+    {NULL, NULL, 0, NULL}
 };
 
 PyMODINIT_FUNC initmorph()
@@ -29,7 +30,7 @@ static PyObject* morphology_differenceImpl(PyObject* self, PyObject* args)
 {
     PyObject* cumulativeSum_object;
     //Parse input from python
-    if(!PyArg_ParseTuple(args, "0", &cumulativeSum_object))
+    if(!PyArg_ParseTuple(args, "O", &cumulativeSum_object))
     {
         return NULL;
     }
