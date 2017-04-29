@@ -1,4 +1,5 @@
 #include "morph.h"
+#include <stdio.h>
 
 void differenceImpl(double* cumulativeSum, double* difference, int n)
 {
@@ -13,11 +14,13 @@ void segmentationImpl(double* diff, double* boxing, int n)
 {
     for(int i = 1; i < n-1; i++)
     {
-        if((diff[i] < diff[i-1] && diff[i] < diff[i+1]) || (diff[i] > diff[i-1] && diff[i] > diff[i+1]))
+        boxing[i] = 1;
+        if( ((diff[i] < diff[i-1]) && (diff[i] < diff[i+1])) || ((diff[i] > diff[i-1]) && (diff[i] > diff[i+1])) )
         {
             boxing[i] = 0;
         }
     }
+	return ;
 }
 
 void erosionImpl(double* boxing, double* blocking, int n)
