@@ -202,7 +202,7 @@ def loadFITS_PrimmaryOnly(fitsfile):
     if len(hduobject.data.shape) == 4:
         log.info('4D Detected: Assuming RA-DEC-FREQ-STOKES, and dropping STOKES')
         coordinateSystem.dropaxis(3)
-        hduobject.data = hduobject.data[:, :, :, 0]
+        hduobject.data = hduobject.data.sum(axis=0)*bscale+bzero
         hduobject.data = (hduobject.data*bscale) + bzero
     elif len(hduobject.data.shape) == 3:
         log.info('3D Detected: Assuming RA-DEC-FREQ')
