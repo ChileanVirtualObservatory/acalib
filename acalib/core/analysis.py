@@ -202,6 +202,7 @@ def spectra_sketch(data, samples, random_state=None):
         x_ = np.random.choice(P_x_range, 1)
         y_ = np.random.choice(P_y_range, 1)
         pixel = data[:, y_, x_]
+        pixel = np.ascontiguousarray(pixel, dtype=np.float64)
         pixel_masked = _pixel_processing(pixel)
         spectra += pixel_masked
     spectra = _pixel_processing(spectra)
@@ -246,7 +247,7 @@ def _differenting(cumPixels):
 
 def _segmenting(diff):
     boxing = segmentationImpl(diff)
-
+    boxing = boxing.astype(np.float32)
     return boxing
 
 
