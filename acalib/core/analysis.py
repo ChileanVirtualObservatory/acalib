@@ -226,36 +226,13 @@ def spectra_sketch(data, samples, random_state=None):
 
     return spectra, slices
 
-
 def _pixel_processing(pixels):
     pixels = pixels.astype(np.float64)
-    acum = _accumulating(pixels)
-    diff = _differenting(acum)
-    boxing = _segmenting(diff)
-    boxing = _erosing(boxing)
-    return _masking(boxing, pixels)
-
-
-def _accumulating(pixels):
-    return np.cumsum(pixels)
-
-
-def _differenting(cumPixels):
-    d = differenceImpl(cumPixels)
-    return d
-
-
-def _segmenting(diff):
+    acum = np.cumsum(pixels)
+    diff = differenceImpl(acum)
     boxing = segmentationImpl(diff)
-    boxing = boxing.astype(np.float32)
-    return boxing
-
-
-def _erosing(boxing):
     boxing = erosionImpl(boxing)
-
-    return boxing
-
+    return _masking(boxing,pixels)
 
 def _masking(boxing, pixels):
     return boxing.reshape(-1) * pixels.reshape(-1)
