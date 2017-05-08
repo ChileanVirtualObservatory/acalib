@@ -8,6 +8,22 @@ from acalib import core
 # axes_names used in formatting
 @support_nddata
 def axes_names(data,wcs=None):
+    """
+        Get the axes's names.
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+
+        Returns
+        -------
+        result: numpy.ndarray
+            Numpy ndarray with the axes's names from the WCS.
+
+    """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -18,6 +34,30 @@ from acalib.upi.formatting import _unitize, _world_table_creator
 
 @support_nddata
 def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
+    """
+        Get the axes's names.
+
+        Parameters
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        mask : numpy.ndarray
+            Mask for data.
+        unit : astropy.units.Unit
+            Astropy unit (http://docs.astropy.org/en/stable/units/).
+        lower : tuple
+            Start coordinate from where to cut.
+        upper : tuple
+            Coordinate to end cut.
+
+        Returns
+        -------
+        result: astropy.nddata.NDData.
+            data cut from lower to upper.
+
+    """
     # Check for NDDataSlicing... maybe this is already done by astropy.nddata package.
     mslab = core.slab(data, lower, upper)
     scube = data[mslab]
@@ -26,7 +66,26 @@ def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
 
 @support_nddata
 def extent(data,wcs=None,lower=None,upper=None):
-    """ Get axes extent  """
+    """
+        Get the axes extent.
+
+        Parameters
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        lower : (M,N) or (M,N,Z) tuple of int
+            Start coordinate in data
+        upper : (M,N) or (M,N,Z) tuple of int
+            End coordinate in data
+        
+        Returns
+        -------
+        result: (M, N) tuple of astropy.units.quantity.Quantity
+            Axes extent
+
+    """
     #TODO: These can be a decorator
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -43,7 +102,22 @@ def extent(data,wcs=None,lower=None,upper=None):
 
 @support_nddata
 def center(data,wcs=None):
-    """ Get center of the data"""
+    """
+        Get center of the data
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        
+        Returns
+        -------
+        result: astropy.units.quantity.Quantity
+            Center of the data
+
+    """
     #TODO: These can be a decorator
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -53,7 +127,22 @@ def center(data,wcs=None):
 
 @support_nddata
 def axes_units(data,wcs=None):
-    """ Get units of the axes"""
+    """
+        Get units of the axes
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        
+        Returns
+        -------
+        result: (M,N) or (M,N,Z) numpy.ndarray
+            Vector with the units of the axes
+
+    """
     #TODO: These can be a decorator (
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -63,7 +152,22 @@ def axes_units(data,wcs=None):
 
 @support_nddata
 def resolution(data,wcs=None):
-    """ Get the resolution of data"""
+    """
+        Get the resolution of data
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        
+        Returns
+        -------
+        result: (M,N) or (M,N,Z) numpy.ndarray
+            Resolution of the data
+
+    """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -72,7 +176,30 @@ def resolution(data,wcs=None):
 
 @support_nddata
 def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
-    """ Get the spectral velocities from frequencies fqs given a rest frequency (by default search for it in the WCS). If fqs is None, then frequencies indices (fqis) need to be given.
+    """
+        Get the spectral velocities from frequencies fqs given a rest
+        frequency (by default search for it in the WCS). If fqs is None,
+        then frequencies indices (fqis) need to be given.
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        fqs : astropy.units.quantity.Quantity
+            Array of frequencies with units.
+        fqis : list of integers
+            Array of frequencies indices
+        restfrq : astropy.units.quantity.Quantity
+            Rest frequency
+        
+        Returns
+        -------
+        result: astropy.units.quantity.Quantity
+            Array of Spectral velocities.
+
+
     """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
@@ -93,7 +220,26 @@ def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
 
 @support_nddata
 def features(data,wcs=None,lower=None,upper=None):
-    """ Creates an array with WCS axea in features format """
+    """
+        Creates an array with WCS axea in features format
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        lower : (M,N) or (M,N,Z) tuple of integers
+            Start coordinate in data.
+        upper : (M,N) or (M,N,Z) tuple of integers
+            End coordinate in data.
+        
+        Returns
+        -------
+        result: astropy.table.Table
+            Table with WCS information of a section from the data.
+
+    """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -105,7 +251,26 @@ def features(data,wcs=None,lower=None,upper=None):
 @support_nddata
 # TODO: Consider using "box" structure rather than up and low
 def opening(data,center,window,wcs=None):
-    """ Field of view (center +- window) converted to indices """
+    """
+        Field of view (center +- window) converted to indices
+
+        Parameters
+        ----------            
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            Astronomical data cube.
+        center : astropy.units.quantity.Quantity
+            Center of the field of view in WCS.
+        window : astropy.units.quantity.Quantity
+            Window for the field in WCS.
+        wcs : astropy.wcs.wcs.WCS
+            World Coordinate System to use.
+        
+        Returns
+        -------
+        result: ((M1,N1,Z1),(M2,N2,Z2)) tuple of tuple of ints
+            
+
+    """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -125,89 +290,3 @@ def opening(data,center,window,wcs=None):
     return (lower,upper)
     #values=np.vstack((lower,upper))
     #return _pix_table_creator(values,wcs)
-    
-
-
-### DEPRECATED ####
-#TODO: try to merge with axes_ranges and get_velocities!
-#@support_nddata
-#def axis_range(data,wcs,axis):
-#    lower=wcs.wcs_pix2world([[0,0,0]], 0) - wcs.wcs.cdelt/2.0
-#    shape=data.shape
-#    shape=[shape[::-1]]
-#    upper=wcs.wcs_pix2world(shape, 1) + wcs.wcs.cdelt/2.0
-#    return (lower[0][axis],upper[0][axis])
-#def ndslice(ndd, lower, upper):
-#    """ 
-#    N-Dimensional slicing.
-#    
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#    
-#    Returns:
-#        A sliced astropy.nddata.NDDataArray object.
-#        
-#    """
-#    lower = lower if lower is not None else np.zeros(ndd.ndim)
-#    upper = upper if upper is not None else ndd.shape
-#    return ndd[[slice(min(a,b), max(a,b)+1) for a,b in zip(lower, upper)]]
-#
-#def adjust_index(relative, origin):
-#    """
-#    Adjusts an index relative to a subarray to an absolute
-#    index in the superarray.
-#    
-#    Arguments:
-#        origin   -- an n-dimensional index of a point as an n-tuple.
-#                    It should be the origin from which the relative
-#                    index was computed.
-#        relative -- an n-dimensional index of a point as an n-tuple.
-#                    The index to be adjusted.
-#    
-#    Returns:
-#        The relative index adjusted to the superarray as an n-tuple.
-#    """
-#    return tuple(np.array(origin) + np.array(relative))
-
-#def index_of_max(ndd, lower=None, upper=None):
-#    """ 
-#    Index of maximum value in an m-dimensional subarray from 
-#    an n-dimensional array, specified by lower and upper.
-#    
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#    
-#    Returns:
-#        A tuple with the maximum value found in the m-dimensional
-#        subarray and its index in the n-dimensional superarray.
-#        
-#    """
-#    ndd = ndslice(ndd, lower, upper)
-#    index = np.unravel_index(ndd.data.argmax(), ndd.data.shape)
-#    value = ndd.data[index]
-#    return (value, adjust_index(index, lower))
-
-#def index_of_min(ndd, lower=None, upper=None):
-#    """ 
-#    Index of minimum value in an m-dimensional subarray from 
-#    an n-dimensional array, specified by lower and upper.
-#    
-#    Arguments:
-#        ndd   -- an astropy.nddata.NDDataArray object.
-#        lower -- n-dimensional point as an n-tuple.
-#        upper -- n-dimensional point as an n-tuple.
-#    
-#    Returns:
-#        A tuple with the minimum value found in the m-dimensional
-#        subarray and its index in the n-dimensional superarray.
-#        
-#    """
-#    ndd = ndslice(ndd, lower, upper)
-#    index = np.unravel_index(ndd.data.argmin(), ndd.data.shape)
-#    value = ndd.data[index]
-#    return (value, adjust_index(index, lower))
-
