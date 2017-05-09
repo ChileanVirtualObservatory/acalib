@@ -14,14 +14,34 @@ static PyMethodDef module_methods[] =
     {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC initmorph()
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef module_definition =
 {
+    PyModuleDef_HEAD_INIT,
+    "morph",
+    NULL,
+    -1,
+    module_methods
+};
+
+PyMODINIT_FUNC PyInit_morph()
+#else
+PyMODINIT_FUNC initmorph()
+#endif
+{
+    #if PY_MAJOR_VERSION >= 3
+    PyObject* module = PyModule_Create(&module_definition);
+    #else
     PyObject* module = Py_InitModule3("morph", module_methods, NULL);
+    #endif
     if(module == NULL)
     {
         return;
     }
     import_array();
+    #if PY_MAJOR_VERSION >= 3
+    return module;
+    #endif
 }
 
 static PyObject* morphology_differenceImpl(PyObject* self, PyObject* args)
