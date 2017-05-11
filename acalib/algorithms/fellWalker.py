@@ -1,7 +1,7 @@
 import numpy as np
-from acalib.cupid import pycupid
+import acalib
+import pycupid
 from astropy.nddata import *
-
 from .algorithm import Algorithm
 
 
@@ -32,9 +32,24 @@ def _struct_builder(caa):
 
 @support_nddata
 def _fellwalker(data, config, wcs=None, mask=None, unit=None, rms=0.0):
-    data = data.astype(np.float64)
-    ret = pycupid.fellwalker(data, config, rms)
-    return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+    if len(data.shape) == 4:
+        if data.shape[0] == 1:
+            cube = data[0,:,:,:]
+            if data.shape[1] == 1:
+                cube = data[0,:,:]
+    elif len(data.shape) == 3:
+        if data.shape[0] == 1:
+            cube = data[0,:,:]
+    else:
+        cube = data
+
+    ret = pycupid.fellwalker(cube, rms,config=config)
+    
+    if ret is not None:
+        ret[ret == ret.min()] = 0
+        return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+    else:
+        return None
 
 
 class FellWalker(Algorithm):
@@ -46,16 +61,22 @@ class FellWalker(Algorithm):
             self.config['VELORES'] =  2.0  
 
     def run(self, data):
+        if len(data.data.shape) > 4:
+            raise Exception("Algorithm only support 2D and 3D Matrices")
         # if rms not in config, estimate it
+
         if 'RMS' not in self.config:
-            rms = rms(data)
+            rms = acalib.rms(data.data)
         else:
             rms = self.config['RMS']
 
         # computing the CAA through CUPID's fellwalker clumping algorithm
-        caa = _fellwalker(data, self.config, rms=rms)
+        caa = _fellwalker(data, self.config,rms = rms)
 
         # computing asocciated structures
-        clumps = _struct_builder(caa.data)
+        if caa:
+            clumps = _struct_builder(caa.data)
 
-        return caa,clumps
+            return caa,clumps
+        else:
+            return None,None
