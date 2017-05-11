@@ -39,7 +39,6 @@ def setup_package():
         run_build = False
     #Building packages
     if check_build() or run_build:
-        build_and_move('acalib/cupid')
         build_and_move('acalib/core/_morph')
 
     setup(
