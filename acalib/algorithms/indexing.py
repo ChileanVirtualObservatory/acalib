@@ -2,6 +2,10 @@ import acalib
 from .algorithm import Algorithm
 from .gms import GMS
 
+import dask
+import dask.bag as db
+import distributed
+import time
 
 class Indexing(Algorithm):
     """
@@ -10,8 +14,8 @@ class Indexing(Algorithm):
     Parameters
     ----------
     params : dict (default = None)
-        Algorithm parameters, allowed keys:    
-        
+        Algorithm parameters, allowed keys:
+
         P : float (default = 0.05)
             Thresholding quantile for multiscale segmentation.
         PRECISION : float (default = 0.02)
@@ -19,14 +23,14 @@ class Indexing(Algorithm):
         SAMPLES : int (default = 1000)
             Number of pixels used to generate the spectra sketch.
         RANDOM_STATE : int (default = None)
-            Seed for random smpling. 
+            Seed for random smpling.
 
 
     References
     ----------
-    
+
     .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. Astronomy and Computing, 14, 23-34.
-    
+
     """
     def default_params(self):
         if 'P' not in self.config:
@@ -43,7 +47,7 @@ class Indexing(Algorithm):
             Run the indexing algorithm on a given data cube.
 
             Parameters
-            ----------            
+            ----------
             data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
                 Astronomical data cube.
 
@@ -88,3 +92,31 @@ class Indexing(Algorithm):
         c.images.insert(0, data)
         c.primary = c.images[0]
         return c
+
+class IndexingDask(Algorithm):
+    def default_params(self):
+        if 'P' not in self.config:
+            self.config['P'] = 0.05
+        if 'PRECISION' not in self.config:
+            self.config['PRECISION'] = 0.02
+        if 'RANDOM_STATE' not in self.config:
+            self.config['RANDOM_STATE'] = None
+        if 'SAMPLES' not in self.config:
+            self.config['SAMPLES'] = 1000
+        if 'N_PARTITIONS' not in self.config:
+            self.config['N_PARTITIONS'] = None
+        if 'PARTITION_SIZE' not in self.config:
+            self.config['PARTITION_SIZE'] = None
+        if 'SCHEDULER_ADDR' not in self.config:
+            self.config['SCHEDULER_ADDR'] = None #Raise Error
+
+    def computeIndexing(self, data):
+        pass
+
+    def run(self, collection):
+        client = distributed.Client(self.config['SCHEDULER_ADDR'])
+        data = db.from_sequence(collection, self.config['PARTITION_SIZE'], self.config['N_PARTITIONS'])
+        indexing = lambda x: self.computeIndexing(x)
+        result = data.map(indexing).compute()
+        client.gather(result)
+        client.shutdown()
