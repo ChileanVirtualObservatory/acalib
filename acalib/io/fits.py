@@ -202,7 +202,7 @@ def loadFITS_PrimmaryOnly(fitsfile):
     coordinateSystem = wcs.WCS(hduobject.header)
     if len(hduobject.data.shape) == 4:
         log.info('4D Detected: Assuming RA-DEC-FREQ-STOKES, and dropping STOKES')
-        coordinateSystem.dropaxis(3)
+        coordinateSystem = coordinateSystem.dropaxis(3)
         hduobject.data = hduobject.data.sum(axis=0)*bscale+bzero
         hduobject.data = (hduobject.data*bscale) + bzero
     elif len(hduobject.data.shape) == 3:
