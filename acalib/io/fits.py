@@ -176,9 +176,9 @@ def load_fits_to_cont(filePath,acont):
         else:
             acont.primary = acont.images[0]
 
-def loadFITS_PrimmaryOnly(fitsfile):
+def loadFITS_PrimmaryOnly(fitsBinaryData):
     hduobject = None
-    hdulist = fits.open(fitsfile)
+    hdulist = fits.HDUList.fromfile(fitsBinaryData)
     for idx, hdu in enumerate(hdulist):
         if isinstance(hdu, fits.PrimaryHDU):
             log.info('Processing PrimaryHDU Object '+str(idx))
