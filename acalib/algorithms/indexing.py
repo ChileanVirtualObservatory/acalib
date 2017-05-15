@@ -2,10 +2,9 @@ import acalib
 from .algorithm import Algorithm
 from .gms import GMS
 
-import dask
-import dask.bag as db
 import distributed
-import time
+import dask.bag as db
+from astropy import log
 
 class Indexing(Algorithm):
     """
@@ -94,6 +93,8 @@ class Indexing(Algorithm):
         return c
 
 class IndexingDask(Algorithm):
+    #Create master scheduler => dask-scheduler
+    #Add slave to scheduler => dask-worker --nprocs [N Processes] [SCHEDULER_ADDR]
     def default_params(self):
         if 'P' not in self.config:
             self.config['P'] = 0.05
@@ -108,15 +109,36 @@ class IndexingDask(Algorithm):
         if 'PARTITION_SIZE' not in self.config:
             self.config['PARTITION_SIZE'] = None
         if 'SCHEDULER_ADDR' not in self.config:
-            self.config['SCHEDULER_ADDR'] = None #Raise Error
+            self.config['SCHEDULER_ADDR'] = '127.0.0.1:8786'
 
     def computeIndexing(self, data):
-        pass
+        gmsParams = {'P': self.config['P'], 'PRECISION': self.config['PRECISION']}
+        gms = GMS(gmsParams)
+        spectra, slices = acalib.core.spectra_sketch(data.data, self.config["SAMPLES"], self.config["RANDOM_STATE"])
+        result = []
+        for slice in slices:
+            slice_stacked = acalib.core.vel_stacking(data, slice)
+            labeled_images = gms.run(slice_stacked)
+            freq_min = None
+            freq_max = None
+            if data.wcs:
+                freq_min = float(data.wcs.all_pix2world(0, 0, slice.start, 1)[2])
+                freq_max = float(data.wcs.all_pix2world(0, 0, slice.stop, 1)[2])
+            table = acalib.core.measure_shape(slice_stacked, labeled_images, freq_min, freq_max)
+            if len(table) > 0:
+                result.append(table)
+        return result
+
 
     def run(self, collection):
+        log.info('Connecting to dask-scheduler at ['+self.config['SCHEDULER_ADDR']+']')
         client = distributed.Client(self.config['SCHEDULER_ADDR'])
-        data = db.from_sequence(collection, self.config['PARTITION_SIZE'], self.config['N_PARTITIONS'])
         indexing = lambda x: self.computeIndexing(x)
-        result = data.map(indexing).compute()
-        client.gather(result)
+        cores = sum(client.ncores().values())
+        log.info('Computing "Indexing" on '+str(len(collection))+' elements with '+str(cores)+' cores')
+        data = db.from_sequence(collection, self.config['PARTITION_SIZE'], self.config['N_PARTITIONS'])
+        results = data.map(indexing).compute()
+        results = client.gather(results)
+        log.info('Removing dask-client')
         client.shutdown()
+        return results

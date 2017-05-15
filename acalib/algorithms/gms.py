@@ -96,7 +96,6 @@ class GMS(Algorithm):
         #Iterate over radious dividing it by 2
         # in each iteration
         while (r > rMin):
-            print(r)
             background = np.zeros((rows, cols))
 
             #Label the previous segmentation
