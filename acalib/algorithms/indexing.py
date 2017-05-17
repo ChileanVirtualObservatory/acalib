@@ -162,7 +162,7 @@ class IndexingDask(Algorithm):
         log.info('Computing "Indexing" on '+str(len(files))+' elements with '+str(cores)+' cores')
         data = db.from_sequence(files, self.config['PARTITION_SIZE'], self.config['N_PARTITIONS'])
         data = data.map(load).map(denoise)
-        results = data.map(indexing).compute
+        results = data.map(indexing).compute()
         results = client.gather(results)
         log.info('Removing dask-client')
         client.shutdown()
