@@ -40,7 +40,7 @@ class lineDB:
             self.pointer = lite.connect(self.name+".sqlite")
             self.connected = True
         except lite.Error as e:
-            print((e.args[0]))
+            print(e.args[0])
             sys.exit(1)
 
     def disconnect(self):
@@ -173,7 +173,7 @@ class lineDB:
                         else:
                             command = command + str(0)
                     else:
-                        print((type(value).__name__))
+                        print(type(value).__name__)
                         print("Data Type not supported. Data not inserted in database. Exiting now!")
                         sys.exit()
                 counter+=1

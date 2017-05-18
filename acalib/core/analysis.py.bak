@@ -191,9 +191,9 @@ def spectra_sketch(data, samples, random_state=None):
 
     dims = data.shape
     P_x = dims[2]
-    P_x_range = list(range(P_x))
+    P_x_range = range(P_x)
     P_y = dims[1]
-    P_y_range = list(range(P_y))
+    P_y_range = range(P_y)
     frec = dims[0]
 
     spectra = np.zeros(frec)

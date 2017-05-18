@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 from astropy import log
 from astropy.table.table import Table
-import urllib.request, urllib.parse, urllib.error
+import urllib
 import shutil
 import os.path
 from acalib import *

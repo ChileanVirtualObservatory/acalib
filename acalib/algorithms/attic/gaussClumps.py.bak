@@ -50,7 +50,7 @@ class GaussClumps:
       # The maximum allowed number of failed fits between succesful fits.
       self.par['MAXSKIP']=10
       # Maximum Clumps
-      self.par['MAXCLUMPS']=sys.maxsize
+      self.par['MAXCLUMPS']=sys.maxint
       # The iterative process ends when "npad" consecutive clumps all had peak
       # values below "peak_thresh" or all had areas below "area_thresh".
       self.par['NPAD']=10
@@ -471,8 +471,8 @@ class GaussClumps:
       try:
          off=np.min(vlow,vup) + rms
       except ValueError:
-        print((vlow,vup,rms))
-        print((self.imax))
+        print(vlow,vup,rms)
+        print(self.imax)
         self.data.data[self.imax]
         sys.exit()
       if vlow < vup:
@@ -482,7 +482,7 @@ class GaussClumps:
            cand=cand[0][0]
          except IndexError:
            print(cand)
-           print((plow, self.imax))
+           print(plow, self.imax)
            sys.exit()
          cand-=vlow
          cand=cand[::-1]
@@ -547,7 +547,7 @@ class GaussClumps:
       fvel=self.fobs[2]/velres
       guess[8]=np.sqrt(fvel*fvel- 1.0 )*velres
       if np.isnan(guess[8]):
-         print((fvel,self.fobs[2],fvel*fvel))
+         print(fvel,self.fobs[2],fvel*fvel)
       guess[9]=0.0
       guess[10]=0.0
       
@@ -578,7 +578,7 @@ class GaussClumps:
 
       FWHM_TO_SIGMA = 1. / (8 * np.log(2))**0.5
       # Set the RMS, or automatically find an estimate for it
-      if 'RMS' not in self.par:
+      if not self.par.has_key('RMS'):
          rms=cube.rms()
          self.par['RMS']=rms
       
