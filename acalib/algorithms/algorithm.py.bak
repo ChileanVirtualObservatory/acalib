@@ -14,7 +14,7 @@ class Algorithm(object):
         """
         self.config = dict()
         if params is not None:
-            for key,value in list(params.items()):
+            for key,value in params.items():
                 self.config[key] = value
         self.default_params()
 

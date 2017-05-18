@@ -42,7 +42,7 @@ def HDU_to_NDData(hdu):
    except KeyError:
      bunit=u.Unit("u.Jy/u.beam")
    rem_list=[]
-   for i in list(meta.items()):
+   for i in meta.items():
       if i[0].startswith('PC00'):
          rem_list.append(i[0])
    for e in rem_list:
@@ -100,7 +100,7 @@ def Table_to_HDU(tab):
     #    dtmp = [col.filled(None) for col in six.itervalues(self.columns)]
     hdu=fits.BinTableHDU.from_columns(np.array(tab))
     if tab.meta is not None:
-        for k, v in list(tab.meta.items()):
+        for k, v in tab.meta.items():
             hdu.header[k] = v
     return hdu
 
@@ -126,7 +126,7 @@ def NDData_to_HDU(cube,primary=False):
         hdu = fits.ImageHDU(cube.data,header=header)
 
     if cube.meta is not None:
-        for k, v in list(cube.meta.items()):
+        for k, v in cube.meta.items():
             hdu.header[k] = v
     return hdu
 
@@ -196,7 +196,7 @@ def loadFITS_PrimmaryOnly(fitsfile):
     if 'BUNIT' in hduobject.header:
         unit = hduobject.header['BUNIT'].lower().replace('jy','Jy')
         bunit = u.Unit(unit, format='fits')
-    for item in list(hduobject.header.items()):
+    for item in hduobject.header.items():
         if item[0].startswith('PC00'):
             hduobject.header.remove(item[0])
     coordinateSystem = wcs.WCS(hduobject.header)

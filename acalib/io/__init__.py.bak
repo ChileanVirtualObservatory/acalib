@@ -3,21 +3,20 @@ from astropy.units.format.latex import Latex
 from .fits import *
 from .graph import *
 from .container import *
-import collections
 
 
 # TODO: This maybe moved to a file
 
 def jovial_array_styler(arr):
     lrep = getattr(arr, "_repr_latex_", None)
-    if isinstance(lrep, collections.Callable):
+    if callable(lrep):
         return arr._repr_latex_()[1:-1]
     return repr(arr)
 
 
 def jovial_array_makeup(a):
     lrep = getattr(a, "_repr_latex_", None)
-    if isinstance(lrep, collections.Callable):
+    if callable(lrep):
         return a._repr_latex_()
     latex_value = np.array2string(
         a.view(),

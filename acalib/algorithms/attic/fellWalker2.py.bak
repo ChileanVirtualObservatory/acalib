@@ -21,7 +21,7 @@ class FellWalker:
       # Beam resolution in pixels
       self.par['FWHMBEAM'] = 2.0
       # Maximum Clumps
-      self.par['MAXCLUMPS'] = sys.maxsize
+      self.par['MAXCLUMPS'] = sys.maxint
       # The lower threshold for clump values to a user-specified multiple of the RMS noise.
       self.par['THRESH'] = 1.0
 
@@ -140,7 +140,7 @@ class FellWalker:
          cols[clumpId]=dict()
       shape=data.shape
 
-      for clumpId,pixels in list(clump.items()):
+      for clumpId,pixels in clump.items():
          peaks[clumpId]=0. #max value in current clump
          for pos in pixels:
             #First, find the peak of clump
@@ -199,7 +199,7 @@ class FellWalker:
             """
             topcol=0.
             neighId=-1
-            for tmpId,col in list(cols[clumpId].items()):
+            for tmpId,col in cols[clumpId].items():
                if col>topcol:
                   topcol=col
                   neighId=tmpId
@@ -453,7 +453,7 @@ class FellWalker:
       minSize = self.par['MINSIZE']
       #deleted=list() #deleted id's
 
-      for clumpId,pixels in list(clump.items()):
+      for clumpId,pixels in clump.items():
          if len(pixels)<=minSize:
             #Set pixels as unusable
             for pos in pixels:
@@ -509,7 +509,7 @@ class FellWalker:
          #positions where they were changes
          diff = caa!=_caa
          if not np.any(diff): del _caa; continue
-         positions = list(map(tuple,np.array(np.where(diff)).T))
+         positions = map(tuple,np.array(np.where(diff)).T)
 
          #update clump struct
          for pos in positions:

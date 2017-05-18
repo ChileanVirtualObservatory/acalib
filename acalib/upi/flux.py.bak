@@ -176,7 +176,7 @@ def world_gaussian(data, mu, P, peak, cutoff, wcs=None):
     if np.any(np.array(upper - lower) <= 0):
         return None, lower, upper
     feat = features(data, wcs=wcs, lower=lower, upper=upper)
-    feat = np.array(list(feat.columns.values()))
+    feat = np.array(feat.columns.values())
     mu = np.array([x.value for x in mu])
     res = core.gaussian_function(mu, P, feat, peak)
     # TODO Not generic
