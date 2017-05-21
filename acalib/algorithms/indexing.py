@@ -58,7 +58,6 @@ class Indexing(Algorithm):
         else:
             wcs = None
 
-        c = acalib.Container()
         params = {"P":self.config["P"], "PRECISION":self.config["PRECISION"]}
         gms = GMS(params)
 
