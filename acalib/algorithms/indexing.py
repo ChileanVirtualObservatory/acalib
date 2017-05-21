@@ -111,14 +111,12 @@ class IndexingDask(Algorithm):
             self.config['PARTITION_SIZE'] = None
         if 'SCHEDULER_ADDR' not in self.config:
             self.config['SCHEDULER_ADDR'] = '127.0.0.1:8786'
-        if 'HADOOP_ADDR' not in self.config:
-            self.config['HADOOP_ADDR'] = None
 
     def computeIndexing(self, data):
         gmsParams = {'P': self.config['P'], 'PRECISION': self.config['PRECISION']}
         gms = GMS(gmsParams)
         spectra, slices = acalib.core.spectra_sketch(data.data, self.config["SAMPLES"], self.config["RANDOM_STATE"])
-        result = [[],[]]
+        result = []
         for slice in slices:
             slice_stacked = acalib.core.vel_stacking(data, slice)
             labeled_images = gms.run(slice_stacked)
@@ -129,24 +127,14 @@ class IndexingDask(Algorithm):
                 freq_max = float(data.wcs.all_pix2world(0, 0, slice.stop, 1)[2])
             table = acalib.core.measure_shape(slice_stacked, labeled_images, freq_min, freq_max)
             if len(table) > 0:
-                result[0].append(table)
-                result[1].append(slice_stacked)
-                result[1].extend(labeled_images)
+                result.append(table)
         return result
 
-    def loadData(self, filename):
-        if self.config['HADOOP_ADDR']:
-            pass
-        else:
-            binaryBuffer = open(filename, 'rb')
-            return acalib.io.loadFITS_PrimmaryOnly(binaryBuffer)
-
     def checkAbsoluteLocalFilePaths(self, files):
-        if not self.config['HADOOP_ADDR']:
-            for f in files:
-                if not os.path.isabs(f):
-                    log.error('FITS file path should be absolute when running in local-filesystem mode')
-                    raise ValueError('FITS file path should be absolute when running in local-filesystem mode')
+        for f in files:
+            if not os.path.isabs(f):
+                log.error('FITS file path should be absolute when running in local-filesystem mode')
+                raise ValueError('FITS file path should be absolute when running in local-filesystem mode')
 
     def run(self, files):
         self.checkAbsoluteLocalFilePaths(files)
@@ -154,7 +142,7 @@ class IndexingDask(Algorithm):
         client = distributed.Client(self.config['SCHEDULER_ADDR'])
         indexing = lambda x: self.computeIndexing(x)
         indexing.__name__ = 'computeIndexing'
-        load = lambda x: self.loadData(x)
+        load = lambda x: acalib.io.loadFITS_PrimmaryOnly(x)
         load.__name__ = 'loadData'
         denoise = lambda x: acalib.denoise(x, threshold=acalib.noise_level(x))
         denoise.__name__ = 'denoise'
@@ -163,6 +151,7 @@ class IndexingDask(Algorithm):
         data = db.from_sequence(files, self.config['PARTITION_SIZE'], self.config['N_PARTITIONS'])
         data = data.map(load).map(denoise)
         results = data.map(indexing).compute()
+        log.info('Gathering results')
         results = client.gather(results)
         log.info('Removing dask-client')
         client.shutdown()
