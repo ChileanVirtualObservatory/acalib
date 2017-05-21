@@ -40,20 +40,21 @@ class Indexing(Algorithm):
 
     def run(self, data):
         """
-            Run the indexing algorithm on a given data cube.
+            Run the indexing algorithm on a given FITS.
 
             Parameters
             ----------
-            data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
-                Astronomical data cube.
+            data : FITS archive
 
             Returns
             -------
             :class:`~acalib.Container` with the cube slices, segmentated images and region of interest tables for each scale analyzed.
         """
-
-        if data.wcs:
-            wcs = data.wcs
+        c = acalib.Container()
+        c.load_fits(data)
+        cube = c.primary
+        if cube.wcs:
+            wcs = cube.wcs
         else:
             wcs = None
 
@@ -62,11 +63,11 @@ class Indexing(Algorithm):
         gms = GMS(params)
 
 
-        spectra, slices = acalib.core.spectra_sketch(data.data, self.config["SAMPLES"], self.config["RANDOM_STATE"])
+        spectra, slices = acalib.core.spectra_sketch(cube.cube, self.config["SAMPLES"], self.config["RANDOM_STATE"])
 
         pp_slices = []
         for slice in slices:
-            pp_slice = acalib.core.vel_stacking(data, slice)
+            pp_slice = acalib.core.vel_stacking(cube, slice)
             labeled_images = gms.run(pp_slice)
 
             if wcs is not None:
@@ -79,8 +80,12 @@ class Indexing(Algorithm):
             table = acalib.core.measure_shape(pp_slice, labeled_images, freq_min, freq_max)
             if len(table) > 0:
                 c.tables.append(table)
+                print("pp")
                 c.images.append(pp_slice)
+                print(type(pp_slice))
+                print("lb")
                 c.images.extend(labeled_images)
-        c.images.insert(0, data)
+                print(type(labeled_images))
+        c.images.insert(0, cube)
         c.primary = c.images[0]
         return c
