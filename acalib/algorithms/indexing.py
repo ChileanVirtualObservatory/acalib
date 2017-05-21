@@ -10,8 +10,8 @@ class Indexing(Algorithm):
     Parameters
     ----------
     params : dict (default = None)
-        Algorithm parameters, allowed keys:    
-        
+        Algorithm parameters, allowed keys:
+
         P : float (default = 0.05)
             Thresholding quantile for multiscale segmentation.
         PRECISION : float (default = 0.02)
@@ -19,14 +19,14 @@ class Indexing(Algorithm):
         SAMPLES : int (default = 1000)
             Number of pixels used to generate the spectra sketch.
         RANDOM_STATE : int (default = None)
-            Seed for random smpling. 
+            Seed for random smpling.
 
 
     References
     ----------
-    
+
     .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. Astronomy and Computing, 14, 23-34.
-    
+
     """
     def default_params(self):
         if 'P' not in self.config:
@@ -43,7 +43,7 @@ class Indexing(Algorithm):
             Run the indexing algorithm on a given data cube.
 
             Parameters
-            ----------            
+            ----------
             data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
                 Astronomical data cube.
 
@@ -79,12 +79,8 @@ class Indexing(Algorithm):
             table = acalib.core.measure_shape(pp_slice, labeled_images, freq_min, freq_max)
             if len(table) > 0:
                 c.tables.append(table)
-                print("pp")
                 c.images.append(pp_slice)
-                print(type(pp_slice))
-                print("lb")
                 c.images.extend(labeled_images)
-                print(type(labeled_images))
         c.images.insert(0, data)
         c.primary = c.images[0]
         return c
