@@ -176,14 +176,16 @@ def load_fits_to_cont(filePath,acont):
         else:
             acont.primary = acont.images[0]
 
-def loadFITS_PrimmaryOnly(fitspath):
-    hdulist = fits.open(fitspath, lazy_load_hdus=True)
-    log.info('Processing PrimaryHDU Object 0')
-    hduobject = hdulist[0]
-    if hduobject is None:
-        log.error('FITS PrimaryHDU is None')
-        raise ValueError('FITS PrimaryHDU is None')
+def loadFITS_PrimmaryOnly(fitsfile):
+    hduobject = None
+    hdulist = fits.open(fitsfile)
+    for idx, hdu in enumerate(hdulist):
+        if isinstance(hdu, fits.PrimaryHDU):
+            log.info('Processing PrimaryHDU Object '+str(idx))
+            hduobject = hdu
+            break
     hduobject.verify("fix")
+    #Check if hduobject is None??
     bscale = 1.0
     bunit = u.Unit('u.Jy/u.beam')
     bzero = 0.0
@@ -202,7 +204,7 @@ def loadFITS_PrimmaryOnly(fitspath):
     coordinateSystem = wcs.WCS(hduobject.header)
     if len(hduobject.data.shape) == 4:
         log.info('4D Detected: Assuming RA-DEC-FREQ-STOKES, and dropping STOKES')
-        coordinateSystem = coordinateSystem.dropaxis(3)
+        coordinateSystem.dropaxis(3)
         hduobject.data = hduobject.data.sum(axis=0)*bscale+bzero
         hduobject.data = (hduobject.data*bscale) + bzero
     elif len(hduobject.data.shape) == 3:
@@ -213,8 +215,7 @@ def loadFITS_PrimmaryOnly(fitspath):
         hduobject.data = (hduobject.data*bscale) + bzero
     else:
         log.error('Only 2-4D data allowed')
-        raise TypeError('Only 2-4D data allowed')
-    hdulist.close()
+        raise TypeError
     return ndd.NDData(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit)
 
 
