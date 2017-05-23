@@ -49,7 +49,7 @@ class GMS(Algorithm):
         """
         Parameters
         ----------
-        data : (M,N) numpy.ndarray or astropy.nddata.NDData
+        data : (M,N) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Velocity collapsed image
 
         Returns

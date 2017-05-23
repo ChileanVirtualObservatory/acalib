@@ -5,12 +5,12 @@ import astropy.constants as const
 import astropy.wcs as wcs
 import astropy.units as u
 from astropy.table.table import Table
-from astropy.nddata import NDData
-import datetime 
+from astropy.nddata import NDDataRef
+import datetime
 import copy
 
 from acalib import *
-from .convert import * 
+from .convert import *
 
 
 class Universe:
@@ -29,7 +29,7 @@ class Universe:
 
     def add_component(self, source_name, model):
         """
-        To add a component a Component object must be instantiated (model), and added to 
+        To add a component a Component object must be instantiated (model), and added to
         a source called source_name.
         """
         self.sources[source_name].add_component(model)
@@ -48,11 +48,11 @@ class Universe:
                           component.get_velocity().value))
 
         return table
-    
+
     def gen_cube(self, pos, ang_res, fov, freq, spe_res, bw, noise, cutlev):
         """
         Returns a container object where all the sources within the FOV and BW are projected in the
-        primary object (NDData), and with a sources astropy Table and all the parameters of the components
+        primary object (NDDataRef), and with a sources astropy Table and all the parameters of the components
         in the successive tables as extensions
 
         This function needs the following parameters:
@@ -163,7 +163,7 @@ class Universe:
         meta['ORIGIN'] = "ACALIB"
         mywcs=wcs.WCS(meta)
         tab = [self._gen_sources_table()]
-        cube = NDData(data, wcs=mywcs,meta=meta,unit=u.Jy / u.beam)
+        cube = NDDataRef(data, wcs=mywcs,meta=meta,unit=u.Jy / u.beam)
         for source in self.sources:
             log.info('Projecting source ' + source)
             gen_tables = self.sources[source].project(cube, cutlev)
@@ -264,7 +264,7 @@ class Component:
     def set_redshift(self, z):
         """Set the redshift"""
         self.z = z
- 
+
     def get_velocity(self):
         """
         Get radial velocity rvel

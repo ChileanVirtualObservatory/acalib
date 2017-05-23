@@ -47,7 +47,7 @@ def _clumpfind(data, config, wcs=None, mask=None, unit=None, rms=0.0):
     ret = pycupid.clumpfind(cube, rms,config=config)
     if ret is not None:
         ret[ret == ret.min()] = 0
-        return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+        return NDDataRef(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
     else:
         return None
 
@@ -67,11 +67,11 @@ class ClumpFind(Algorithm):
             self.config['IDLALG'] = 0
         if 'MINPIX' not in self.config:
             self.config['MINPIX'] = 10
-        
+
 
     def run(self, data):
         if len(data.data.shape) > 4:
-            raise Exception("Algorithm only support 2D and 3D Matrices") 
+            raise Exception("Algorithm only support 2D and 3D Matrices")
         # if rms not in config, estimate it
         if 'RMS' not in self.config:
             rms = core.rms(data.data)
