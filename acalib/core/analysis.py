@@ -1,7 +1,10 @@
 import numpy as np
 from astropy import log
 from astropy.nddata import support_nddata, NDData
-from skimage.filters import threshold_local
+try:
+    from skimage.filters import threshold_adaptive
+except:
+    from skimage.filter import threshold_adaptive
 from skimage.measure import label,regionprops
 
 from ._morph import differenceImpl, segmentationImpl, erosionImpl
@@ -289,7 +292,7 @@ def _optimal_w(image, p=0.05):
         if tt % 2 == 0:
             tt += 1
 
-        g = threshold_local(f, tt, method='mean', offset=0)
+        g = threshold_adaptive(f, tt, method='mean', offset=0)
         ov = _bg_fg(f, g, bg, fg)
         if (ov < min_ov):
             w = radius

@@ -1,8 +1,10 @@
 import acalib
 
 import numpy as np
-from skimage.filters import threshold_local
-from astropy import log
+try:
+    from skimage.filters import threshold_adaptive
+except:
+    from skimage.filter import threshold_adaptive
 from skimage.measure import label,regionprops
 from skimage.morphology import binary_opening, disk
 from skimage.segmentation import clear_border
@@ -23,12 +25,12 @@ class GMS(Algorithm):
     Gaussian Multiscale Segmentation:
 
     Using a mixture of gaussians make an multiscale segmentation to get the region of interest of a 2D astronomical image.
-
+    
     Parameters
     ----------
     params : dict (default = None)
         Algorithm parameters, allowed keys:
-
+         
         P : float (default = 0.05)
             Thresholding quantile for multiscale segmentation.
         PRECISION : float (default = 0.02)
@@ -36,7 +38,7 @@ class GMS(Algorithm):
 
     References
     ----------
-    .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. Astronomy and Computing, 14, 23-34.
+    .. [1] Araya, M., Candia, G., Gregorio, R., Mendoza, M., & Solar, M. (2016). Indexing data cubes for content-based searches in radio astronomy. Astronomy and Computing, 14, 23-34.   
     """
     def default_params(self):
         if 'P' not in self.config:
@@ -46,15 +48,15 @@ class GMS(Algorithm):
 
 
     def run(self, data):
-        """
+        """        
         Parameters
-        ----------
+        ----------        
         data : (M,N) numpy.ndarray or astropy.nddata.NDData
             Velocity collapsed image
-
+        
         Returns
         ----------
-        List of labeled images.
+        List of labeled images. 
         """
         data,wcs = get_data(data)
 
@@ -81,24 +83,25 @@ class GMS(Algorithm):
         w_max = _optimal_w(image, prob)
         diff = (image - np.min(image)) / (np.max(image) - np.min(image))
 
-        tt = int(w_max * w_max)
+        tt = w_max * w_max
 
         # Initial segmentation
         if tt % 2 == 0:
             tt += 1
-        g = threshold_local(diff, tt, method='mean', offset=0)
+        g = threshold_adaptive(diff, int(tt), method='mean', offset=0)
+
         r = w_max / 2
 
         #Smallest radious for region
         rMin = 2 * np.round(precision)
 
-        #Iterate over radious dividing it by 2
+        #Iterate over radious dividing it by 2 
         # in each iteration
         while (r > rMin):
             background = np.zeros((rows, cols))
-
+            
             #Label the previous segmentation
-            #calculate shape features for each
+            #calculate shape features for each 
             #connected region.
             selem = disk(r)
             sub = binary_opening(g, selem)
@@ -110,14 +113,15 @@ class GMS(Algorithm):
             # Non NNData version (without wcs... lets check if it pass)
             image_list.append(sub)
 
-            #Uses a gaussian mix to fit the region
+            #Uses a gaussian mix to fit the region 
             #then smooth it and remove the gaussian mixture
-            #from the image, uses this new image to continue in next
+            #from the image, uses this new image to continue in next 
             #iteration
             if len(fts) > 0:
                 for props in fts:
                     C_x, C_y = props.centroid
-                    radius = int(np.round(props.equivalent_diameter / 2.))
+
+                    radius = int(props.equivalent_diameter / 2.)
                     kern = 0.01 * np.ones((2 * radius, 2 * radius))
                     krn = _kernelsmooth(x=np.ones((2 * radius, 2 * radius)), kern=kern)
                     krn = np.exp(np.exp(krn))
@@ -131,7 +135,7 @@ class GMS(Algorithm):
             tt = int(r * r)
             if tt % 2 == 0:
                 tt += 1
-            g = threshold_local(diff, tt, method='mean', offset=0)
+            g = threshold_adaptive(diff, tt, method='mean', offset=0)
             r = np.round(r / 2.)
 
         return image_list
