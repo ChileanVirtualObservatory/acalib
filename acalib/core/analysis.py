@@ -288,7 +288,7 @@ def _optimal_w(image, p=0.05):
     min_ov = imagesize
 
     while (radius <= radiusMax):
-        tt = radius * radius
+        tt = int(radius * radius)
         if tt % 2 == 0:
             tt += 1
 

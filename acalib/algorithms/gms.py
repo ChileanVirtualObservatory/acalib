@@ -88,7 +88,7 @@ class GMS(Algorithm):
         # Initial segmentation
         if tt % 2 == 0:
             tt += 1
-        g = threshold_adaptive(diff, tt, method='mean', offset=0)
+        g = threshold_adaptive(diff, int(tt), method='mean', offset=0)
 
         r = w_max / 2
 
@@ -121,7 +121,7 @@ class GMS(Algorithm):
                 for props in fts:
                     C_x, C_y = props.centroid
 
-                    radius = props.equivalent_diameter / 2.
+                    radius = int(props.equivalent_diameter / 2.)
                     kern = 0.01 * np.ones((2 * radius, 2 * radius))
                     krn = _kernelsmooth(x=np.ones((2 * radius, 2 * radius)), kern=kern)
                     krn = np.exp(np.exp(krn))
@@ -132,7 +132,7 @@ class GMS(Algorithm):
                 background = (background - np.min(background)) / (np.max(background) - np.min(background))
                 diff = diff - background
             diff = (diff - np.min(diff)) / (np.max(diff) - np.min(diff))
-            tt = r * r
+            tt = int(r * r)
             if tt % 2 == 0:
                 tt += 1
             g = threshold_adaptive(diff, tt, method='mean', offset=0)
