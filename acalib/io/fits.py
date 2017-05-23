@@ -183,6 +183,7 @@ def loadFITS_PrimmaryOnly(fitspath):
     if hduobject is None:
         log.error('FITS PrimaryHDU is None')
         raise ValueError('FITS PrimaryHDU is None')
+    hduobject.verify("fix")
     bscale = 1.0
     bunit = u.Unit('u.Jy/u.beam')
     bzero = 0.0
@@ -194,6 +195,7 @@ def loadFITS_PrimmaryOnly(fitspath):
     if 'BUNIT' in hduobject.header:
         unit = hduobject.header['BUNIT'].lower().replace('jy','Jy')
         bunit = u.Unit(unit, format='fits')
+
     for item in hduobject.header.items():
         if item[0].startswith('PC00'):
             hduobject.header.remove(item[0])

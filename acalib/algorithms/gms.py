@@ -87,7 +87,6 @@ class GMS(Algorithm):
         if tt % 2 == 0:
             tt += 1
         g = threshold_local(diff, tt, method='mean', offset=0)
-
         r = w_max / 2
 
         #Smallest radious for region
@@ -118,7 +117,6 @@ class GMS(Algorithm):
             if len(fts) > 0:
                 for props in fts:
                     C_x, C_y = props.centroid
-
                     radius = int(np.round(props.equivalent_diameter / 2.))
                     kern = 0.01 * np.ones((2 * radius, 2 * radius))
                     krn = _kernelsmooth(x=np.ones((2 * radius, 2 * radius)), kern=kern)
