@@ -57,7 +57,7 @@ def rotate(data, angle):
     angles = []
 
     for i in np.arange(len(data)):
-        prop = img_props(data[i])
+        prop = fits_props(data[i])
         angles.append(angle - prop['angle'])
         rotatedData.append(scnd.rotate(data[i], angles[-1], reshape=True))
     return rotatedData, angles
