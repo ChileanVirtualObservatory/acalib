@@ -1,7 +1,7 @@
 import acalib
 from .algorithm import Algorithm
 from .gms import GMS
-from astropy.nddata import support_nddata, NDData
+from astropy.nddata import support_nddata, NDDataRef
 
 import os
 import distributed
@@ -49,7 +49,7 @@ class Indexing(Algorithm):
 
             Parameters
             ----------
-            data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+            data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDData
                 Astronomical data cube.
 
             Returns
@@ -90,7 +90,7 @@ class Indexing(Algorithm):
         if wcs:
             wcs = wcs.dropaxis(2)
             for i,im in enumerate(c.images):
-                c.images[i] = NDData(data=im, wcs = wcs)
+                c.images[i] = NDDataRef(data=im, wcs = wcs)
 
         c.images.insert(0, data)
         c.primary = c.images[0]
