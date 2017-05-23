@@ -176,15 +176,13 @@ def load_fits_to_cont(filePath,acont):
         else:
             acont.primary = acont.images[0]
 
-def loadFITS_PrimmaryOnly(fitsBinaryData):
-    hduobject = None
-    hdulist = fits.HDUList.fromfile(fitsBinaryData)
-    for idx, hdu in enumerate(hdulist):
-        if isinstance(hdu, fits.PrimaryHDU):
-            log.info('Processing PrimaryHDU Object '+str(idx))
-            hduobject = hdu
-            break
-    #Check if hduobject is None??
+def loadFITS_PrimmaryOnly(fitspath):
+    hdulist = fits.open(fitspath, lazy_load_hdus=True)
+    log.info('Processing PrimaryHDU Object 0')
+    hduobject = hdulist[0]
+    if hduobject is None:
+        log.error('FITS PrimaryHDU is None')
+        raise ValueError('FITS PrimaryHDU is None')
     bscale = 1.0
     bunit = u.Unit('u.Jy/u.beam')
     bzero = 0.0
@@ -213,7 +211,8 @@ def loadFITS_PrimmaryOnly(fitsBinaryData):
         hduobject.data = (hduobject.data*bscale) + bzero
     else:
         log.error('Only 2-4D data allowed')
-        raise TypeError
+        raise TypeError('Only 2-4D data allowed')
+    hdulist.close()
     return ndd.NDData(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit)
 
 
