@@ -184,6 +184,7 @@ def loadFITS_PrimmaryOnly(fitsfile):
             log.info('Processing PrimaryHDU Object '+str(idx))
             hduobject = hdu
             break
+    hduobject.verify("fix")
     #Check if hduobject is None??
     bscale = 1.0
     bunit = u.Unit('u.Jy/u.beam')
@@ -196,6 +197,7 @@ def loadFITS_PrimmaryOnly(fitsfile):
     if 'BUNIT' in hduobject.header:
         unit = hduobject.header['BUNIT'].lower().replace('jy','Jy')
         bunit = u.Unit(unit, format='fits')
+
     for item in hduobject.header.items():
         if item[0].startswith('PC00'):
             hduobject.header.remove(item[0])

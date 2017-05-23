@@ -32,6 +32,7 @@ def _struct_builder(caa):
 
 @support_nddata
 def _fellwalker(data, config, wcs=None, mask=None, unit=None, rms=0.0):
+    cube = data
     if len(data.shape) == 4:
         if data.shape[0] == 1:
             cube = data[0,:,:,:]
@@ -40,8 +41,6 @@ def _fellwalker(data, config, wcs=None, mask=None, unit=None, rms=0.0):
     elif len(data.shape) == 3:
         if data.shape[0] == 1:
             cube = data[0,:,:]
-    else:
-        cube = data
 
     ret = pycupid.fellwalker(cube, rms,config=config)
     
