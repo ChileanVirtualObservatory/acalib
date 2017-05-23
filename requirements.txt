@@ -1,4 +1,6 @@
 ###### Requirements with Version Specifiers ######
+distributed
+dask >= 0.14.1
 numpy>=1.11.2
 astropy>=1.2
 cython>=0.18
