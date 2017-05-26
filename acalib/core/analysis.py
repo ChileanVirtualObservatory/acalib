@@ -17,14 +17,11 @@ from acalib.core import *
 def rms(data, mask=None):
     """
     Compute the RMS of data. If mask != None, then we use that mask.
-
     Parameters
     ----------
     data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
-
     mask : numpy.ndarray (default = None)
-
     Returns
     -------
     RMS of the data (float)
@@ -44,20 +41,15 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
     ---------- 
     data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
-
     mask : numpy.ndarray (default = None)
-
     noise : float (default=None)
         Noise level, if not given will use rms of the data.
     
     points : (default=1000)
-
     full_output : boolean (default=False)
         Gives verbose results if True
-
     Returns
     --------
-
     "Signal to Noise Radio" value
     
     """
@@ -94,15 +86,12 @@ def integrate(data, mask=None, axis=(0)):
     ----------    
     data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
-
     mask : numpy.ndarray (default = None)
-
     axis : int (default=(0))
     
     Returns
     -------
      A numpy array with the integration results.
-
     """
     if mask is not None:
         data = fix_mask(data, mask)
@@ -175,16 +164,12 @@ def spectra_sketch(data, samples, random_state=None):
     ----------
     data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
         Astronomical data cube.
-
     samples : Number of pixel samples(int) used for the sketch.
-
     random_state : (default=None)
     
     Returns
     -------
-
      spectra (array) and slices (list)
-
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
@@ -402,14 +387,12 @@ def vel_stacking(data, data_slice):
     ----------
     data : numpy.ndarray
         Astronomical 2D image 
-
     slice : slice object
         Sector to be collapsed
     
     Returns
     -------
     image (NDData): 2D-Array with the stacked cube.
-
     """
     if len(data.shape) != 3:
         log.error("Cube needs to be a 3D array")
@@ -417,6 +400,6 @@ def vel_stacking(data, data_slice):
     dims = data.shape
     subcube = data[data_slice, :,:]
     stacked = np.sum(subcube,axis=0)
-    # wcs = wcs.dropaxis(2)
+    wcs = wcs.dropaxis(2)
 
     return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)

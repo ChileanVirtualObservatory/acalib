@@ -1,10 +1,10 @@
 import acalib
 from .algorithm import Algorithm
 from .gms import GMS
+from astropy.nddata import support_nddata, NDData
 
 
 class Indexing(Algorithm):
-
     """
     Perform an unsupervised region of interest detection and extract shape features.
 
@@ -67,7 +67,6 @@ class Indexing(Algorithm):
 
         pp_slices = []
         for slice in slices:
-
             pp_slice = acalib.core.vel_stacking(data, slice)
             labeled_images = gms.run(pp_slice)
 
@@ -81,12 +80,14 @@ class Indexing(Algorithm):
             table = acalib.core.measure_shape(pp_slice, labeled_images, freq_min, freq_max)
             if len(table) > 0:
                 c.tables.append(table)
-                print("pp")
                 c.images.append(pp_slice)
-                print(type(pp_slice))
-                print("lb")
                 c.images.extend(labeled_images)
-                print(type(labeled_images))
+
+        if wcs:
+            wcs = wcs.dropaxis(2)
+            for i,im in enumerate(c.images):
+                c.images[i] = NDData(data=im, wcs = wcs)
+
         c.images.insert(0, data)
         c.primary = c.images[0]
         return c
