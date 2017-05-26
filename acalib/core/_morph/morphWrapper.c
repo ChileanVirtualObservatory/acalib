@@ -36,7 +36,7 @@ PyMODINIT_FUNC initmorph()
     #endif
     if(module == NULL)
     {
-        return;
+        return NULL;
     }
     import_array();
     #if PY_MAJOR_VERSION >= 3
