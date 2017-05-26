@@ -1,8 +1,8 @@
 from .. import core
 import numpy as np
-from acalib.cupid import pycupid
-from astropy.nddata import *
+import pycupid
 
+from astropy.nddata import *
 from .algorithm import Algorithm
 
 
@@ -33,9 +33,23 @@ def _struct_builder(caa):
 
 @support_nddata
 def _clumpfind(data, config, wcs=None, mask=None, unit=None, rms=0.0):
-    data = data.astype(np.float64)
-    ret = pycupid.clumpfind(data, config, rms)
-    return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+    cube = data
+    if len(data.shape) == 4:
+        if data.shape[0] == 1:
+            cube = data[0,:,:,:]
+            if data.shape[1] == 1:
+                cube = data[0,:,:]
+    elif len(data.shape) == 3:
+        if data.shape[0] == 1:
+            cube = data[0,:,:]
+
+
+    ret = pycupid.clumpfind(cube, rms,config=config)
+    if ret is not None:
+        ret[ret == ret.min()] = 0
+        return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+    else:
+        return None
 
 
 class ClumpFind(Algorithm):
@@ -53,8 +67,11 @@ class ClumpFind(Algorithm):
             self.config['IDLALG'] = 0
         if 'MINPIX' not in self.config:
             self.config['MINPIX'] = 10
+        
 
     def run(self, data):
+        if len(data.data.shape) > 4:
+            raise Exception("Algorithm only support 2D and 3D Matrices") 
         # if rms not in config, estimate it
         if 'RMS' not in self.config:
             rms = core.rms(data.data)
@@ -65,6 +82,9 @@ class ClumpFind(Algorithm):
         caa = _clumpfind(data, self.config, rms=rms)
 
         # computing asocciated structures
-        clumps = _struct_builder(caa.data)
+        if caa:
+            clumps = _struct_builder(caa.data)
 
-        return caa,clumps
+            return caa,clumps
+        else:
+            return None,None

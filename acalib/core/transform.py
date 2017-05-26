@@ -57,7 +57,7 @@ def rotate(data, angle):
     angles = []
 
     for i in np.arange(len(data)):
-        prop = img_props(data[i])
+        prop = fits_props(data[i])
         angles.append(angle - prop['angle'])
         rotatedData.append(scnd.rotate(data[i], angles[-1], reshape=True))
     return rotatedData, angles
@@ -105,11 +105,11 @@ def crop_and_align(data, angles):
     minShape = tuple(np.amin(shapes, axis=0))
 
     for i in np.arange(len(alignedData)):
-        dxl = (alignedData[i].shape[0] - minShape[0]) / 2
-        dxr = (alignedData[i].shape[0] + minShape[0]) / 2
-        dyu = (alignedData[i].shape[1] - minShape[1]) / 2
-        dyd = (alignedData[i].shape[1] + minShape[1]) / 2
-
+        dxl = int((alignedData[i].shape[0] - minShape[0]) / 2)
+        dxr = int((alignedData[i].shape[0] + minShape[0]) / 2)
+        dyu = int((alignedData[i].shape[1] - minShape[1]) / 2)
+        dyd = int((alignedData[i].shape[1] + minShape[1]) / 2)
+       
         alignedData[i] = alignedData[i][dxl:dxr, dyu:dyd]
 
     return alignedData
@@ -229,18 +229,21 @@ def fits_props(img):
     areas = []
 
     for i in props:
-        ratios.append(i.minor_axis_length / i.major_axis_length)
-        areas.append(i.area)
+        if i.major_axis_length > 0:
+            ratios.append(i.minor_axis_length / i.major_axis_length)
+            areas.append(i.area)
+        else:
+            ratios.append(0)
+            areas.append(0)
 
     if len(props) > 1:
-        pos = areas.index(max(areas))
+        pos = np.argmax(areas)
     else:
         pos = 0
-
+    
     properties = {'centroid': props[pos].centroid, 'major': props[pos].major_axis_length,
                   'minor': props[pos].minor_axis_length, 'ratio': ratios[pos],
                   'angle': props[pos].orientation, 'area': props[pos].area, 'img': props[pos].image,
                   'clr': clr, 'label': label_image, 'orig': img}
-
     return properties
 

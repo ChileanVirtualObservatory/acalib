@@ -39,7 +39,6 @@ def setup_package():
         run_build = False
     #Building packages
     if check_build() or run_build:
-        build_and_move('acalib/cupid')
         build_and_move('acalib/core/_morph')
 
     setup(
@@ -62,9 +61,9 @@ def setup_package():
         packages = find_packages(),
         include_package_data = True,
         setup_requires = ['numpy>=1.8', 'cython>=0.18'],
-        install_requires = ['numpy>=1.8', 'astropy>=1.2', 'cython>=0.18',
+        install_requires = ['numpy>=1.11.2', 'astropy>=1.2', 'cython>=0.18',
                             'matplotlib>=1.5', 'scipy>=0.18',
-                            'scikit-image>=0.12', 'urllib3']
+                            'scikit-image>=0.12', 'urllib3', 'pycupid']
     )
 
 
