@@ -15,7 +15,7 @@ def visualize(data,wcs=None,unit=None,contour=False):
 
     Parameters
     ----------
-    data : numpy.ndarray or astropy.nddata.NDData
+    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical image
 
     wcs : astropy.wcs.WCS
@@ -59,7 +59,7 @@ def visualize_plot(data,wcs=None,unit=None):
         plt.ylabel(unit)
         plt.xlabel(wcs.axis_type_names[0])
     #plt.show()
-         
+
 @support_nddata
 def visualize_image(data,wcs=None,unit=None,contour=False):
     """
@@ -67,7 +67,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
 
     Parameters
     ----------
-    data : numpy.ndarray or astropy.nddata.NDData
+    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical image
 
     wcs : astropy.wcs.WCS
@@ -77,7 +77,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
         Image units (not needed if contained in NDData)
 
     contour : numpy.ndarray
-        For plotting Contourns    
+        For plotting Contourns
     """
     if wcs is None:
         plt.imshow(data, origin='lower', cmap=plt.cm.gist_heat)
@@ -100,4 +100,3 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
         crs=np.arange(1,dmax/arms)
         plt.contour(data,levels=arms*crs,alpha=0.5)
     plt.show()
-

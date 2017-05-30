@@ -1,10 +1,7 @@
 import numpy as np
 from astropy import log
-from astropy.nddata import support_nddata, NDData
-try:
-    from skimage.filters import threshold_adaptive
-except:
-    from skimage.filter import threshold_adaptive
+from astropy.nddata import support_nddata, NDDataRef
+from skimage.filters import threshold_local
 from skimage.measure import label,regionprops
 
 from ._morph import differenceImpl, segmentationImpl, erosionImpl
@@ -20,7 +17,7 @@ def rms(data, mask=None):
 
     Parameters
     ----------
-    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or or astropy.nddata.NDDataRef
         Astronomical data cube.
 
     mask : numpy.ndarray (default = None)
@@ -42,7 +39,7 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
 
     Parameters
     ----------
-    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical data cube.
 
     mask : numpy.ndarray (default = None)
@@ -91,7 +88,7 @@ def integrate(data, mask=None, axis=(0)):
 
     Parameters
     ----------
-    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical data cube.
 
     mask : numpy.ndarray (default = None)
@@ -172,7 +169,7 @@ def spectra_sketch(data, samples, random_state=None):
 
     Parameters
     ----------
-    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical data cube.
 
     samples : Number of pixel samples(int) used for the sketch.
@@ -378,7 +375,7 @@ def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None
 
     Parameters
     ----------
-    data : numpy.ndarray
+    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical 2D image
 
     slice : slice object
@@ -386,7 +383,7 @@ def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None
 
     Returns
     -------
-    image (NDData): 2D-Array with the stacked cube.
+    image (NDDataRef): 2D-Array with the stacked cube.
 
     """
     if len(data.shape) != 3:
@@ -397,4 +394,4 @@ def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None
     stacked = np.sum(subcube,axis=0)
     wcs = wcs.dropaxis(2)
 
-    return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+    return NDDataRef(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
