@@ -43,10 +43,10 @@ def _fellwalker(data, config, wcs=None, mask=None, unit=None, rms=0.0):
             cube = data[0,:,:]
 
     ret = pycupid.fellwalker(cube, rms,config=config)
-    
+
     if ret is not None:
         ret[ret == ret.min()] = 0
-        return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+        return NDDataRef(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
     else:
         return None
 
@@ -57,7 +57,7 @@ class FellWalker(Algorithm):
         if 'FWHMBEAM' not in self.config:
             self.config['FWHMBEAM'] = 2.0
         if 'VELORES' not in self.config:
-            self.config['VELORES'] =  2.0  
+            self.config['VELORES'] =  2.0
 
     def run(self, data):
         if len(data.data.shape) > 4:

@@ -26,7 +26,7 @@ def scale(inputCont, majorAxisTemplate):
     Returns
     -------
     result : list
-        List with the scaled images. 
+        List with the scaled images.
     """
     scaledData = []
 
@@ -39,7 +39,7 @@ def scale(inputCont, majorAxisTemplate):
 
 def rotate(data, angle):
     """
-    Performs an angle rotation over a list of images 
+    Performs an angle rotation over a list of images
 
     Parameters
     ----------
@@ -51,7 +51,7 @@ def rotate(data, angle):
     Returns
     -------
     result : tuple
-        Tuple with the list of rotated images and the list of rotation angles applied to each one.  
+        Tuple with the list of rotated images and the list of rotation angles applied to each one.
     """
     rotatedData = []
     angles = []
@@ -83,7 +83,7 @@ def crop_and_align(data, angles):
     ----------
     data : list
         List of astronomical data cubes (numpy.ndarray).
-        
+
     angles : list
         List of angles (float) to perform alignment.
 
@@ -109,7 +109,7 @@ def crop_and_align(data, angles):
         dxr = int((alignedData[i].shape[0] + minShape[0]) / 2)
         dyu = int((alignedData[i].shape[1] - minShape[1]) / 2)
         dyd = int((alignedData[i].shape[1] + minShape[1]) / 2)
-       
+
         alignedData[i] = alignedData[i][dxl:dxr, dyu:dyd]
 
     return alignedData
@@ -121,7 +121,7 @@ def standarize(data):
 
     Parameters
     ----------
-    data : numpy.ndarray or astropy.nddata.NDData
+    data : numpy.ndarray or astropy.nddata.NDData or or astropy.nddata.NDData
         Astronomical data cube.
 
     Returns
@@ -142,7 +142,7 @@ def unstandarize(data, a, b):
 
     Parameters
     ----------
-    data : numpy.ndarray or astropy.nddata.NDData
+    data : numpy.ndarray or astropy.nddata.NDData or or astropy.nddata.NDData
         Astronomical data cube.
     a : float
         Scale value.
@@ -150,7 +150,7 @@ def unstandarize(data, a, b):
         Shift value.
 
     Returns
-    ------- 
+    -------
     result : numpy.ndarray or astropy.nddata.NDData
         Unstandarized astronomical cube.
     """
@@ -163,12 +163,12 @@ def add(data, flux, lower, upper):
 
     Parameters
     ----------
-    data : numpy.ndarray or astropy.nddata.NDData
+    data : numpy.ndarray or astropy.nddata.NDData or or astropy.nddata.NDData
         Astronomical data cube.
     flux : numpy.ndarray
         Flux added to the cube.
     lower : float
-        Lower bound of the sub-cube to which flux will be added. 
+        Lower bound of the sub-cube to which flux will be added.
     upper : float
         Upper bound of the sub-cube to which flux will be added.
     """
@@ -183,7 +183,7 @@ def denoise(data, threshold):
 
     Parameters
     ----------
-    data : numpy.ndarray or astropy.nddata.NDData
+    data : numpy.ndarray or astropy.nddata.NDData or or astropy.nddata.NDData
         Astronomical data cube.
     threshold : float
         Threshold value used for denoising.
@@ -240,10 +240,9 @@ def fits_props(img):
         pos = np.argmax(areas)
     else:
         pos = 0
-    
+
     properties = {'centroid': props[pos].centroid, 'major': props[pos].major_axis_length,
                   'minor': props[pos].minor_axis_length, 'ratio': ratios[pos],
                   'angle': props[pos].orientation, 'area': props[pos].area, 'img': props[pos].image,
                   'clr': clr, 'label': label_image, 'orig': img}
     return properties
-

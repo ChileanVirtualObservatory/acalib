@@ -7,3 +7,5 @@ scipy>=0.18
 scikit-image>=0.12
 numpydoc
 pycupid >= 0.1.0
+dask >= 0.13.0
+distributed >= 1.16
