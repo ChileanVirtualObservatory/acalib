@@ -289,7 +289,9 @@ def _optimal_w(image, p=0.05):
         if tt % 2 == 0:
             tt += 1
 
-        g = threshold_adaptive(f, tt, method='mean', offset=0)
+        adaptive_threshold = threshold_local(f, tt, method='mean', offset=0)#(f, tt, offset=0)
+        g = f > adaptive_threshold
+
         ov = _bg_fg(f, g, bg, fg)
         if (ov < min_ov):
             w = radius
