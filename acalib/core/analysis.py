@@ -393,6 +393,9 @@ def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None
     dims = data.shape
     subcube = data[data_slice, :,:]
     stacked = np.sum(subcube,axis=0)
-    wcs = wcs.dropaxis(2)
+    if wcs:
+        wcs = wcs.dropaxis(2)
 
-    return NDDataRef(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+        return NDDataRef(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+    else:
+        return stacked
