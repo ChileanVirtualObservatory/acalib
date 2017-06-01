@@ -98,7 +98,7 @@ It also returns the segmentated images.
 
 
 
-.. image:: Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_files/Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_14_0.png
+.. image:: Indexing_tutorial_files/Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_14_0.png
 
 
 Here we visualize the segmentated images
@@ -110,15 +110,15 @@ Here we visualize the segmentated images
 
 
 
-.. image:: Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_files/Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_16_0.png
+.. image:: Indexing_tutorial_files/Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_16_0.png
 
 
 
-.. image:: Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_files/Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_16_1.png
+.. image:: Indexing_tutorial_files/Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_16_1.png
 
 
 
-.. image:: Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_files/Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_16_2.png
+.. image:: Indexing_tutorial_files/Using%20Indexing%20to%20detect%20regions%20of%20interest%20and%20extracting%20their%20shape%20features_16_2.png
 
 
 With this you learned how to use the Indexing Class and visualize its
