@@ -176,7 +176,7 @@ def load_fits_to_cont(filePath,acont):
         else:
             acont.primary = acont.images[0]
 
-def loadFITS_PrimmaryOnly(fitsfile):
+def loadFITS_PrimaryOnly(fitsfile):
     hduobject = None
     hdulist = fits.open(fitsfile)
     for idx, hdu in enumerate(hdulist):
