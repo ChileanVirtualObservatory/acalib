@@ -184,7 +184,7 @@ def spectra_sketch(data, samples, random_state=None):
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
-        np.random.seed(random_state)
+        random = np.random.RandomState(random_state)
 
     dims = data.shape
     P_x = dims[2]
@@ -194,14 +194,13 @@ def spectra_sketch(data, samples, random_state=None):
     frec = dims[0]
 
     spectra = np.zeros(frec)
-
-    for i in range(samples):
-        x_ = np.random.choice(P_x_range, 1)
-        y_ = np.random.choice(P_y_range, 1)
-        pixel = data[:, y_, x_]
-        pixel = np.ascontiguousarray(pixel, dtype=np.float64)
+    x_ = random.choice(P_x_range, samples, replace=True)
+    y_ = random.choice(P_y_range, samples, replace=True)
+    pixels = data[:, y_, x_]
+    for pixel in pixels:
         pixel_masked = _pixel_processing(pixel)
         spectra += pixel_masked
+    
     spectra = _pixel_processing(spectra)
 
     slices = []
