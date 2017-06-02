@@ -44,8 +44,8 @@ class TestAnalysis(unittest.TestCase):
         random = np.random.RandomState(0)
         data_spectra = random.rand(10,100,100)
         result =(
-            np.array([ 1.57281087,  3.68279424,  3.39177227,  2.12900264,  2.10467559,
-                    0.81608578,  1.35890767,  1.86194499,  1.44764893,  0.        ]),
+            np.array([2.194053 ,  4.3325863,  4.220324 ,  2.2198028,  2.9155446,
+        0.       ,  0.       ,  0.       ,  0.       ,  0.            ]),
             [slice(0, 9, None)])
 
         spectra,slices=acaana.spectra_sketch(data_spectra,10,random_state=1)
