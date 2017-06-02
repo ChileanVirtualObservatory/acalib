@@ -11,7 +11,12 @@ sys.path.append("..")
 import acalib.algorithms as acaalgo
 
 from acalib.io import loadFITS_PrimaryOnly
+import acalib
 
+
+"""
+	Function to download a fits and load as np.ndarray
+"""
 def download_and_load():
 	if not os.path.exists("files"):
 		print("Creating files directory\n#######################")
@@ -69,6 +74,35 @@ class TestFW(unittest.TestCase):
 		caa = self.fw.run(self.data2d)[0]
 		assert(caa.min() == 0)
 		assert(caa.max() == 4)
+
+
+class TestIndexing(unittest.TestCase):
+	idx = acaalgo.Indexing({"RANDOM_STATE":1234})
+
+	data = download_and_load()
+
+	#TODO make a better unit test
+	def test_run(self):
+		result = self.idx.run(self.data).images
+		np.testing.assert_equal(len(result),6)
+
+
+class TestStacking(unittest.TestCase):
+	st = acaalgo.Stacking()
+
+	template = download_and_load()
+	template = np.sum(template,axis=0)
+
+	cont = acalib.Container()
+	cont.images.append(template)
+	cont.images.append(template)
+	cont.primary = cont.images[0]
+
+
+	#TODO make a better unit test
+	def test_run(self):
+		result = self.st.run(self.template,self.cont)
+		np.testing.assert_equal(result.shape,(99,99))
 
 if __name__ == '__main__':
     unittest.main()
