@@ -23,7 +23,7 @@ Contents
    io
    upi
    synthetic
-   Indexing_tutorial
+   tutorial
 
 Installation
 ------------
