@@ -170,7 +170,7 @@ class AData(ndd.NDDataRef):
 
         Returns
         -------
-        result: astropy.nddata.NDDataRef
+        result: astropy.nddata.AData
             Moment 0 of the data cube
         """
         return reduction.moment0(self, restfrq=None)
@@ -198,7 +198,7 @@ class AData(ndd.NDDataRef):
 
         Returns
         -------
-        result: astropy.nddata.NDDataRef
+        result: astropy.nddata.AData
             Moment 2 of the data cube
         """
         return reduction.moment2(self, restfrq=restfrq)
