@@ -1,11 +1,13 @@
-from astropy.nddata import support_nddata, NDDataRef
+from astropy.nddata import support_nddata
 from acalib import core
 import numpy as np
 
+from acalib.upi.adata import AData
 from acalib.upi.axes import opening, features, axes_units
 
+
 @support_nddata
-def noise_level(data,mask=None,unit=None):
+def rms(data, mask=None, unit=None):
     """
         Compute the RMS of data.
 
@@ -23,12 +25,12 @@ def noise_level(data,mask=None,unit=None):
             RMS of data
     """
 
-
-    #TODO: check photutils background estimation for using that if possible
+    # TODO: check photutils background estimation for using that if possible
     if unit is None:
-        return core.rms(data,mask)
+        return core.rms(data, mask)
     else:
-        return core.rms(data,mask)*unit
+        return core.rms(data, mask) * unit
+
 
 @support_nddata
 def standarize(data, wcs=None, unit=None, mask=None, meta=None):
@@ -52,8 +54,8 @@ def standarize(data, wcs=None, unit=None, mask=None, meta=None):
     if mask is not None:
         data = core.fix_mask(data, mask)
     (res, a, b) = core.standarize(data)
-    res = NDDataRef(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
-    return (res, a, b)
+    res = AData(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
+    return res, a, b
 
 
 @support_nddata
@@ -83,11 +85,11 @@ def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
     if mask is not None:
         data = core.fix_mask(data, mask)
     res = core.unstandarize(data, a, b)
-    return NDDataRef(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
+    return AData(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
 
 
 @support_nddata
-def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=None):
+def add(data, flux, lower=None, upper=None, wcs=None, unit=None, meta=None, mask=None):
     """
         Create a new data with the new flux added.
 
@@ -114,10 +116,10 @@ def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=Non
 
     """
 
-    #Please use the OO version data.add(flux) for modifying the data itself.
+    # Please use the OO version data.add(flux) for modifying the data itself.
     res = data.copy()
     core.add(res, flux, lower, upper)
-    return NDDataRef(res, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
+    return AData(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
 
 
 @support_nddata
@@ -140,8 +142,8 @@ def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
         NDDataRef: Data denoised
 
     """
-    newdata = core.denoise(data, threshold.value)
-    return NDDataRef(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
+    newdata = core.denoise(data, threshold)
+    return AData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 
 
 @support_nddata

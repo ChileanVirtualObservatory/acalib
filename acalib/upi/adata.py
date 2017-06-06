@@ -144,3 +144,53 @@ class AData(ndd.NDDataRef):
         result: ((M1,N1,Z1),(M2,N2,Z2)) tuple of tuple of ints
         """
         return axes.opening(self, center=center, window=window)
+
+    def rms(self):
+        """
+        Compute the RMS of data.
+
+        Returns
+        -------
+        rms : float
+            RMS of data
+        """
+        return flux.rms(self)
+
+    def moment0(self):
+        """
+        Calculate moment 0 from a data cube.
+
+        Returns
+        -------
+        result: astropy.nddata.NDDataRef
+            Moment 0 of the data cube
+        """
+        return reduction.moment0(self, restfrq=None)
+
+    def moment1(self, restfrq=None):
+        """
+        Calculate moment 1 from a data cube.
+
+        restfrq : astropy.units.quantity.Quantity
+            Rest frequency
+
+        Returns
+        -------
+        result: astropy.nddata.NDData
+            Moment 1 of the data cube
+        """
+        return reduction.moment1(self, restfrq=restfrq)
+
+    def moment2(self, restfrq=None):
+        """
+        Calculate moment 2 from a data cube.
+
+        restfrq : astropy.units.quantity.Quantity
+            Rest frequency
+
+        Returns
+        -------
+        result: astropy.nddata.NDDataRef
+            Moment 2 of the data cube
+        """
+        return reduction.moment2(self, restfrq=restfrq)
