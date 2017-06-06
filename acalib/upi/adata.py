@@ -1,6 +1,14 @@
 from astropy import nddata as ndd
+
+import io
+
+from acalib import loadFITS_PrimaryOnly
+from acalib.io import graph
 from acalib.upi import *
 
+# TODO: Dummy function. This should be smart (Tables, AData etc...)
+def loadme(uri):
+    return loadFITS_PrimaryOnly(uri)
 
 class AData(ndd.NDDataRef):
     """
@@ -194,3 +202,9 @@ class AData(ndd.NDDataRef):
             Moment 2 of the data cube
         """
         return reduction.moment2(self, restfrq=restfrq)
+
+    def visualize(self):
+        """
+        Generic function to visualize data, line-plot for 1D and image for 2D.
+        """
+        graph.visualize(self)
