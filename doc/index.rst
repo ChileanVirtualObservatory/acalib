@@ -23,7 +23,7 @@ Contents
    io
    upi
    synthetic
-
+   tutorial
 
 Installation
 ------------

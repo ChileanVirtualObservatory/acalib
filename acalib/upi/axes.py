@@ -1,6 +1,6 @@
 import numpy as np
 import astropy.units as u
-from astropy.nddata import support_nddata, NDData
+from astropy.nddata import support_nddata, NDDataRef
 from astropy import log
 
 from acalib import core
@@ -12,8 +12,8 @@ def axes_names(data,wcs=None):
         Get the axes's names.
 
         Parameters
-        ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
@@ -39,7 +39,7 @@ def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
 
         Parameters
         ----------
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
@@ -54,7 +54,7 @@ def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
 
         Returns
         -------
-        result: astropy.nddata.NDData.
+        result: astropy.nddata.NDDataRef.
             data cut from lower to upper.
 
     """
@@ -62,7 +62,7 @@ def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
     mslab = core.slab(data, lower, upper)
     scube = data[mslab]
     newwcs = wcs.slice(mslab, numpy_order=True)
-    return NDData(scube, wcs=newwcs, unit=unit)
+    return NDDataRef(scube, wcs=newwcs, unit=unit)
 
 @support_nddata
 def extent(data,wcs=None,lower=None,upper=None):
@@ -71,7 +71,7 @@ def extent(data,wcs=None,lower=None,upper=None):
 
         Parameters
         ----------
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
@@ -79,7 +79,7 @@ def extent(data,wcs=None,lower=None,upper=None):
             Start coordinate in data
         upper : (M,N) or (M,N,Z) tuple of int
             End coordinate in data
-        
+
         Returns
         -------
         result: (M, N) tuple of astropy.units.quantity.Quantity
@@ -106,12 +106,12 @@ def center(data,wcs=None):
         Get center of the data
 
         Parameters
-        ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
-        
+
         Returns
         -------
         result: astropy.units.quantity.Quantity
@@ -131,12 +131,12 @@ def axes_units(data,wcs=None):
         Get units of the axes
 
         Parameters
-        ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
-        
+
         Returns
         -------
         result: (M,N) or (M,N,Z) numpy.ndarray
@@ -156,12 +156,12 @@ def resolution(data,wcs=None):
         Get the resolution of data
 
         Parameters
-        ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
-        
+
         Returns
         -------
         result: (M,N) or (M,N,Z) numpy.ndarray
@@ -182,8 +182,8 @@ def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
         then frequencies indices (fqis) need to be given.
 
         Parameters
-        ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
@@ -193,7 +193,7 @@ def spectral_velocities(data,wcs=None,fqs=None,fqis=None,restfrq=None):
             Array of frequencies indices
         restfrq : astropy.units.quantity.Quantity
             Rest frequency
-        
+
         Returns
         -------
         result: astropy.units.quantity.Quantity
@@ -225,8 +225,8 @@ def features(data,wcs=None,lower=None,upper=None):
         Creates an array with WCS axea in features format
 
         Parameters
-        ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
@@ -234,7 +234,7 @@ def features(data,wcs=None,lower=None,upper=None):
             Start coordinate in data.
         upper : (M,N) or (M,N,Z) tuple of integers
             End coordinate in data.
-        
+
         Returns
         -------
         result: astropy.table.Table
@@ -256,8 +256,8 @@ def opening(data,center,window,wcs=None):
         Field of view (center +- window) converted to indices
 
         Parameters
-        ----------            
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+        ----------
+        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Astronomical data cube.
         center : astropy.units.quantity.Quantity
             Center of the field of view in WCS.
@@ -265,11 +265,11 @@ def opening(data,center,window,wcs=None):
             Window for the field in WCS.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
-        
+
         Returns
         -------
         result: ((M1,N1,Z1),(M2,N2,Z2)) tuple of tuple of ints
-            
+
 
     """
     if wcs is None:

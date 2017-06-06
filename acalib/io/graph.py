@@ -7,7 +7,6 @@ from ..core.analysis import rms
 import matplotlib.pyplot as plt
 
 #TODO: complete the nddata support (i.e. data, meta...)
-#TODO: make animation possible again
 
 @support_nddata
 def visualize(data,wcs=None,unit=None,contour=False):
@@ -16,7 +15,7 @@ def visualize(data,wcs=None,unit=None,contour=False):
 
     Parameters
     ----------
-    data : numpy.ndarray or astropy.nddata.NDData
+    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical image
 
     wcs : astropy.wcs.WCS
@@ -65,7 +64,7 @@ def visualize_plot(data,wcs=None,unit=None):
         plt.ylabel(unit)
         plt.xlabel(wcs.axis_type_names[0])
     #plt.show()
-         
+
 @support_nddata
 def visualize_image(data,wcs=None,unit=None,contour=False):
     """
@@ -73,7 +72,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
 
     Parameters
     ----------
-    data : numpy.ndarray or astropy.nddata.NDData
+    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical image
 
     wcs : astropy.wcs.WCS
@@ -83,7 +82,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
         Image units (not needed if contained in NDData)
 
     contour : numpy.ndarray
-        For plotting Contourns    
+        For plotting Contourns
     """
     if wcs is None:
         plt.imshow(data, origin='lower', cmap=plt.cm.gist_heat)
@@ -143,7 +142,6 @@ def visualize_contour3D(data,wcs=None,unit=None):
      mlab.show()
 
 
-
 def plot_snr_estimation(target,snr_results):
     fig = plt.figure(figsize=(10,4))
     # Unpack results
@@ -164,19 +162,4 @@ def plot_snr_estimation(target,snr_results):
     axp.set_ylabel('$\Delta$RMS', color='grey')
     for tl in axp.get_yticklabels():
         tl.set_color('grey')
-
-#    def animate(self, inte, rep=True):
-#               #TODO: this is not ported to the new wcs usage: maybe we must use wcsaxes to plot the wcs information...
-#               """ Simple animation of the data.
-#                               - inte       : time interval between frames
-#                               - rep[=True] : boolean to repeat the animation
-#                       """
-#               fig = plt.figure()
-#               self.im = plt.imshow(self.data[0, :, :], cmap=plt.get_cmap('jet'), vmin=self.data.min(), vmax=self.data.max(), \
-#                                                                                                extent=(
-#                                                                                                                self.alpha_border[0], self.alpha_border[1], self.delta_border[0],
-#                                                                                                                self.delta_border[1]))
-#               ani = animation.FuncAnimation(fig, self._updatefig, frames=range(len(self.freq_axis)), interval=inte, blit=True,
-#                                                                                                                                       repeat=rep)
-#               plt.show()
 

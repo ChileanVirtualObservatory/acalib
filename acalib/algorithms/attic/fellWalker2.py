@@ -527,5 +527,4 @@ def fellwalker(data,wcs=None,mask=None,unit=None,rms=0.0):
     fw=FellWalker()
     fw.defaultParams()
     clasar=fw.run(data,rms)
-    return NDData(clasar[0], uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
-   
+    return NDDataRef(clasar[0], uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
