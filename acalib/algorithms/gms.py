@@ -2,9 +2,9 @@ import acalib
 
 import numpy as np
 try:
-    from skimage.filters import threshold_adaptive
+    from skimage.filters import threshold_local
 except:
-    from skimage.filter import threshold_adaptive
+    from skimage.filter import threshold_local
 from skimage.measure import label,regionprops
 from skimage.morphology import binary_opening, disk
 from skimage.segmentation import clear_border
@@ -50,8 +50,8 @@ class GMS(Algorithm):
     def run(self, data):
         """        
         Parameters
-        ----------        
-        data : (M,N) numpy.ndarray or astropy.nddata.NDData
+        ----------
+        data : (M,N) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
             Velocity collapsed image
         
         Returns
@@ -81,6 +81,7 @@ class GMS(Algorithm):
 
         #Getting optimal radius for first step segmentation
         w_max = _optimal_w(image, prob)
+
         diff = (image - np.min(image)) / (np.max(image) - np.min(image))
 
         tt = w_max * w_max
@@ -88,7 +89,8 @@ class GMS(Algorithm):
         # Initial segmentation
         if tt % 2 == 0:
             tt += 1
-        g = threshold_adaptive(diff, int(tt), method='mean', offset=0)
+        adaptive_threshold = threshold_local(diff, int(tt), method='mean', offset=0)#(diff, int(tt), offset=0)
+        g = diff > adaptive_threshold
 
         r = w_max / 2
 
@@ -135,7 +137,11 @@ class GMS(Algorithm):
             tt = int(r * r)
             if tt % 2 == 0:
                 tt += 1
-            g = threshold_adaptive(diff, tt, method='mean', offset=0)
+            adaptive_threshold = threshold_local(diff, tt, offset=0, method='mean')
+            g = diff > adaptive_threshold
+
             r = np.round(r / 2.)
 
         return image_list
+
+

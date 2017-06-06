@@ -1,9 +1,13 @@
 ###### Requirements with Version Specifiers ######
+distributed
+dask >= 0.14.1
 numpy>=1.11.2
 astropy>=1.2
 cython>=0.18
 matplotlib>=1.5
 scipy>=0.18
-scikit-image>=0.12
+scikit-image>=0.13
 numpydoc
 pycupid >= 0.1.0
+dask >= 0.13.0
+distributed >= 1.16
