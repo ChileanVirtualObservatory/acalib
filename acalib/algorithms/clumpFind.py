@@ -47,7 +47,10 @@ def _clumpfind(data, config, wcs=None, mask=None, unit=None, rms=0.0):
     ret = pycupid.clumpfind(cube, rms,config=config)
     if ret is not None:
         ret[ret == ret.min()] = 0
-        return NDDataRef(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+        if wcs:
+            return NDDataRef(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+        else:
+            return ret
     else:
         return None
 
@@ -70,11 +73,18 @@ class ClumpFind(Algorithm):
 
 
     def run(self, data):
-        if len(data.data.shape) > 4:
-            raise Exception("Algorithm only support 2D and 3D Matrices")
+        if type(data) is NDData or type(data) is NDDataRef:
+            if len(data.data.shape) > 4:
+                raise Exception("Algorithm only support 2D and 3D Matrices")
+        else:
+            if len(data.shape) > 4:
+                raise Exception("Algorithm only support 2D and 3D Matrices")
         # if rms not in config, estimate it
         if 'RMS' not in self.config:
-            rms = core.rms(data.data)
+            if type(data) == NDData or type(data)== NDDataRef:
+                rms = core.rms(data.data)
+            else:
+                rms = core.rms(data)
         else:
             rms = self.config['RMS']
 
@@ -82,7 +92,7 @@ class ClumpFind(Algorithm):
         caa = _clumpfind(data, self.config, rms=rms)
 
         # computing asocciated structures
-        if caa:
+        if caa is not None:
             clumps = _struct_builder(caa.data)
 
             return caa,clumps

@@ -184,7 +184,9 @@ def spectra_sketch(data, samples, random_state=None):
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
-        np.random.seed(random_state)
+        random = np.random.RandomState(random_state)
+    else:
+        random = np.random
 
     dims = data.shape
     P_x = dims[2]
@@ -194,14 +196,14 @@ def spectra_sketch(data, samples, random_state=None):
     frec = dims[0]
 
     spectra = np.zeros(frec)
+    x_ = random.choice(P_x_range, samples, replace=True)
+    y_ = random.choice(P_y_range, samples, replace=True)
 
-    for i in range(samples):
-        x_ = np.random.choice(P_x_range, 1)
-        y_ = np.random.choice(P_y_range, 1)
-        pixel = data[:, y_, x_]
-        pixel = np.ascontiguousarray(pixel, dtype=np.float64)
+    pixels = data[:, y_, x_].T
+    for pixel in pixels:
         pixel_masked = _pixel_processing(pixel)
         spectra += pixel_masked
+    
     spectra = _pixel_processing(spectra)
 
     slices = []
@@ -220,7 +222,6 @@ def spectra_sketch(data, samples, random_state=None):
                     if i == frec - 2:
                         max_slice = i + 1
                         slices.append(slice(min_slice, max_slice))
-
     return spectra, slices
 
 def _pixel_processing(pixels):
@@ -289,7 +290,9 @@ def _optimal_w(image, p=0.05):
         if tt % 2 == 0:
             tt += 1
 
-        g = threshold_adaptive(f, tt, method='mean', offset=0)
+        adaptive_threshold = threshold_local(f, tt, method='mean', offset=0)#(f, tt, offset=0)
+        g = f > adaptive_threshold
+
         ov = _bg_fg(f, g, bg, fg)
         if (ov < min_ov):
             w = radius
@@ -392,6 +395,9 @@ def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None
     dims = data.shape
     subcube = data[data_slice, :,:]
     stacked = np.sum(subcube,axis=0)
-    wcs = wcs.dropaxis(2)
+    if wcs:
+        wcs = wcs.dropaxis(2)
 
-    return NDDataRef(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+        return NDDataRef(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+    else:
+        return stacked

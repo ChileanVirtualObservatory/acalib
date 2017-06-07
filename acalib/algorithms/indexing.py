@@ -1,7 +1,7 @@
 import acalib
 from .algorithm import Algorithm
 from .gms import GMS
-from astropy.nddata import support_nddata, NDDataRef
+from astropy.nddata import support_nddata, NDDataRef, NDData
 
 
 class Indexing(Algorithm):
@@ -39,7 +39,8 @@ class Indexing(Algorithm):
         if 'SAMPLES' not in self.config:
             self.config["SAMPLES"] = 1000
 
-    def run(self, data):
+
+    def run(self, cube):
         """
             Run the indexing algorithm on a given data cube.
 
@@ -53,21 +54,27 @@ class Indexing(Algorithm):
             :class:`~acalib.Container` with the cube slices, segmentated images and region of interest tables for each scale analyzed.
         """
 
-        if data.wcs:
-            wcs = data.wcs
+        if type(cube) is NDData or type(cube) is NDDataRef:
+            if cube.wcs:
+                wcs = cube.wcs
+            else:
+                wcs = None
+            data = cube.data
         else:
+            data = cube
             wcs = None
+
 
         c = acalib.Container()
         params = {"P":self.config["P"], "PRECISION":self.config["PRECISION"]}
         gms = GMS(params)
 
 
-        spectra, slices = acalib.core.spectra_sketch(data.data, self.config["SAMPLES"], self.config["RANDOM_STATE"])
+        spectra, slices = acalib.core.spectra_sketch(data, self.config["SAMPLES"], self.config["RANDOM_STATE"])
 
         pp_slices = []
         for slice in slices:
-            pp_slice = acalib.core.vel_stacking(data, slice)
+            pp_slice = acalib.core.vel_stacking(cube, slice)
             labeled_images = gms.run(pp_slice)
 
             if wcs is not None:
@@ -88,6 +95,6 @@ class Indexing(Algorithm):
             for i,im in enumerate(c.images):
                 c.images[i] = NDDataRef(data=im, wcs = wcs)
 
-        c.images.insert(0, data)
+        c.images.insert(0, cube)
         c.primary = c.images[0]
         return c
