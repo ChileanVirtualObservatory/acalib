@@ -73,7 +73,7 @@ class ClumpFind(Algorithm):
 
 
     def run(self, data):
-        if type(data) is NDData or type(data) is NDDataRef:
+        if isinstance(data,NDData):
             if len(data.data.shape) > 4:
                 raise Exception("Algorithm only support 2D and 3D Matrices")
         else:
@@ -96,5 +96,4 @@ class ClumpFind(Algorithm):
             clumps = _struct_builder(caa.data)
 
             return caa,clumps
-        else:
-            return None,None
+        else:            return None,None
