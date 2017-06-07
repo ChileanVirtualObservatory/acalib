@@ -1,11 +1,3 @@
-recursive-include acalib/cupid/attic *
-recursive-include acalib/cupid/cupidsub *
-recursive-include acalib/cupid/include *
-recursive-include acalib/core/_morph/*
+recursive-include acalib/core/_morph/ *.so
 
-include acalib/cupid/*.c
-include acalib/cupid/*.so
-include acalib/cupid/Makefile
-include acalib/cupid/pycupid.pxd
-include acalib/cupid/pycupid.pyx
-include acalib/core/_morph/*
+include acalib/core/_morph/*.so
