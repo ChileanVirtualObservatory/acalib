@@ -2,7 +2,7 @@ from astropy.nddata import support_nddata
 from acalib import core
 import numpy as np
 
-from acalib.upi.adata import AData
+from acalib.upi.data import Data
 from acalib.upi.axes import opening, features, axes_units
 
 
@@ -31,7 +31,7 @@ def rms(data, mask=None, unit=None):
     else:
         return core.rms(data, mask) * unit
 
-
+#TODO: candidate for deprecation
 @support_nddata
 def standarize(data, wcs=None, unit=None, mask=None, meta=None):
     """
@@ -54,10 +54,10 @@ def standarize(data, wcs=None, unit=None, mask=None, meta=None):
     if mask is not None:
         data = core.fix_mask(data, mask)
     (res, a, b) = core.standarize(data)
-    res = AData(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
+    res = Data(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
     return res, a, b
 
-
+#TODO: candidate for deprecation
 @support_nddata
 def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
     """
@@ -85,9 +85,9 @@ def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
     if mask is not None:
         data = core.fix_mask(data, mask)
     res = core.unstandarize(data, a, b)
-    return AData(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
+    return Data(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
 
-
+#TODO: candidate for deprecation
 @support_nddata
 def add(data, flux, lower=None, upper=None, wcs=None, unit=None, meta=None, mask=None):
     """
@@ -119,9 +119,9 @@ def add(data, flux, lower=None, upper=None, wcs=None, unit=None, meta=None, mask
     # Please use the OO version data.add(flux) for modifying the data itself.
     res = data.copy()
     core.add(res, flux, lower, upper)
-    return AData(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
+    return Data(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
 
-
+#TODO: candidate for deprecation --> need to move to algorithms
 @support_nddata
 def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
     """
@@ -143,9 +143,9 @@ def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
 
     """
     newdata = core.denoise(data, threshold)
-    return AData(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
+    return Data(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 
-
+#TODO: really needed as UPI?
 @support_nddata
 def world_gaussian(data, mu, P, peak, cutoff, wcs=None):
     """
