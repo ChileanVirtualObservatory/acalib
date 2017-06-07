@@ -55,6 +55,7 @@ def HDU_to_NDData(hdu):
        # TODO: Stokes is removed by summing (is this correct? maybe is averaging?)
        log.info("4D data detected: assuming RA-DEC-FREQ-STOKES (like CASA-generated ones), and dropping STOKES")
        data=data.sum(axis=0)*bscale+bzero
+       mask = np.logical_and.reduce(mask,axis=0)
        mywcs=mywcs.dropaxis(3)
    elif len(data.shape) == 3:
        log.info("3D data detected: assuming RA-DEC-FREQ")
