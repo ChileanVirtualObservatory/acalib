@@ -1,16 +1,9 @@
 from astropy import nddata as ndd
 
-import io
+from acalib import upi,io
 
-from acalib import loadFITS_PrimaryOnly
-from acalib.io import graph
-from acalib.upi import *
 
-# TODO: Dummy function. This should be smart (Tables, AData etc...)
-def loadme(uri):
-    return loadFITS_PrimaryOnly(uri)
-
-class AData(ndd.NDDataRef):
+class Data(ndd.NDDataRef):
     """
     A generic represenation of astronomical n-dimensional data array. Extends NDData.
    
@@ -23,7 +16,8 @@ class AData(ndd.NDDataRef):
         result: numpy.ndarray
             Numpy ndarray with the axes's names from the WCS.
         """
-        return axes.axes_names(self)
+
+        return upi.axes_names(self)
 
     def cut(self, lower=None, upper=None):
         """
@@ -41,7 +35,7 @@ class AData(ndd.NDDataRef):
         result: acalib.upi.AData.
             AData cut from lower to upper.
         """
-        return axes.cut(self, lower=lower, upper=upper)
+        return upi.axes.cut(self, lower=lower, upper=upper)
 
     def extent(self, lower=None, upper=None):
         """
@@ -59,7 +53,7 @@ class AData(ndd.NDDataRef):
         result: (M, N) tuple of astropy.units.quantity.Quantity
             Axes extent
         """
-        return axes.extent(self, lower=lower, upper=upper)
+        return upi.axes.extent(self, lower=lower, upper=upper)
 
     def center(self):
         """
@@ -70,7 +64,7 @@ class AData(ndd.NDDataRef):
         result: astropy.units.quantity.Quantity
             Center of the data
         """
-        return axes.center(self)
+        return upi.axes.center(self)
 
     def axes_units(self):
         """
@@ -81,7 +75,7 @@ class AData(ndd.NDDataRef):
         result: (M,N) or (M,N,Z) numpy.ndarray
             Vector with the units of the axes
         """
-        return axes.axes_units(self)
+        return upi.axes.axes_units(self)
 
     def resolution(self):
         """
@@ -92,7 +86,7 @@ class AData(ndd.NDDataRef):
         result: (M,N) or (M,N,Z) numpy.ndarray
             Resolution of the data
         """
-        return axes.resolution(self)
+        return upi.axes.resolution(self)
 
     def spectral_velocities(self, fqs=None, fqis=None, restfrq=None):
         """
@@ -114,7 +108,7 @@ class AData(ndd.NDDataRef):
         result: astropy.units.quantity.Quantity
             Array of Spectral velocities.
         """
-        return axes.spectral_velocities(self, fqs=fqs, fqis=fqis, restfrq=restfrq)
+        return upi.axes.spectral_velocities(self, fqs=fqs, fqis=fqis, restfrq=restfrq)
 
     def features(self, lower=None, upper=None):
         """
@@ -132,7 +126,7 @@ class AData(ndd.NDDataRef):
         result: astropy.table.Table
             Table with WCS information of a section from the data.
         """
-        return axes.features(self, lower=lower, upper=upper)
+        return upi.axes.features(self, lower=lower, upper=upper)
 
     def opening(self, center, window):
         """
@@ -151,7 +145,7 @@ class AData(ndd.NDDataRef):
         -------
         result: ((M1,N1,Z1),(M2,N2,Z2)) tuple of tuple of ints
         """
-        return axes.opening(self, center=center, window=window)
+        return upi.axes.opening(self, center=center, window=window)
 
     def rms(self):
         """
@@ -162,7 +156,7 @@ class AData(ndd.NDDataRef):
         rms : float
             RMS of data
         """
-        return flux.rms(self)
+        return upi.flux.rms(self)
 
     def moment0(self):
         """
@@ -173,7 +167,7 @@ class AData(ndd.NDDataRef):
         result: astropy.nddata.AData
             Moment 0 of the data cube
         """
-        return reduction.moment0(self, restfrq=None)
+        return upi.reduction.moment0(self, restfrq=None)
 
     def moment1(self, restfrq=None):
         """
@@ -187,7 +181,7 @@ class AData(ndd.NDDataRef):
         result: astropy.nddata.NDData
             Moment 1 of the data cube
         """
-        return reduction.moment1(self, restfrq=restfrq)
+        return upi.reduction.moment1(self, restfrq=restfrq)
 
     def moment2(self, restfrq=None):
         """
@@ -201,10 +195,10 @@ class AData(ndd.NDDataRef):
         result: astropy.nddata.AData
             Moment 2 of the data cube
         """
-        return reduction.moment2(self, restfrq=restfrq)
+        return upi.reduction.moment2(self, restfrq=restfrq)
 
     def visualize(self):
         """
         Generic function to visualize data, line-plot for 1D and image for 2D.
         """
-        graph.visualize(self)
+        io.graph.visualize(self,contour=False)

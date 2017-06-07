@@ -4,7 +4,7 @@ from astropy import log
 import numpy as np
 import astropy.units as u
 from acalib import core
-from acalib.upi.adata import AData
+from acalib.upi.data import Data
 from acalib.upi.axes import spectral_velocities
 
 
@@ -19,7 +19,7 @@ def _moment(data, order, wcs=None, mask=None, unit=None, restfrq=None):
     m0 = data.sum(axis=rdim)
     if order == 0:
         mywcs = wcs.dropaxis(dim)
-        return AData(m0.data, uncertainty=None, mask=m0.mask, wcs=mywcs, meta=None, unit=unit)
+        return Data(m0.data, uncertainty=None, mask=m0.mask, wcs=mywcs, meta=None, unit=unit)
 
     v = spectral_velocities(data, wcs, fqis=np.arange(data.shape[rdim]), restfrq=restfrq)
     v = v.value
@@ -28,14 +28,14 @@ def _moment(data, order, wcs=None, mask=None, unit=None, restfrq=None):
     m1 = alpha * mu / m0
     if order == 1:
         mywcs = wcs.dropaxis(dim)
-        return AData(m1.data, uncertainty=None, mask=m1.mask, wcs=mywcs, meta=None, unit=u.km / u.s)
+        return Data(m1.data, uncertainty=None, mask=m1.mask, wcs=mywcs, meta=None, unit=u.km / u.s)
     v2 = v * v
     var, beta = np.ma.average(data, axis=rdim, weights=v2, returned=True)
     # var,beta=data.average(axis=rdim,weights=v2,returned=True)
     m2 = np.sqrt(beta * var / m0 - m1 * m1)
     if order == 2:
         mywcs = wcs.dropaxis(dim)
-        return AData(m2.data, uncertainty=None, mask=m2.mask, wcs=mywcs, meta=None, unit=u.km * u.km / u.s / u.s)
+        return Data(m2.data, uncertainty=None, mask=m2.mask, wcs=mywcs, meta=None, unit=u.km * u.km / u.s / u.s)
     log.error("Order not supported")
     return None
 

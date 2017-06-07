@@ -6,7 +6,7 @@ from astropy import log
 from acalib import core
 
 # axes_names used in formatting
-from acalib.upi.adata import AData
+from acalib.upi.data import Data
 
 
 @support_nddata
@@ -59,13 +59,13 @@ def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
         Returns
         -------
          result: acalib.upi.AData.
-            AData cut from lower to upper.
+            Data cut from lower to upper.
     """
     # Check for NDDataSlicing... maybe this is already done by astropy.nddata package.
     mslab = core.slab(data, lower, upper)
     scube = data[mslab]
     newwcs = wcs.slice(mslab, numpy_order=True)
-    return AData(scube, wcs=newwcs, unit=unit)
+    return Data(scube, wcs=newwcs, unit=unit)
 
 
 @support_nddata

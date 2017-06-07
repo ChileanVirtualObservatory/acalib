@@ -7,7 +7,11 @@ from astropy.table.table import Table
 from astropy.vo.samp import SAMPIntegratedClient
 import os
 
-from acalib.upi import AData
+from acalib.upi.data import Data
+
+# TODO: Dummy function. This should be smart (Tables, AData etc...)
+def loadme(uri):
+    return loadFITS_PrimaryOnly(uri)
 
 def HDU_to_NDData(hdu):
     """
@@ -66,7 +70,7 @@ def HDU_to_NDData(hdu):
     else:
         log.error("Only 3D data allowed (or 4D in case of polarization)")
         raise TypeError
-    return AData(data, uncertainty=None, mask=mask, wcs=mywcs, meta=meta, unit=bunit)
+    return Data(data, uncertainty=None, mask=mask, wcs=mywcs, meta=meta, unit=bunit)
 
 
 def HDU_to_Table(hdu):
@@ -223,7 +227,7 @@ def loadFITS_PrimaryOnly(fitsfile):
         log.error('Only 2-4D data allowed')
         raise TypeError('Only 2-4D data allowed')
     hdulist.close()
-    return AData(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit)
+    return Data(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit)
 
 
 def SAMP_send_fits(filename, longname):

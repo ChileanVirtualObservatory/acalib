@@ -4,7 +4,6 @@ from .fits import *
 from .graph import *
 from .container import *
 
-
 # TODO: This maybe moved to a file
 
 def jovial_array_styler(arr):
