@@ -1,4 +1,5 @@
 from astropy.nddata import support_nddata
+from astropy.units import Quantity
 from acalib import core
 import numpy as np
 
@@ -142,6 +143,8 @@ def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
         NDDataRef: Data denoised
 
     """
+    if isinstance(threshold,Quantity):
+        threshold=threshold.value
     newdata = core.denoise(data, threshold)
     return Data(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 

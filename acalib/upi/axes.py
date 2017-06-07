@@ -64,8 +64,12 @@ def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
     # Check for NDDataSlicing... maybe this is already done by astropy.nddata package.
     mslab = core.slab(data, lower, upper)
     scube = data[mslab]
+    if mask is None:
+        smask=None
+    else:
+        smask = mask[mslab]
     newwcs = wcs.slice(mslab, numpy_order=True)
-    return Data(scube, wcs=newwcs, unit=unit)
+    return Data(scube, wcs=newwcs, unit=unit, mask=smask)
 
 
 @support_nddata
