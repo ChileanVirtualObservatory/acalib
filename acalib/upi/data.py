@@ -138,8 +138,6 @@ class Data(ndd.NDDataRef):
             Center of the field of view in WCS.
         window : astropy.units.quantity.Quantity
             Window for the field in WCS.
-        wcs : astropy.wcs.wcs.WCS
-            World Coordinate System to use.
 
         Returns
         -------
