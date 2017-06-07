@@ -177,7 +177,7 @@ def load_fits_to_cont(filePath,acont):
             acont.primary = acont.images[0]
 
 def loadFITS_PrimaryOnly(fitsfile):
-    hdulist = fits.open(fitspath, lazy_load_hdus=True)
+    hdulist = fits.open(fitsfile, lazy_load_hdus=True)
     log.info('Processing PrimaryHDU Object 0')
     hduobject = hdulist[0]
     if hduobject is None:
