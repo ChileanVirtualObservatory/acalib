@@ -17,13 +17,13 @@ def _moment(data, order, wcs=None, mask=None, unit=None, restfrq=None):
     dim = wcs.wcs.spec
     rdim = data.ndim - 1 - dim
     m0 = data.sum(axis=rdim)
-    if order == 0:
-        mywcs = wcs.dropaxis(dim)
-        return Data(m0.data, uncertainty=None, mask=m0.mask, wcs=mywcs, meta=None, unit=unit)
 
     v = spectral_velocities(data, wcs, fqis=np.arange(data.shape[rdim]), restfrq=restfrq)
     v = v.value
     # mu,alpha=np.average(data,axis=rdim,weights=v,returned=True)
+    if order == 0:
+        mywcs = wcs.dropaxis(dim)
+        return Data(m0.data, uncertainty=None, mask=m0.mask, wcs=mywcs, meta=None, unit=unit)
     mu, alpha = np.ma.average(data, axis=rdim, weights=v, returned=True)
     m1 = alpha * mu / m0
     if order == 1:
