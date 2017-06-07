@@ -1,8 +1,0 @@
-cminpack/libast_la-lmder1.lo: cminpack/lmder1.c \
- /usr/include/stdc-predef.h cminpack/cminpack.h cminpack/cminpackP.h
-
-/usr/include/stdc-predef.h:
-
-cminpack/cminpack.h:
-
-cminpack/cminpackP.h:

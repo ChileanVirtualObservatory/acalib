@@ -19,7 +19,7 @@ def HDU_to_NDData(hdu):
 
     Returns
     -------
-    result: numpy.ndarray or astropy.nddata.NDData with data from the HDU object.
+    result: astropy.nddata.NDDataRef with data from the HDU object.
    """
    hdu.verify("fix")
    data=hdu.data
@@ -65,7 +65,7 @@ def HDU_to_NDData(hdu):
    else:
        log.error("Only 3D data allowed (or 4D in case of polarization)")
        raise TypeError
-   return ndd.NDData(data, uncertainty=None, mask=mask,wcs=mywcs, meta=meta, unit=bunit)
+   return ndd.NDDataRef(data, uncertainty=None, mask=mask,wcs=mywcs, meta=meta, unit=bunit)
 
 def HDU_to_Table(hdu):
     """
@@ -110,7 +110,7 @@ def NDData_to_HDU(cube,primary=False):
 
     Parameters
     ----------
-    cube : numpy.ndarray or astropy.nddata.NDData
+    cube : numpy.ndarray or astropy.nddata.NDData or or astropy.nddata.NDDataRef
         Astronomical data cube.
     primary : bool
         Whether to pick the primary or an image HDU.
@@ -176,7 +176,7 @@ def load_fits_to_cont(filePath,acont):
         else:
             acont.primary = acont.images[0]
 
-def loadFITS_PrimmaryOnly(fitsfile):
+def loadFITS_PrimaryOnly(fitsfile):
     hduobject = None
     hdulist = fits.open(fitsfile)
     for idx, hdu in enumerate(hdulist):
@@ -197,7 +197,6 @@ def loadFITS_PrimmaryOnly(fitsfile):
     if 'BUNIT' in hduobject.header:
         unit = hduobject.header['BUNIT'].lower().replace('jy','Jy')
         bunit = u.Unit(unit, format='fits')
-
     for item in hduobject.header.items():
         if item[0].startswith('PC00'):
             hduobject.header.remove(item[0])
@@ -215,8 +214,9 @@ def loadFITS_PrimmaryOnly(fitsfile):
         hduobject.data = (hduobject.data*bscale) + bzero
     else:
         log.error('Only 2-4D data allowed')
-        raise TypeError
-    return ndd.NDData(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit)
+        raise TypeError('Only 2-4D data allowed')
+    hdulist.close()
+    return ndd.NDDataRef(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit)
 
 
 def SAMP_send_fits(filename,longname):

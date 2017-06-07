@@ -43,10 +43,13 @@ def _fellwalker(data, config, wcs=None, mask=None, unit=None, rms=0.0):
             cube = data[0,:,:]
 
     ret = pycupid.fellwalker(cube, rms,config=config)
-    
+
     if ret is not None:
         ret[ret == ret.min()] = 0
-        return NDData(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+        if wcs:
+            return NDDataRef(ret, uncertainty=None, mask=None, wcs=wcs, meta=None, unit=unit)
+        else:
+            return ret
     else:
         return None
 
@@ -57,15 +60,22 @@ class FellWalker(Algorithm):
         if 'FWHMBEAM' not in self.config:
             self.config['FWHMBEAM'] = 2.0
         if 'VELORES' not in self.config:
-            self.config['VELORES'] =  2.0  
+            self.config['VELORES'] =  2.0
 
     def run(self, data):
-        if len(data.data.shape) > 4:
-            raise Exception("Algorithm only support 2D and 3D Matrices")
+        if type(data) is NDData or type(data) is NDDataRef:
+            if len(data.data.shape) > 4:
+                raise Exception("Algorithm only support 2D and 3D Matrices")
+        else:
+            if len(data.shape) > 4:
+                raise Exception("Algorithm only support 2D and 3D Matrices")
         # if rms not in config, estimate it
 
         if 'RMS' not in self.config:
-            rms = acalib.rms(data.data)
+            if type(data) == NDData or type(data)== NDDataRef:
+                rms = acalib.rms(data.data)
+            else:
+                rms = acalib.rms(data)
         else:
             rms = self.config['RMS']
 
@@ -73,7 +83,7 @@ class FellWalker(Algorithm):
         caa = _fellwalker(data, self.config,rms = rms)
 
         # computing asocciated structures
-        if caa:
+        if caa is not None:
             clumps = _struct_builder(caa.data)
 
             return caa,clumps

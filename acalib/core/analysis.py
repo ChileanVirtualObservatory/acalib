@@ -1,10 +1,7 @@
 import numpy as np
 from astropy import log
-from astropy.nddata import support_nddata, NDData
-try:
-    from skimage.filters import threshold_adaptive
-except:
-    from skimage.filter import threshold_adaptive
+from astropy.nddata import support_nddata, NDDataRef
+from skimage.filters import threshold_local
 from skimage.measure import label,regionprops
 
 from ._morph import *
@@ -19,7 +16,7 @@ def rms(data, mask=None):
     Compute the RMS of data. If mask != None, then we use that mask.
     Parameters
     ----------
-    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or or astropy.nddata.NDDataRef
         Astronomical data cube.
     mask : numpy.ndarray (default = None)
     Returns
@@ -162,7 +159,7 @@ def spectra_sketch(data, samples, random_state=None):
     
     Parameters
     ----------
-    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical data cube.
     samples : Number of pixel samples(int) used for the sketch.
     random_state : (default=None)
@@ -173,7 +170,9 @@ def spectra_sketch(data, samples, random_state=None):
     """
     # Specific for a FREQ,DEC,RA order
     if random_state is not None:
-        np.random.seed(random_state)
+        random = np.random.RandomState(random_state)
+    else:
+        random = np.random
 
     dims = data.shape
     P_x = dims[2]
@@ -183,13 +182,14 @@ def spectra_sketch(data, samples, random_state=None):
     frec = dims[0]
 
     spectra = np.zeros(frec)
+    x_ = random.choice(P_x_range, samples, replace=True)
+    y_ = random.choice(P_y_range, samples, replace=True)
 
-    for i in range(samples):
-        x_ = np.random.choice(P_x_range, 1)
-        y_ = np.random.choice(P_y_range, 1)
-        pixel = data[:, y_, x_]
+    pixels = data[:, y_, x_].T
+    for pixel in pixels:
         pixel_masked = _pixel_processing(pixel)
         spectra += pixel_masked
+    
     spectra = _pixel_processing(spectra)
 
     slices = []
@@ -208,7 +208,6 @@ def spectra_sketch(data, samples, random_state=None):
                     if i == frec - 2:
                         max_slice = i + 1
                         slices.append(slice(min_slice, max_slice))
-
     return spectra, slices
 
 
@@ -300,7 +299,9 @@ def _optimal_w(image, p=0.05):
         if tt % 2 == 0:
             tt += 1
 
-        g = threshold_adaptive(f, tt, method='mean', offset=0)
+        adaptive_threshold = threshold_local(f, tt, method='mean', offset=0)#(f, tt, offset=0)
+        g = f > adaptive_threshold
+
         ov = _bg_fg(f, g, bg, fg)
         if (ov < min_ov):
             w = radius
@@ -387,12 +388,13 @@ def vel_stacking(data, data_slice):
     ----------
     data : numpy.ndarray
         Astronomical 2D image 
+
     slice : slice object
         Sector to be collapsed
     
     Returns
     -------
-    image (NDData): 2D-Array with the stacked cube.
+    image (NDDataRef): 2D-Array with the stacked cube.
     """
     if len(data.shape) != 3:
         log.error("Cube needs to be a 3D array")
@@ -400,6 +402,9 @@ def vel_stacking(data, data_slice):
     dims = data.shape
     subcube = data[data_slice, :,:]
     stacked = np.sum(subcube,axis=0)
-    wcs = wcs.dropaxis(2)
+    if wcs:
+        wcs = wcs.dropaxis(2)
 
-    return NDData(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+        return NDDataRef(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+    else:
+        return stacked
