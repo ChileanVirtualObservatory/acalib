@@ -27,6 +27,7 @@ def visualize(data,wcs=None,unit=None,contour=False):
     contour : numpy.ndarray
         For plotting Contourns
     """
+
     if data.ndim == 1:
         return visualize_plot(data,wcs,unit)
     elif data.ndim == 2:
@@ -105,7 +106,6 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
         crs=np.arange(1,dmax/arms)
         plt.contour(data,levels=arms*crs,alpha=0.5)
     plt.show()
-
 
 # TODO: Remove hardocded stuff
 @support_nddata
