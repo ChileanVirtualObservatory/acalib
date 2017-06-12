@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
 from .algorithms import *
-from .upi import *
 from .io import *
+from .upi import *
 
 import warnings 
 from astropy.utils.exceptions import AstropyWarning 
