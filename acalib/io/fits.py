@@ -2,6 +2,7 @@ from astropy.io import fits
 from astropy import log
 import numpy as np
 import astropy.units as u
+from astropy.nddata import support_nddata
 from astropy.wcs import wcs
 from astropy.table.table import Table
 from astropy.vo.samp import SAMPIntegratedClient
@@ -9,11 +10,21 @@ import os
 
 from acalib.upi.data import Data
 
-# TODO: Dummy function. This should be smart (Tables, AData etc...)
-def loadme(uri):
-    return loadFITS_PrimaryOnly(uri)
+@support_nddata
+def remove_superfluous(data, wcs=None, mask=None, unit=None,meta=None, restfrq=None):
+    if data.shape[0] == 1:
+        log.info("Removing superfluous dimension "+wcs.axis_type_names[wcs.naxis - 1]+" (kept in the metadata)")
+        cs=wcs.dropaxis(wcs.naxis - 1)
+        if mask is not None:
+            mk=mask[0]
+        dt=data[0]
+    else:
+        return(Data(data,wcs=wcs,unit=unit,mask=mask,meta=meta))
+    newimg=Data(dt,wcs=cs,unit=unit,mask=mk,meta=meta)
+    return(remove_superfluous(newimg))
 
-def HDU_to_NDData(hdu):
+
+def HDU_to_Data(hdu):
     """
     Create an N-dimensional dataset from an HDU component.
 
@@ -54,24 +65,25 @@ def HDU_to_NDData(hdu):
         meta.remove(e)
 
     mywcs = wcs.WCS(meta)
+    data = data * bscale + bzero
     # Create astropy units
-    if len(data.shape) == 4:
+    #if len(data.shape) == 4:
         # Put data in physically-meaninful values, and remove stokes
         # TODO: Stokes is removed by summing (is this correct? maybe is averaging?)
-        log.info("4D data detected: assuming RA-DEC-FREQ-STOKES (like CASA-generated ones), and dropping STOKES")
-        data = data.sum(axis=0) * bscale + bzero
-        mask = np.logical_and.reduce(mask,axis=0)
-        mywcs = mywcs.dropaxis(3)
-    elif len(data.shape) == 3:
-        log.info("3D data detected: assuming RA-DEC-FREQ")
-        data = data * bscale + bzero
-    elif len(data.shape) == 2:
-        log.info("2D data detected: assuming RA-DEC")
-        data = data * bscale + bzero
-    else:
-        log.error("Only 3D data allowed (or 4D in case of polarization)")
-        raise TypeError
-    return Data(data, uncertainty=None, mask=mask, wcs=mywcs, meta=meta, unit=bunit)
+        #log.info("4D data detected: assuming RA-DEC-FREQ-STOKES (like CASA-generated ones), and dropping STOKES")
+     #   data = data.sum(axis=0) * bscale + bzero
+     #   mask = np.logical_and.reduce(mask,axis=0)
+     #   mywcs = mywcs.dropaxis(3)
+    #elif len(data.shape) == 3:
+    #    log.info("3D data detected: assuming RA-DEC-FREQ")
+    #
+    #elif len(data.shape) == 2:
+    #    log.info("2D data detected: assuming RA-DEC")
+    #    data = data * bscale + bzero
+    #else:
+    #    log.error("Only 3D data allowed (or 4D in case of polarization)")
+    #    raise TypeError
+    return remove_superfluous(Data(data, uncertainty=None, mask=mask, wcs=mywcs, meta=meta, unit=bunit))
 
 
 def HDU_to_Table(hdu):
@@ -113,7 +125,7 @@ def Table_to_HDU(tab):
     return hdu
 
 
-def NDData_to_HDU(cube, primary=False):
+def Data_to_HDU(cube, primary=False):
     """
     Create a HDU object from an N-dimensional dataset.
 
@@ -213,22 +225,23 @@ def loadFITS_PrimaryOnly(fitsfile):
         if item[0].startswith('PC00'):
             hduobject.header.remove(item[0])
     coordinateSystem = wcs.WCS(hduobject.header)
-    if len(hduobject.data.shape) == 4:
-        log.info('4D Detected: Assuming RA-DEC-FREQ-STOKES, and dropping STOKES')
-        coordinateSystem=coordinateSystem.dropaxis(3)
-        hduobject.data = hduobject.data.sum(axis=0) * bscale + bzero
-        mask = np.logical_and.reduce(mask, axis=0)
-    elif len(hduobject.data.shape) == 3:
-        log.info('3D Detected: Assuming RA-DEC-FREQ')
-        hduobject.data = (hduobject.data * bscale) + bzero
-    elif len(hduobject.data.shape) == 2:
-        log.info('2D Detected: Assuming RA-DEC')
-        hduobject.data = (hduobject.data * bscale) + bzero
-    else:
-        log.error('Only 2-4D data allowed')
-        raise TypeError('Only 2-4D data allowed')
+    hduobject.data = (hduobject.data * bscale) + bzero
+    #if len(hduobject.data.shape) == 4:
+    #    log.info('4D Detected: Assuming RA-DEC-FREQ-STOKES, and dropping STOKES')
+    #    coordinateSystem=coordinateSystem.dropaxis(3)
+    #    hduobject.data = hduobject.data.sum(axis=0) * bscale + bzero
+    #    mask = np.logical_and.reduce(mask, axis=0)
+    #elif len(hduobject.data.shape) == 3:
+    #    log.info('3D Detected: Assuming RA-DEC-FREQ')
+    #    hduobject.data = (hduobject.data * bscale) + bzero
+    #elif len(hduobject.data.shape) == 2:
+    #    log.info('2D Detected: Assuming RA-DEC')
+    #    hduobject.data = (hduobject.data * bscale) + bzero
+    #else:
+    #    log.error('Only 2-4D data allowed')
+    #    raise TypeError('Only 2-4D data allowed')
     hdulist.close()
-    return Data(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit)
+    return remove_superfluous(Data(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit))
 
 
 def SAMP_send_fits(filename, longname):
