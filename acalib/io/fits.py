@@ -73,7 +73,6 @@ def HDU_to_NDData(hdu):
         raise TypeError
     return Data(data, uncertainty=None, mask=mask, wcs=mywcs, meta=meta, unit=bunit)
 
-
 def HDU_to_Table(hdu):
     """
     Create a data table from a HDU component.
