@@ -85,7 +85,6 @@ def HDU_to_Data(hdu):
     #    raise TypeError
     return remove_superfluous(Data(data, uncertainty=None, mask=mask, wcs=mywcs, meta=meta, unit=bunit))
 
-
 def HDU_to_Table(hdu):
     """
     Create a data table from a HDU component.
