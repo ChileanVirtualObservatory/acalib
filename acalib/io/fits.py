@@ -158,12 +158,12 @@ def save_fits_from_cont(filepath, acont):
     if acont.primary == None:
         phdu = fits.PrimaryHDU()
     else:
-        phdu = NDData_to_HDU(acont.primary, primary=True)
+        phdu = Data_to_HDU(acont.primary, primary=True)
     nlist = [phdu]
     count = 0
     for elm in acont.images:
         count += 1
-        hdu = NDData_to_HDU(elm)
+        hdu = Data_to_HDU(elm)
         hdu.header['EXTNAME'] = 'SCI'
         hdu.header['EXTVER'] = count
         nlist.append(hdu)
@@ -184,7 +184,7 @@ def load_fits_to_cont(filePath, acont):
         if isinstance(hdu, fits.PrimaryHDU) or isinstance(hdu, fits.ImageHDU):
             log.info("Processing HDU " + str(counter) + " (Image)")
             try:
-                ndd = HDU_to_NDData(hdu)
+                ndd = HDU_to_Data(hdu)
                 if isinstance(hdu, fits.PrimaryHDU):
                     acont.primary = ndd
                 acont.images.append(ndd)
@@ -201,48 +201,15 @@ def load_fits_to_cont(filePath, acont):
 
 
 def loadFITS_PrimaryOnly(fitsfile):
-    hduobject = None
-    hdulist = fits.open(fitsfile)
-    for idx, hdu in enumerate(hdulist):
-        if isinstance(hdu, fits.PrimaryHDU):
-            log.info('Processing PrimaryHDU Object ' + str(idx))
-            hduobject = hdu
-            break
-    hduobject.verify("fix")
-    # Check if hduobject is None??
-    bscale = 1.0
-    bunit = u.Unit('u.Jy/u.beam')
-    bzero = 0.0
-    mask = np.isnan(hduobject.data)
-    if 'BSCALE' in hduobject.header:
-        bscale = hduobject.header['BSCALE']
-    if 'BZERO' in hduobject.header:
-        bzero = hduobject.header['BZERO']
-    if 'BUNIT' in hduobject.header:
-        unit = hduobject.header['BUNIT'].lower().replace('jy', 'Jy')
-        bunit = u.Unit(unit, format='fits')
-    for item in hduobject.header.items():
-        if item[0].startswith('PC00'):
-            hduobject.header.remove(item[0])
-    coordinateSystem = wcs.WCS(hduobject.header)
-    hduobject.data = (hduobject.data * bscale) + bzero
-    #if len(hduobject.data.shape) == 4:
-    #    log.info('4D Detected: Assuming RA-DEC-FREQ-STOKES, and dropping STOKES')
-    #    coordinateSystem=coordinateSystem.dropaxis(3)
-    #    hduobject.data = hduobject.data.sum(axis=0) * bscale + bzero
-    #    mask = np.logical_and.reduce(mask, axis=0)
-    #elif len(hduobject.data.shape) == 3:
-    #    log.info('3D Detected: Assuming RA-DEC-FREQ')
-    #    hduobject.data = (hduobject.data * bscale) + bzero
-    #elif len(hduobject.data.shape) == 2:
-    #    log.info('2D Detected: Assuming RA-DEC')
-    #    hduobject.data = (hduobject.data * bscale) + bzero
-    #else:
-    #    log.error('Only 2-4D data allowed')
-    #    raise TypeError('Only 2-4D data allowed')
+    hdulist = fits.open(fitsfile, lazy_load_hdus=True)
+    log.info('Processing PrimaryHDU Object 0')
+    hduobject = hdulist[0]
+    if hduobject is None:
+        log.error('FITS PrimaryHDU is None')
+        raise ValueError('FITS PrimaryHDU is None')
+    result = HDU_to_Data(hduobject)
     hdulist.close()
-    return remove_superfluous(Data(hduobject.data, uncertainty=None, mask=mask, wcs=coordinateSystem, meta=hduobject.header, unit=bunit))
-
+    return result
 
 def SAMP_send_fits(filename, longname):
     client = SAMPIntegratedClient()
