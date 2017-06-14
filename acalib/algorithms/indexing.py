@@ -54,7 +54,7 @@ class Indexing(Algorithm):
             :class:`~acalib.Container` with the cube slices, segmentated images and region of interest tables for each scale analyzed.
         """
 
-        if type(cube) is NDData or type(cube) is NDDataRef:
+        if isinstance(cube,NDData):
             if cube.wcs:
                 wcs = cube.wcs
             else:
