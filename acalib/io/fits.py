@@ -2,6 +2,7 @@ from astropy.io import fits
 from astropy import log
 import numpy as np
 import astropy.units as u
+from astropy.nddata import support_nddata
 from astropy.wcs import wcs
 from astropy.table.table import Table
 from astropy.vo.samp import SAMPIntegratedClient
@@ -9,11 +10,21 @@ import os
 
 from acalib.upi.data import Data
 
-# TODO: Dummy function. This should be smart (Tables, AData etc...)
-def loadme(uri):
-    return loadFITS_PrimaryOnly(uri)
+@support_nddata
+def remove_superfluous(data, wcs=None, mask=None, unit=None,meta=None, restfrq=None):
+    if data.shape[0] == 1:
+        log.info("Removing superfluous dimension "+wcs.axis_type_names[wcs.naxis - 1]+" (kept in the metadata)")
+        cs=wcs.dropaxis(wcs.naxis - 1)
+        if mask is not None:
+            mk=mask[0]
+        dt=data[0]
+    else:
+        return(Data(data,wcs=wcs,unit=unit,mask=mask,meta=meta))
+    newimg=Data(dt,wcs=cs,unit=unit,mask=mk,meta=meta)
+    return(remove_superfluous(newimg))
 
-def HDU_to_NDData(hdu):
+
+def HDU_to_Data(hdu):
     """
     Create an N-dimensional dataset from an HDU component.
 
@@ -54,24 +65,25 @@ def HDU_to_NDData(hdu):
         meta.remove(e)
 
     mywcs = wcs.WCS(meta)
+    data = data * bscale + bzero
     # Create astropy units
-    if len(data.shape) == 4:
+    #if len(data.shape) == 4:
         # Put data in physically-meaninful values, and remove stokes
         # TODO: Stokes is removed by summing (is this correct? maybe is averaging?)
-        log.info("4D data detected: assuming RA-DEC-FREQ-STOKES (like CASA-generated ones), and dropping STOKES")
-        data = data.sum(axis=0) * bscale + bzero
-        mask = np.logical_and.reduce(mask,axis=0)
-        mywcs = mywcs.dropaxis(3)
-    elif len(data.shape) == 3:
-        log.info("3D data detected: assuming RA-DEC-FREQ")
-        data = data * bscale + bzero
-    elif len(data.shape) == 2:
-        log.info("2D data detected: assuming RA-DEC")
-        data = data * bscale + bzero
-    else:
-        log.error("Only 3D data allowed (or 4D in case of polarization)")
-        raise TypeError
-    return Data(data, uncertainty=None, mask=mask, wcs=mywcs, meta=meta, unit=bunit)
+        #log.info("4D data detected: assuming RA-DEC-FREQ-STOKES (like CASA-generated ones), and dropping STOKES")
+     #   data = data.sum(axis=0) * bscale + bzero
+     #   mask = np.logical_and.reduce(mask,axis=0)
+     #   mywcs = mywcs.dropaxis(3)
+    #elif len(data.shape) == 3:
+    #    log.info("3D data detected: assuming RA-DEC-FREQ")
+    #
+    #elif len(data.shape) == 2:
+    #    log.info("2D data detected: assuming RA-DEC")
+    #    data = data * bscale + bzero
+    #else:
+    #    log.error("Only 3D data allowed (or 4D in case of polarization)")
+    #    raise TypeError
+    return remove_superfluous(Data(data, uncertainty=None, mask=mask, wcs=mywcs, meta=meta, unit=bunit))
 
 def HDU_to_Table(hdu):
     """
@@ -112,7 +124,7 @@ def Table_to_HDU(tab):
     return hdu
 
 
-def NDData_to_HDU(cube, primary=False):
+def Data_to_HDU(cube, primary=False):
     """
     Create a HDU object from an N-dimensional dataset.
 
@@ -145,12 +157,12 @@ def save_fits_from_cont(filepath, acont):
     if acont.primary == None:
         phdu = fits.PrimaryHDU()
     else:
-        phdu = NDData_to_HDU(acont.primary, primary=True)
+        phdu = Data_to_HDU(acont.primary, primary=True)
     nlist = [phdu]
     count = 0
     for elm in acont.images:
         count += 1
-        hdu = NDData_to_HDU(elm)
+        hdu = Data_to_HDU(elm)
         hdu.header['EXTNAME'] = 'SCI'
         hdu.header['EXTVER'] = count
         nlist.append(hdu)
@@ -171,7 +183,7 @@ def load_fits_to_cont(filePath, acont):
         if isinstance(hdu, fits.PrimaryHDU) or isinstance(hdu, fits.ImageHDU):
             log.info("Processing HDU " + str(counter) + " (Image)")
             try:
-                ndd = HDU_to_NDData(hdu)
+                ndd = HDU_to_Data(hdu)
                 if isinstance(hdu, fits.PrimaryHDU):
                     acont.primary = ndd
                 acont.images.append(ndd)
@@ -194,7 +206,7 @@ def loadFITS_PrimaryOnly(fitsfile):
     if hduobject is None:
         log.error('FITS PrimaryHDU is None')
         raise ValueError('FITS PrimaryHDU is None')
-    result = HDU_to_NDData(hduobject)
+    result = HDU_to_Data(hduobject)
     hdulist.close()
     return result
 
