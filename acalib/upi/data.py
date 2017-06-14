@@ -1,6 +1,6 @@
 from astropy import nddata as ndd
 
-from acalib import upi,io
+from acalib import upi, io
 
 
 class Data(ndd.NDDataRef):
@@ -19,41 +19,36 @@ class Data(ndd.NDDataRef):
 
         return upi.axes_names(self)
 
-    def cut(self, lower=None, upper=None):
+    def cut(self, region=None):
         """
         Get a cut of the cube.
 
         Parameters
         ----------
-        lower : tuple
-            Start coordinate from where to cut.
-        upper : tuple
-            Coordinate to end cut.
-
+        region :(lower : (M,N) or (M,N,Z), upper : (M,N) or (M,N,Z))
+            Start and End index in data (int tuples)
         Returns
         -------
         result: acalib.upi.AData.
             AData cut from lower to upper.
         """
-        return upi.axes.cut(self, lower=lower, upper=upper)
+        return upi.reduction.cut(self, region=region)
 
-    def extent(self, lower=None, upper=None):
+    def extent(self, region=None):
         """
         Get the axes extent.
 
         Parameters
         ----------
-        lower : (M,N) or (M,N,Z) tuple of int
-            Start index in data
-        upper : (M,N) or (M,N,Z) tuple of int
-            End index in data
+    region :(lower : (M,N) or (M,N,Z), upper : (M,N) or (M,N,Z))
+            Start and End index in data (int tuples)
 
         Returns
         -------
         result: (M, N) tuple of astropy.units.quantity.Quantity
             Axes extent
         """
-        return upi.axes.extent(self, lower=lower, upper=upper)
+        return upi.axes.extent(self, region)
 
     def center(self):
         """
@@ -110,23 +105,21 @@ class Data(ndd.NDDataRef):
         """
         return upi.axes.spectral_velocities(self, fqs=fqs, fqis=fqis, restfrq=restfrq)
 
-    def features(self, lower=None, upper=None):
+    def features(self, region=None):
         """
         Creates an array with WCS axea in features format
 
         Parameters
         ----------
-        lower : (M,N) or (M,N,Z) tuple of integers
-            Start index in data.
-        upper : (M,N) or (M,N,Z) tuple of integers
-            End index in data.
+        region :(lower : (M,N) or (M,N,Z), upper : (M,N) or (M,N,Z))
+            Start and End index in data (int tuples)
 
         Returns
         -------
         result: astropy.table.Table
             Table with WCS information of a section from the data.
         """
-        return upi.axes.features(self, lower=lower, upper=upper)
+        return upi.axes.features(self, region=region)
 
     def opening(self, center, window):
         """
@@ -199,4 +192,16 @@ class Data(ndd.NDDataRef):
         """
         Generic function to visualize data, line-plot for 1D and image for 2D.
         """
-        io.graph.visualize(self,contour=False)
+        io.graph.visualize(self)
+
+    def visualize_image(self, contour=False):
+        io.visualize_image(self, contour=contour)
+
+    def visualize_spectra(self, velocities=False):
+        io.visualize_spectra(self, velocities=velocities)
+
+    def select_region(self, ra_1=None, dec_1=None, ra_2=None, dec_2=None, interactive=False):
+        upi.reduction.select_region(self, ra_1=ra_1, dec_1=dec_1, ra_2=ra_2, dec_2=dec_2, interactive=interactive)
+
+    def select_band(self,freq_1=None,freq_2=None,interactive=False):
+        upi.reduction.select_band(self, freq_1=freq_1,freq_2=freq_2, interactive=interactive)
