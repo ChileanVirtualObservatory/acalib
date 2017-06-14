@@ -4,7 +4,7 @@ from astropy.wcs import wcs
 #from mayavi import mlab
 from astropy.nddata import support_nddata
 
-from acalib import core
+from acalib import core, upi
 from acalib.upi import axes
 from ..core.analysis import rms
 import matplotlib.pyplot as plt
@@ -211,24 +211,44 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
             plt.contour(data,levels=arms*crs,alpha=0.5)
     plt.show()
 
+import ipyvolume.pylab as ipvlab
+
 @support_nddata
 def visualize_volume(data,wcs=None,unit=None):
-    pass
-     # if wcs is None:
-     #    log.error("WCS is needed by this function")
-     # figure = mlab.figure('Volume Plot')
-     # mesh=get_mesh(data)
-     # xi,yi,zi=mesh
-     # ranges=axes_ranges(data,wcs)
-     # grid = mlab.pipeline.scalar_field(xi, yi, zi, data)
-     # mmin = data.min()
-     # mmax = data.max()
-     # mlab.pipeline.volume(grid)#,vmin=mmin, vmax=mmin)
-     # ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
-     # ax.axes.label_format='%.3f'
-     # mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
-     # mlab.show()
+    if wcs is None:
+        log.error("WCS is needed by this function")
+        return
 
+    if unit is None:
+        log.error("Unit is needed by this function")
+        return
+
+    ipvlab.clear()
+
+    labels = ["{} [{}]".format(axe, str(unit)) for axe, unit in
+              zip(upi.axes_names(data, wcs), upi.axes_units(data, wcs))]
+
+    ipvlab.xyzlabel(*labels)
+
+    extent = upi.extent(data, wcs)
+    minlim = extent[0]
+    maxlim = extent[1]
+
+    ipvlab.xlim(minlim[0].value, maxlim[0].value)
+    ipvlab.ylim(minlim[1].value, maxlim[1].value)
+    ipvlab.zlim(minlim[2].value, maxlim[2].value)
+
+    ipvlab.style.use('dark')
+
+    tf = ipvlab.transfer_function(level=[0.39, 0.54, 0.60], opacity=[0.2, 0.2, 0.2])
+    vol = ipvlab.volshow(data, tf=tf, controls=False, level_width=0.1)
+
+    ipvlab.gcf().width = 1024
+    ipvlab.gcf().height = 456
+
+    ipvlab.show()
+
+    
 @support_nddata
 def visualize_contour3D(data,wcs=None,unit=None):
     pass
