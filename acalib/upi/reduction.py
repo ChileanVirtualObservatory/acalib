@@ -9,7 +9,7 @@ from acalib.upi.axes import spectral_velocities
 
 
 @support_nddata
-def _moment(data, order, wcs=None, mask=None, unit=None, restfrq=None):
+def _moment(data, order, wcs=None, mask=None, unit=None, meta=None, restfrq=None):
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -23,24 +23,24 @@ def _moment(data, order, wcs=None, mask=None, unit=None, restfrq=None):
     # mu,alpha=np.average(data,axis=rdim,weights=v,returned=True)
     if order == 0:
         mywcs = wcs.dropaxis(dim)
-        return Data(m0.data, uncertainty=None, mask=m0.mask, wcs=mywcs, meta=None, unit=unit)
+        return Data(m0.data, uncertainty=None, mask=m0.mask, wcs=mywcs, meta=meta, unit=unit)
     mu, alpha = np.ma.average(data, axis=rdim, weights=v, returned=True)
     m1 = alpha * mu / m0
     if order == 1:
         mywcs = wcs.dropaxis(dim)
-        return Data(m1.data, uncertainty=None, mask=m1.mask, wcs=mywcs, meta=None, unit=u.km / u.s)
+        return Data(m1.data, uncertainty=None, mask=m1.mask, wcs=mywcs, meta=meta, unit=u.km / u.s)
     v2 = v * v
     var, beta = np.ma.average(data, axis=rdim, weights=v2, returned=True)
     # var,beta=data.average(axis=rdim,weights=v2,returned=True)
     m2 = np.sqrt(beta * var / m0 - m1 * m1)
     if order == 2:
         mywcs = wcs.dropaxis(dim)
-        return Data(m2.data, uncertainty=None, mask=m2.mask, wcs=mywcs, meta=None, unit=u.km * u.km / u.s / u.s)
+        return Data(m2.data, uncertainty=None, mask=m2.mask, wcs=mywcs, meta=meta, unit=u.km * u.km / u.s / u.s)
     log.error("Order not supported")
     return None
 
 @support_nddata
-def moment0(data, wcs=None, mask=None, unit=None, restfrq=None):
+def moment0(data, wcs=None, mask=None, unit=None, meta=None, restfrq=None):
     """
         Calculate moment 0 from a data cube.
 
@@ -63,11 +63,11 @@ def moment0(data, wcs=None, mask=None, unit=None, restfrq=None):
             Moment 0 of the data cube
 
     """
-    return _moment(data, 0, wcs, mask, unit, restfrq)
+    return _moment(data, 0, wcs, mask, unit, meta, restfrq)
 
 
 @support_nddata
-def moment1(data, wcs=None, mask=None, unit=None, restfrq=None):
+def moment1(data, wcs=None, mask=None, unit=None, meta=None, restfrq=None):
     """
         Calculate moment 1 from a data cube.
 
@@ -90,11 +90,11 @@ def moment1(data, wcs=None, mask=None, unit=None, restfrq=None):
             Moment 1 of the data cube
 
     """
-    return _moment(data, 1, wcs, mask, unit, restfrq)
+    return _moment(data, 1, wcs, mask, unit, meta, restfrq)
 
 
 @support_nddata
-def moment2(data, wcs=None, mask=None, unit=None, restfrq=None):
+def moment2(data, wcs=None, mask=None, unit=None, meta=None, restfrq=None):
     """
         Calculate moment 2 from a data cube.
 
@@ -117,7 +117,7 @@ def moment2(data, wcs=None, mask=None, unit=None, restfrq=None):
             Moment 2 of the data cube
 
     """
-    return _moment(data, 2, wcs, mask, unit, restfrq)
+    return _moment(data, 2, wcs, mask, unit, meta, restfrq)
 
 
 # TODO: Fix this function, is not working correctly
@@ -153,3 +153,5 @@ def spectra(data, wcs=None, mask=None, unit=None, restrict=None):
         #    log.error("Not Implemented Yet!")
         # specview=data[slab(data,lb,ub)]
         # return specview.sum(axis=(1,2))
+
+
