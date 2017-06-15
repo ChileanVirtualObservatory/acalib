@@ -63,7 +63,7 @@ class FellWalker(Algorithm):
             self.config['VELORES'] =  2.0
 
     def run(self, data):
-        if type(data) is NDData or type(data) is NDDataRef:
+        if isinstance(data,NDData):
             if len(data.data.shape) > 4:
                 raise Exception("Algorithm only support 2D and 3D Matrices")
         else:

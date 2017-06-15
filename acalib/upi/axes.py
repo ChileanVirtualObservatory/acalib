@@ -37,43 +37,7 @@ from acalib.upi.formatting import _unitize, _world_table_creator
 
 
 @support_nddata
-def cut(data, wcs=None, mask=None, unit=None, lower=None, upper=None):
-    """
-        Get a cut of the cube.
-
-        Parameters
-        ----------
-        data : (M,N) or (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
-            Astronomical data cube.
-        wcs : astropy.wcs.wcs.WCS
-            World Coordinate System to use.
-        mask : numpy.ndarray
-            Mask for data.
-        unit : astropy.units.Unit
-            Astropy unit (http://docs.astropy.org/en/stable/units/).
-        lower : tuple
-            Start index from where to cut.
-        upper : tuple
-            Index to end cut.
-
-        Returns
-        -------
-         result: acalib.upi.AData.
-            Data cut from lower to upper.
-    """
-    # Check for NDDataSlicing... maybe this is already done by astropy.nddata package.
-    mslab = core.slab(data, lower, upper)
-    scube = data[mslab]
-    if mask is None:
-        smask=None
-    else:
-        smask = mask[mslab]
-    newwcs = wcs.slice(mslab, numpy_order=True)
-    return Data(scube, wcs=newwcs, unit=unit, mask=smask)
-
-
-@support_nddata
-def extent(data, wcs=None, lower=None, upper=None):
+def extent(data, wcs=None, region=None):
     """
         Get the axes extent.
 
@@ -83,10 +47,8 @@ def extent(data, wcs=None, lower=None, upper=None):
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
-        lower : (M,N) or (M,N,Z) tuple of int
-            Start index in data
-        upper : (M,N) or (M,N,Z) tuple of int
-            End index in data
+        region :(lower : (M,N) or (M,N,Z), upper : (M,N) or (M,N,Z))
+            Start and End index in data (int tuples)
 
         Returns
         -------
@@ -98,6 +60,13 @@ def extent(data, wcs=None, lower=None, upper=None):
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
+
+    if region is None:
+        lower=None
+        upper=None
+    else:
+        (lower,upper) = region
+
     if lower == None:
         lower = np.zeros(data.ndim)
     if upper == None:
@@ -216,13 +185,16 @@ def spectral_velocities(data, wcs=None, fqs=None, fqis=None, restfrq=None):
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
+    if data.ndim != 3:
+        log.error("Not spectral axis found.")
+        return None
     if restfrq is None:
         restfrq = wcs.wcs.restfrq * u.Hz
     if fqs is None:
         dim = wcs.wcs.spec
         if fqis is None:
             # Semi Hardconded...
-            fqis = np.arange(data.shape[2 - dim])
+            fqis = np.arange(data.shape[data.ndim - dim - 1])
         idx = np.zeros((fqis.size, data.ndim))
         idx[:, dim] = fqis
         vals = wcs.all_pix2world(idx, 0)
@@ -232,7 +204,7 @@ def spectral_velocities(data, wcs=None, fqs=None, fqis=None, restfrq=None):
 
 
 @support_nddata
-def features(data, wcs=None, lower=None, upper=None):
+def features(data, wcs=None, region=None):
     """
         Creates an array with WCS axea in features format
 
@@ -242,10 +214,8 @@ def features(data, wcs=None, lower=None, upper=None):
             Astronomical data cube.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
-        lower : (M,N) or (M,N,Z) tuple of integers
-            Start index in data.
-        upper : (M,N) or (M,N,Z) tuple of integers
-            End index in data.
+        region :(lower : (M,N) or (M,N,Z), upper : (M,N) or (M,N,Z))
+            Start and End index in data (int tuples)
 
         Returns
         -------
@@ -253,6 +223,11 @@ def features(data, wcs=None, lower=None, upper=None):
             Table with WCS information of a section from the data.
 
     """
+    if region  is None:
+        lower = None
+        upper = None
+    else:
+        (lower, upper) = region
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
         return None
@@ -260,6 +235,20 @@ def features(data, wcs=None, lower=None, upper=None):
     f = wcs.wcs_pix2world(ii.T, 0)
     return _world_table_creator(f, wcs)
 
+def _get_axis(wcs,name):
+    return wcs.naxis - wcs.axis_type_names.index(name) - 1
+
+def _is_spectra(data,wcs):
+    try:
+        freq_axis=_get_axis(wcs,"FREQ")
+    except ValueError:
+        return False
+    for i in range(wcs.naxis):
+        if i == freq_axis:
+            continue
+        if data.shape[i]!= 1:
+            return False
+    return True
 
 @support_nddata
 # TODO: Consider using "box" structure rather than up and low
@@ -277,12 +266,9 @@ def opening(data, center, window, wcs=None):
             Window for the field in WCS.
         wcs : astropy.wcs.wcs.WCS
             World Coordinate System to use.
-
         Returns
         -------
         result: ((M1,N1,Z1),(M2,N2,Z2)) tuple of tuple of ints
-
-
     """
     if wcs is None:
         log.error("A world coordinate system (WCS) is needed")
