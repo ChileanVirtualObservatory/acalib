@@ -1,3 +1,5 @@
+from astropy import log
+
 import acalib
 
 import numpy as np
@@ -13,8 +15,7 @@ from skimage.segmentation import clear_border
 from astropy.nddata import support_nddata
 from .algorithm import Algorithm
 
-from acalib.core.analysis import _optimal_w, _kernelsmooth, _kernel_shift
-
+from acalib.core.image_analysis import optimal_w, kernelsmooth, kernel_shift
 
 @support_nddata
 def get_data(data,wcs = None):
@@ -80,7 +81,7 @@ class GMS(Algorithm):
         image = image.astype('float64')
 
         #Getting optimal radius for first step segmentation
-        w_max = _optimal_w(image, prob)
+        w_max = optimal_w(image, prob)
 
         diff = (image - np.min(image)) / (np.max(image) - np.min(image))
 
@@ -125,11 +126,11 @@ class GMS(Algorithm):
 
                     radius = int(props.equivalent_diameter / 2.)
                     kern = 0.01 * np.ones((2 * radius, 2 * radius))
-                    krn = _kernelsmooth(x=np.ones((2 * radius, 2 * radius)), kern=kern)
+                    krn = kernelsmooth(x=np.ones((2 * radius, 2 * radius)), kern=kern)
                     krn = np.exp(np.exp(krn))
                     if np.max(krn) > 0:
                         krn = (krn - np.min(krn)) / (np.max(krn) - np.min(krn))
-                        background = _kernel_shift(background, krn, C_x, C_y)
+                        background = kernel_shift(background, krn, C_x, C_y)
             if np.max(background) > 0:
                 background = (background - np.min(background)) / (np.max(background) - np.min(background))
                 diff = diff - background

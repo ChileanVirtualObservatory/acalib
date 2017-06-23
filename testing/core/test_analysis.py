@@ -2,7 +2,7 @@ import unittest
 import sys
 import numpy as np
 sys.path.append("../..")
-import acalib.core.analysis as acaana
+import acalib.core.image_analysis as acaana
 
 
 class TestAnalysis(unittest.TestCase):
