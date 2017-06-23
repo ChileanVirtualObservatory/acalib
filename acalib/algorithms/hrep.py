@@ -1,6 +1,10 @@
+from astropy import log
+
 import acalib
 from .algorithm import Algorithm
 from astropy.nddata import support_nddata
+import numpy as np
+from acalib.upi import Data
 
 # TODO: This is non-generic. Try to use the UPI (it can be done!)
 @support_nddata
@@ -30,7 +34,7 @@ def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None
      if wcs:
          wcs = wcs.dropaxis(2)
 
-         return NDDataRef(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+         return Data(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
      else:
          return stacked
 

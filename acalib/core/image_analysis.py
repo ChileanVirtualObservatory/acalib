@@ -10,12 +10,12 @@ from acalib.core import *
 
 def fits_props(img):
     """
-    Extracts properties information of the astronomical data cube.
+    Extracts properties information of an astronomical image.
 
     Parameters
     ----------
     img : numpy.ndarray
-        Astronomical data cube.
+        Astronomical image.
 
     Returns
     -------

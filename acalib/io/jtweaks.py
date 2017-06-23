@@ -47,6 +47,6 @@ try:
     fmt.for_type(np.array, jovial_array_makeup)
     fmt.for_type(np.ndarray, jovial_array_makeup)
     #fmt.for_type(tuple, jovial_tuple_makeup)
-except NameError:
-    print("Note: Using acalib outside a Jupyter Notebook")
+except (NameError, AttributeError) as e :
+    astropy.log.info("No IPython detected. Using standalone Python mode.")
     pass
