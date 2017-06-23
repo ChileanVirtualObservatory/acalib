@@ -36,7 +36,7 @@ class Stacking(Algorithm):
             if data_cont.images[i] is not NDData or data_cont.images[i] is not NDDataRef:
                 data_cont.images[i] = NDDataRef(data_cont.images[i])
 
-        tprops = acalib.core.transform.fits_props(template_data)
+        tprops = acalib.core.image_analysis.fits_props(template_data)
         scaled = acalib.core.transform.scale(data_cont, tprops['major'])
         rotated, angles = acalib.core.transform.rotate(scaled, tprops['angle'])
         aligned = acalib.core.transform.crop_and_align(rotated, angles)

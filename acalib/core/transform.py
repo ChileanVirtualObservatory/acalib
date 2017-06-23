@@ -1,16 +1,10 @@
 import scipy.ndimage as scnd
 import numpy as np
 
+from .utils import matching_slabs, fix_mask
+from .image_analysis import fits_props
 
-from skimage.filters import threshold_otsu
-from skimage.measure import label
-from skimage.segmentation import clear_border
-from skimage.measure import regionprops
-
-
-from . import utils
-
-
+# TODO: rename this to something like "serial scaler"
 def scale(inputCont, majorAxisTemplate):
     """
     Performs an scale of the images in the container acording to the indicated mayor axis.
