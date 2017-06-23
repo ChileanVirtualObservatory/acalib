@@ -5,6 +5,7 @@ import pycupid
 from astropy.nddata import *
 from .algorithm import Algorithm
 
+# TODO: this algorithm is print verbose... remove this!
 
 # storing unusable pixels for now (-1)
 def _struct_builder(caa):
