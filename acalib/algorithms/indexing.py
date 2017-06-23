@@ -3,6 +3,34 @@ from .algorithm import Algorithm
 from .gms import GMS
 from astropy.nddata import support_nddata, NDDataRef, NDData
 
+from astropy.table import Table
+
+@support_nddata
+def measure_shape(data, labeled_images, min_freq=None, max_freq=None, wcs=None):
+    """ Measure a few statistics from labeled images """
+    # TODO: Document this function
+    objects = list()
+    intensity_image = data
+    for image in labeled_images:
+        objs_properties = acalib.core.get_shape(image, intensity_image)
+        objects.extend(objs_properties)
+
+    if len(objects) == 0:
+        return Table()
+
+    names = ["CentroidRa", "CentroidDec", "MajorAxisLength", "MinorAxisLength",
+             "Area", "Eccentricity", "Solidity", "FilledPercentaje", "MaxIntensity", "MinIntensity", "AverageIntensity"]
+
+    meta = {"name": "Object Shapes"}
+
+    if min_freq is not None:
+        meta["min_freq_hz"] = min_freq
+
+    if max_freq is not None:
+        meta["max_freq_hz"] = max_freq
+
+    t = Table(rows=objects, names=names, meta=meta)
+    return t
 
 class Indexing(Algorithm):
     """

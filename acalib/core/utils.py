@@ -119,3 +119,21 @@ def matching_slabs(data, flux, lower, upper):
     flux_slab = slab(flux, flow, fup)
     return data_slab, flux_slab
 
+def index_mesh(data, lower=None, upper=None):
+    """ Create an meshgrid from indices """
+    sl = slab(data, lower, upper)
+    dim = data.ndim
+    slices = []
+    for i in range(dim):
+        slices.append(slice(sl[i].start, sl[i].stop))
+    retval = np.mgrid[slices]
+    return retval
+
+def index_features(data, lower=None, upper=None):
+    """ Creates an array with indices in features format """
+    msh = index_mesh(data, lower, upper)
+    dim = data.ndim
+    ii = np.empty((dim, int(msh.size / dim)))
+    for i in range(dim):
+        ii[dim - i - 1] = msh[i].ravel()
+    return ii

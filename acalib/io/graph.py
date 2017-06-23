@@ -6,7 +6,7 @@ from astropy.nddata import support_nddata
 
 from acalib import core, upi
 from acalib.upi import axes
-from ..core.analysis import rms
+from ..core.image_analysis import rms
 import matplotlib.pyplot as plt
 
 
