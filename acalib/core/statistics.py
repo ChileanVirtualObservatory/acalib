@@ -1,3 +1,8 @@
+import numpy as np
+
+from .utils import fix_mask
+
+
 def rms(data, mask=None):
     """
     Compute the RMS of data. If mask != None, then we use that mask.

@@ -1,8 +1,10 @@
 from astropy import log
 from astropy.table import Table
 import numpy as np
-from . import matching_slabs, fix_limits, slab, snr_estimation, create_mould, add
-from .function_models import _eighth_mould
+from .utils import matching_slabs, fix_limits, slab
+from .statistics import snr_estimation
+from .function_models import create_mould, _eighth_mould
+from .transform import add
 
 
 def _update_min_energy(energy,mat,ub,lb,delta):
