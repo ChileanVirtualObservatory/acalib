@@ -1,7 +1,8 @@
 import numpy as np
 from astropy import log
-from skimage.filters import threshold_local
+from skimage.filters import threshold_local,threshold_otsu
 from skimage.measure import label,regionprops
+from skimage.segmentation import clear_border
 from .utils import fix_mask, slab
 
 from ._morph import differenceImpl, segmentationImpl, erosionImpl

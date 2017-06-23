@@ -2,8 +2,42 @@ import acalib
 from .algorithm import Algorithm
 from .gms import GMS
 from astropy.nddata import support_nddata, NDDataRef, NDData
-
+import numpy as np
+from acalib.upi import Data
 from astropy.table import Table
+
+# TODO: This is non-generic. Try to use the UPI (it can be done!)
+@support_nddata
+def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None, unit=None):
+     """
+     Create an image collapsing the frecuency axis
+
+     Parameters
+     ----------
+     data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
+         Astronomical 2D image
+
+     slice : slice object
+         Sector to be collapsed
+
+     Returns
+     -------
+     image (NDDataRef): 2D-Array with the stacked cube.
+
+     """
+     if len(data.shape) != 3:
+         log.error("Cube needs to be a 3D array")
+         raise ValueError("Cube needs to be a 3D array")
+     dims = data.shape
+     subcube = data[data_slice, :,:]
+     stacked = np.sum(subcube,axis=0)
+     if wcs:
+         wcs = wcs.dropaxis(2)
+
+         return Data(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+     else:
+         return stacked
+
 
 @support_nddata
 def measure_shape(data, labeled_images, min_freq=None, max_freq=None, wcs=None):
@@ -32,7 +66,7 @@ def measure_shape(data, labeled_images, min_freq=None, max_freq=None, wcs=None):
     t = Table(rows=objects, names=names, meta=meta)
     return t
 
-class Indexing(Algorithm):
+class RoiSE(Algorithm):
     """
     Perform an unsupervised region of interest detection and extract shape features.
 
@@ -102,7 +136,7 @@ class Indexing(Algorithm):
 
         pp_slices = []
         for slice in slices:
-            pp_slice = acalib.core.vel_stacking(cube, slice)
+            pp_slice = vel_stacking(cube, slice)
             labeled_images = gms.run(pp_slice)
 
             if wcs is not None:
@@ -112,7 +146,7 @@ class Indexing(Algorithm):
                 freq_min = None
                 freq_max = None
 
-            table = acalib.core.measure_shape(pp_slice, labeled_images, freq_min, freq_max)
+            table = measure_shape(pp_slice, labeled_images, freq_min, freq_max)
             if len(table) > 0:
                 c.tables.append(table)
                 c.images.append(pp_slice)
