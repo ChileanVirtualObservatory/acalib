@@ -195,6 +195,10 @@ def select_band(data, wcs=None, mask=None, unit=None, meta=None,freq_1=None,freq
         freq_2=ext2[freq_idx]
     freq_1=freq_1.value
     freq_2 = freq_2.value
+    #if freq_1 > freq_2:
+    #    tmp = freq_1
+    #    freq_1 = freq_2
+    #    freq_2 = tmp
     #ra_1 = ext1[ra_idx]
     #dec_1 = ext1[dec_idx]
     #ra_2 = ext2[ra_idx]
@@ -229,7 +233,10 @@ def select_band(data, wcs=None, mask=None, unit=None, meta=None,freq_1=None,freq
         return np.array([lower,upper])
 
     if interactive == True:
-        res=interact(display_region, FREQ1=(freq_1,freq_2),FREQ2=(freq_1,freq_2))
+        if freq_1 > freq_2:
+            res=interact(display_region, FREQ1=(freq_2,freq_1),FREQ2=(freq_2,freq_1))
+        else:
+            res = interact(display_region, FREQ1=(freq_1, freq_2), FREQ2=(freq_1, freq_2))
         result=res.widget.result
     else:
         result=display_region();

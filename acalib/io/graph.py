@@ -5,8 +5,8 @@ from astropy.wcs import wcs
 from astropy.nddata import support_nddata
 
 from acalib import core, upi
-from acalib.upi import axes
-from ..core.statistics import rms
+from acalib.core import rms
+from acalib.upi import axes, flux
 import matplotlib.pyplot as plt
 
 
@@ -163,7 +163,7 @@ def show_subcube(data,wcs=None,meta=None,mask=None,unit=None,lower=None,upper=No
 #
 
 @support_nddata
-def visualize_image(data,wcs=None,unit=None,contour=False):
+def visualize_image(data,wcs=None,unit=None,contour=False,cmap=None):
     """
     Plot 2D astronimical data.
 
@@ -181,11 +181,13 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
     contour : numpy.ndarray
         For plotting Contourns
     """
+    if cmap is None:
+        cmap=plt.cm.gist_heat
     if wcs is None:
         if data.ndim != 2:
             log.info("Cannot visualize image data with no WCS and dimension != 2")
             return
-        plt.imshow(data, origin='lower', cmap=plt.cm.gist_heat)
+        plt.imshow(data, origin='lower', cmap=cmap)
         cb = plt.colorbar()
         cb.ax.set_ylabel(unit)
     else:
@@ -199,7 +201,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
             wcs = wcs.dropaxis(wcs.naxis - freq_axis - 1)
             data = np.nansum(data, axis=(freq_axis))
         gax = plt.subplot(111, projection=wcs)
-        _draw_image(data, gax, wcs, unit)
+        _draw_image(data, gax, wcs, unit,cmap=cmap)
         g0 = gax.coords[0]
         g1 = gax.coords[1]
         g0.grid(color='yellow', alpha=0.5, linestyle='solid')
@@ -288,3 +290,28 @@ def plot_snr_estimation(target,snr_results):
     for tl in axp.get_yticklabels():
         tl.set_color('grey')
 
+def visualize_rgb(rdata,gdata,bdata):
+    wcs=rdata.wcs
+    gax = plt.subplot(111, projection=wcs)
+    sh = rdata.data.shape
+    data = np.zeros((sh[0],sh[1],3))
+    #plt.imshow(gdata.data)
+    #plt.show()
+    (rdata,_,_)=flux.standarize(rdata)
+    (gdata,_,_)=flux.standarize(gdata)
+    (bdata,_,_)=flux.standarize(bdata)
+    data[:,:,0] = rdata.data/np.nanmax(rdata.data)
+    data[:,:,1] = gdata.data/np.nanmax(gdata.data)
+    data[:,:,2] = bdata.data/np.nanmax(bdata.data)
+    plt.imshow(data, origin='lower')
+    g0 = gax.coords[0]
+    g1 = gax.coords[1]
+    g0.set_axislabel(wcs.axis_type_names[0])
+    g1.set_axislabel(wcs.axis_type_names[1])
+    #cb = plt.colorbar()
+    #cb.ax.set_ylabel(unit)
+    g0 = gax.coords[0]
+    g1 = gax.coords[1]
+    g0.grid(color='yellow', alpha=0.5, linestyle='solid')
+    g1.grid(color='yellow', alpha=0.5, linestyle='solid')
+    plt.show()
