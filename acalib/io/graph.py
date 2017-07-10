@@ -220,16 +220,13 @@ def visualize_volume(data, wcs=None, unit=None):
     Parameters
     ------------
     data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
-        Astronomical image
+        Astronomical cube
 
     wcs : astropy.wcs.WCS
-        World Coordinate System from the image (not needed if contained in NDData)
+        World Coordinate System from the cube (not needed if contained in NDData)
 
     unit : astropy.unit
-        Image units (not needed if contained in NDData)
-
-    contour : numpy.ndarray
-        For plotting Contourns
+        Cube units (not needed if contained in NDData)
     """
     if wcs is None:
         log.error("WCS is needed by this function")
