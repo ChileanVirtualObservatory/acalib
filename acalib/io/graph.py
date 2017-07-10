@@ -182,7 +182,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False,cmap=None):
         For plotting Contourns
     """
     if cmap is None:
-        cmap=plt.cm.gist_heat
+        cmap=plt.cm.gray_r
     if wcs is None:
         if data.ndim != 2:
             log.info("Cannot visualize image data with no WCS and dimension != 2")
@@ -314,4 +314,21 @@ def visualize_rgb(rdata,gdata,bdata):
     g1 = gax.coords[1]
     g0.grid(color='yellow', alpha=0.5, linestyle='solid')
     g1.grid(color='yellow', alpha=0.5, linestyle='solid')
+    plt.show()
+
+from matplotlib import gridspec
+
+# TODO: vmax can be computed by default
+def show_image_grid(img_list,side,vmax,cmap=None):
+    if cmap == None:
+        cmap="gray_r"
+    origin="lower"
+
+    plt.figure(figsize=(10,10))
+    gs = gridspec.GridSpec(side, side,wspace=0.0, hspace=0.0)
+    for i in range(side*side):
+        ax  = plt.subplot(gs[i])
+        ax.imshow(img_list[i],origin=origin,vmax=vmax,vmin=0,cmap=cmap)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
     plt.show()

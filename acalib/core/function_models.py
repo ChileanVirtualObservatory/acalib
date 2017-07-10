@@ -66,8 +66,8 @@ def create_mould(P, delta):
     return mould
 
 
-def _eighth_mould(P,delta):
-    """This function creates a Gaussian mould with precision matrix P, using the already computed values of delta
+def eighth_mould(P,delta):
+    """This function creates an eighth of a symetrical Gaussian mould with precision matrix P, using the already computed values of delta
     """
     n=len(delta)
     ax=[]
