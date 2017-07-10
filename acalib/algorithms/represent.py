@@ -1,7 +1,7 @@
 from acalib import upi
 from .algorithm import Algorithm
 
-import acalib.core  as core
+from acalib import core
 import numpy as np
 from astropy.table import Table
 from astropy import log

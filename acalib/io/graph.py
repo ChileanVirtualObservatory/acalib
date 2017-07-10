@@ -217,7 +217,6 @@ def visualize_image(data,wcs=None,unit=None,contour=False,cmap=None):
 import ipyvolume.pylab as ipvlab
 
 @support_nddata
-<<<<<<< HEAD
 def visualize_volume(data,wcs=None,unit=None):
     if wcs is None:
         log.error("WCS is needed by this function")
