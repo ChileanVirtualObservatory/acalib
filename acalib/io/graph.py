@@ -8,6 +8,7 @@ from acalib import core
 from acalib.upi import axes
 from ..core.analysis import rms
 import matplotlib.pyplot as plt
+import ipyvolume.pylab as ipvlab
 
 
 def _draw_spectra(data, wcs=None, unit=None,velocities=False):
@@ -165,7 +166,7 @@ def show_subcube(data,wcs=None,meta=None,mask=None,unit=None,lower=None,upper=No
 @support_nddata
 def visualize_image(data,wcs=None,unit=None,contour=False):
     """
-    Plot 2D astronimical data.
+    Plot 2D astronomical data.
 
     Parameters
     ------------
@@ -212,22 +213,58 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
     plt.show()
 
 @support_nddata
-def visualize_volume(data,wcs=None,unit=None):
-    pass
-     # if wcs is None:
-     #    log.error("WCS is needed by this function")
-     # figure = mlab.figure('Volume Plot')
-     # mesh=get_mesh(data)
-     # xi,yi,zi=mesh
-     # ranges=axes_ranges(data,wcs)
-     # grid = mlab.pipeline.scalar_field(xi, yi, zi, data)
-     # mmin = data.min()
-     # mmax = data.max()
-     # mlab.pipeline.volume(grid)#,vmin=mmin, vmax=mmin)
-     # ax=mlab.axes(xlabel="VEL [km/s] ",ylabel="DEC [deg]",zlabel="RA [deg]",ranges=ranges,nb_labels=5)
-     # ax.axes.label_format='%.3f'
-     # mlab.colorbar(title='flux', orientation='vertical', nb_labels=5)
-     # mlab.show()
+def visualize_volume(data, wcs=None, unit=None):
+    """
+    Plot 3D astronomical data.
+
+    Parameters
+    ------------
+    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
+        Astronomical cube
+
+    wcs : astropy.wcs.WCS
+        World Coordinate System from the cube (not needed if contained in NDData)
+
+    unit : astropy.unit
+        Cube units (not needed if contained in NDData)
+    """
+    if wcs is None:
+        log.error("WCS is needed by this function")
+        return
+    
+    if unit is None:
+        log.error("Unit is needed by this function")
+        return
+    
+    ipvlab.clear()
+    
+    labels = [
+            "{} [{}]".format(axe, str(unit))
+            for axe, unit in zip(axes.axes_names(data, wcs), axes.axes_units(data, wcs))
+            ]
+    
+    ipvlab.xyzlabel(*labels)
+    
+    extent = axes.extent(data, wcs)
+    minlim = extent[1]
+    maxlim = extent[0]
+    
+    ipvlab.xlim(minlim[0].value, maxlim[0].value)
+    ipvlab.ylim(minlim[1].value, maxlim[1].value)
+    ipvlab.zlim(minlim[2].value, maxlim[2].value)
+    
+    ipvlab.style.use('dark')
+    
+    tf = ipvlab.transfer_function(level=[0.39, 0.54, 0.60], opacity = [0.2, 0.2, 0.2])
+    
+    try:
+        vol = ipvlab.volshow(data, tf=tf, controls=True, level_width=0.1)
+        ipvlab.gcf().width = 1024
+        ipvlab.gcf().height = 456
+        
+        ipvlab.show()
+    except ValueError:
+        log.error("Volume too small")
 
 @support_nddata
 def visualize_contour3D(data,wcs=None,unit=None):
