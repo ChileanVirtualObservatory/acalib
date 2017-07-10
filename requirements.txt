@@ -11,3 +11,4 @@ numpydoc
 pycupid >= 0.1.0
 distributed >= 1.16
 tqdm >= 4.14.0
+astroquery >= 0.3.4

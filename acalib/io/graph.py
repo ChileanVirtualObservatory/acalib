@@ -4,9 +4,9 @@ from astropy.wcs import wcs
 #from mayavi import mlab
 from astropy.nddata import support_nddata
 
-from acalib import core
-from acalib.upi import axes
-from ..core.analysis import rms
+from acalib import core, upi
+from acalib.core import rms
+from acalib.upi import axes, flux
 import matplotlib.pyplot as plt
 import ipyvolume.pylab as ipvlab
 
@@ -164,7 +164,7 @@ def show_subcube(data,wcs=None,meta=None,mask=None,unit=None,lower=None,upper=No
 #
 
 @support_nddata
-def visualize_image(data,wcs=None,unit=None,contour=False):
+def visualize_image(data,wcs=None,unit=None,contour=False,cmap=None):
     """
     Plot 2D astronomical data.
 
@@ -182,11 +182,13 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
     contour : numpy.ndarray
         For plotting Contourns
     """
+    if cmap is None:
+        cmap=plt.cm.gray_r
     if wcs is None:
         if data.ndim != 2:
             log.info("Cannot visualize image data with no WCS and dimension != 2")
             return
-        plt.imshow(data, origin='lower', cmap=plt.cm.gist_heat)
+        plt.imshow(data, origin='lower', cmap=cmap)
         cb = plt.colorbar()
         cb.ax.set_ylabel(unit)
     else:
@@ -200,7 +202,7 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
             wcs = wcs.dropaxis(wcs.naxis - freq_axis - 1)
             data = np.nansum(data, axis=(freq_axis))
         gax = plt.subplot(111, projection=wcs)
-        _draw_image(data, gax, wcs, unit)
+        _draw_image(data, gax, wcs, unit,cmap=cmap)
         g0 = gax.coords[0]
         g1 = gax.coords[1]
         g0.grid(color='yellow', alpha=0.5, linestyle='solid')
@@ -212,60 +214,44 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
             plt.contour(data,levels=arms*crs,alpha=0.5)
     plt.show()
 
+import ipyvolume.pylab as ipvlab
+
 @support_nddata
-def visualize_volume(data, wcs=None, unit=None):
-    """
-    Plot 3D astronomical data.
-
-    Parameters
-    ------------
-    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
-        Astronomical cube
-
-    wcs : astropy.wcs.WCS
-        World Coordinate System from the cube (not needed if contained in NDData)
-
-    unit : astropy.unit
-        Cube units (not needed if contained in NDData)
-    """
+def visualize_volume(data,wcs=None,unit=None):
     if wcs is None:
         log.error("WCS is needed by this function")
         return
-    
+
     if unit is None:
         log.error("Unit is needed by this function")
         return
-    
+
     ipvlab.clear()
-    
-    labels = [
-            "{} [{}]".format(axe, str(unit))
-            for axe, unit in zip(axes.axes_names(data, wcs), axes.axes_units(data, wcs))
-            ]
-    
+
+    labels = ["{} [{}]".format(axe, str(unit)) for axe, unit in
+              zip(upi.axes_names(data, wcs), upi.axes_units(data, wcs))]
+
     ipvlab.xyzlabel(*labels)
-    
-    extent = axes.extent(data, wcs)
-    minlim = extent[1]
-    maxlim = extent[0]
-    
+
+    extent = upi.extent(data, wcs)
+    minlim = extent[0]
+    maxlim = extent[1]
+
     ipvlab.xlim(minlim[0].value, maxlim[0].value)
     ipvlab.ylim(minlim[1].value, maxlim[1].value)
     ipvlab.zlim(minlim[2].value, maxlim[2].value)
-    
-    ipvlab.style.use('dark')
-    
-    tf = ipvlab.transfer_function(level=[0.39, 0.54, 0.60], opacity = [0.2, 0.2, 0.2])
-    
-    try:
-        vol = ipvlab.volshow(data, tf=tf, controls=True, level_width=0.1)
-        ipvlab.gcf().width = 1024
-        ipvlab.gcf().height = 456
-        
-        ipvlab.show()
-    except ValueError:
-        log.error("Volume too small")
 
+    ipvlab.style.use('dark')
+
+    tf = ipvlab.transfer_function(level=[0.39, 0.54, 0.60], opacity=[0.2, 0.2, 0.2])
+    vol = ipvlab.volshow(data, tf=tf, controls=False, level_width=0.1)
+
+    ipvlab.gcf().width = 1024
+    ipvlab.gcf().height = 456
+
+    ipvlab.show()
+
+    
 @support_nddata
 def visualize_contour3D(data,wcs=None,unit=None):
     pass
@@ -305,3 +291,45 @@ def plot_snr_estimation(target,snr_results):
     for tl in axp.get_yticklabels():
         tl.set_color('grey')
 
+def visualize_rgb(rdata,gdata,bdata):
+    wcs=rdata.wcs
+    gax = plt.subplot(111, projection=wcs)
+    sh = rdata.data.shape
+    data = np.zeros((sh[0],sh[1],3))
+    #plt.imshow(gdata.data)
+    #plt.show()
+    (rdata,_,_)=flux.standarize(rdata)
+    (gdata,_,_)=flux.standarize(gdata)
+    (bdata,_,_)=flux.standarize(bdata)
+    data[:,:,0] = rdata.data/np.nanmax(rdata.data)
+    data[:,:,1] = gdata.data/np.nanmax(gdata.data)
+    data[:,:,2] = bdata.data/np.nanmax(bdata.data)
+    plt.imshow(data, origin='lower')
+    g0 = gax.coords[0]
+    g1 = gax.coords[1]
+    g0.set_axislabel(wcs.axis_type_names[0])
+    g1.set_axislabel(wcs.axis_type_names[1])
+    #cb = plt.colorbar()
+    #cb.ax.set_ylabel(unit)
+    g0 = gax.coords[0]
+    g1 = gax.coords[1]
+    g0.grid(color='yellow', alpha=0.5, linestyle='solid')
+    g1.grid(color='yellow', alpha=0.5, linestyle='solid')
+    plt.show()
+
+from matplotlib import gridspec
+
+# TODO: vmax can be computed by default
+def show_image_grid(img_list,side,vmax,cmap=None):
+    if cmap == None:
+        cmap="gray_r"
+    origin="lower"
+
+    plt.figure(figsize=(10,10))
+    gs = gridspec.GridSpec(side, side,wspace=0.0, hspace=0.0)
+    for i in range(side*side):
+        ax  = plt.subplot(gs[i])
+        ax.imshow(img_list[i],origin=origin,vmax=vmax,vmin=0,cmap=cmap)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+    plt.show()

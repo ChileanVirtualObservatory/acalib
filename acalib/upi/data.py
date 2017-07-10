@@ -194,8 +194,8 @@ class Data(ndd.NDDataRef):
         """
         io.graph.visualize(self)
 
-    def visualize_image(self, contour=False):
-        io.visualize_image(self, contour=contour)
+    def visualize_image(self, contour=False,cmap = None):
+        io.visualize_image(self, contour=contour,cmap=cmap)
 
     def visualize_spectra(self, velocities=False):
         io.visualize_spectra(self, velocities=velocities)

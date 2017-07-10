@@ -124,40 +124,6 @@ def moment2(data, wcs=None, mask=None, unit=None, meta=None, restfrq=None):
     """
     return _moment(data, 2, wcs, mask, unit, meta, restfrq)
 
-# TODO: Fix this function, is not working correctly (rezise the wcs... uff)
-@support_nddata
-def spectra(data, wcs=None, mask=None, unit=None, restrict=None):
-    """
-
-        Parameters
-        ----------
-        data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
-            Astronomical data cube.
-        wcs : astropy.wcs.wcs.WCS
-            World Coordinate System to use
-        mask : numpy.ndarray
-            Mask for data.
-        unit : astropy.units.Unit
-            Astropy unit (http://docs.astropy.org/en/stable/units/)
-        restrict : boolean
-    """
-    if restrict is None:
-        # Create NDD and WCS change...
-        return core.integrate(data, axis=(1, 2))
-    else:
-        log.error("Not Implemented Yet!")
-
-        # Get 1 pixel aperture
-        aperture = np.abs(wcs.celestial.wcs.cdelt[0]) * u.deg
-        # if position.unit == u.pix and aperture.unit == u.pix:
-        #    # TODO:  Here is the nasty part
-        #    lb=np.array([0,            position[1].value - aperture.value, position[0].value - aperture.value])
-        #    ub=np.array([data.shape[2],position[1].value + aperture.value, position[0].value + aperture.value])
-        # else:
-        #    log.error("Not Implemented Yet!")
-        # specview=data[slab(data,lb,ub)]
-        # return specview.sum(axis=(1,2))
-
 
 @support_nddata
 def select_region(data, wcs=None, mask=None, unit=None, meta=None,ra_1=None,dec_1=None,ra_2=None,dec_2=None,interactive=False):
@@ -229,6 +195,10 @@ def select_band(data, wcs=None, mask=None, unit=None, meta=None,freq_1=None,freq
         freq_2=ext2[freq_idx]
     freq_1=freq_1.value
     freq_2 = freq_2.value
+    #if freq_1 > freq_2:
+    #    tmp = freq_1
+    #    freq_1 = freq_2
+    #    freq_2 = tmp
     #ra_1 = ext1[ra_idx]
     #dec_1 = ext1[dec_idx]
     #ra_2 = ext2[ra_idx]
@@ -263,7 +233,10 @@ def select_band(data, wcs=None, mask=None, unit=None, meta=None,freq_1=None,freq
         return np.array([lower,upper])
 
     if interactive == True:
-        res=interact(display_region, FREQ1=(freq_1,freq_2),FREQ2=(freq_1,freq_2))
+        if freq_1 > freq_2:
+            res=interact(display_region, FREQ1=(freq_2,freq_1),FREQ2=(freq_2,freq_1))
+        else:
+            res = interact(display_region, FREQ1=(freq_1, freq_2), FREQ2=(freq_1, freq_2))
         result=res.widget.result
     else:
         result=display_region();
@@ -309,3 +282,39 @@ def cut(data, wcs=None, mask=None, unit=None, meta=None, region=None):
         smask = mask[mslab]
     newwcs = wcs.slice(mslab, numpy_order=True)
     return Data(scube, wcs=newwcs, unit=unit, mask=smask,meta=meta)
+
+# TODO: Fix this function, is not working correctly (rezise the wcs... uff)
+# TODO: Deprecated!
+# @support_nddata
+# def spectra(data, wcs=None, mask=None, unit=None, restrict=None):
+#     """
+#
+#         Parameters
+#         ----------
+#         data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
+#             Astronomical data cube.
+#         wcs : astropy.wcs.wcs.WCS
+#             World Coordinate System to use
+#         mask : numpy.ndarray
+#             Mask for data.
+#         unit : astropy.units.Unit
+#             Astropy unit (http://docs.astropy.org/en/stable/units/)
+#         restrict : boolean
+#     """
+#     if restrict is None:
+#         # Create NDD and WCS change...
+#         return core.integrate(data, axis=(1, 2))
+#     else:
+#         log.error("Not Implemented Yet!")
+#
+#         # Get 1 pixel aperture
+#         aperture = np.abs(wcs.celestial.wcs.cdelt[0]) * u.deg
+#         # if position.unit == u.pix and aperture.unit == u.pix:
+#         #    # TODO:  Here is the nasty part
+#         #    lb=np.array([0,            position[1].value - aperture.value, position[0].value - aperture.value])
+#         #    ub=np.array([data.shape[2],position[1].value + aperture.value, position[0].value + aperture.value])
+#         # else:
+#         #    log.error("Not Implemented Yet!")
+#         # specview=data[slab(data,lb,ub)]
+#         # return specview.sum(axis=(1,2))
+#
