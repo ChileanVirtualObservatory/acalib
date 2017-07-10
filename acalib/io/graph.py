@@ -166,7 +166,7 @@ def show_subcube(data,wcs=None,meta=None,mask=None,unit=None,lower=None,upper=No
 @support_nddata
 def visualize_image(data,wcs=None,unit=None,contour=False):
     """
-    Plot 2D astronimical data.
+    Plot 2D astronomical data.
 
     Parameters
     ------------
@@ -214,6 +214,23 @@ def visualize_image(data,wcs=None,unit=None,contour=False):
 
 @support_nddata
 def visualize_volume(data, wcs=None, unit=None):
+    """
+    Plot 3D astronomical data.
+
+    Parameters
+    ------------
+    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
+        Astronomical image
+
+    wcs : astropy.wcs.WCS
+        World Coordinate System from the image (not needed if contained in NDData)
+
+    unit : astropy.unit
+        Image units (not needed if contained in NDData)
+
+    contour : numpy.ndarray
+        For plotting Contourns
+    """
     if wcs is None:
         log.error("WCS is needed by this function")
         return
