@@ -3,7 +3,7 @@ from astropy.table import Table
 import numpy as np
 from .utils import matching_slabs, fix_limits, slab
 from .statistics import snr_estimation
-from .function_models import create_mould, _eighth_mould
+from .function_models import create_mould, eighth_mould
 from .transform import add
 
 
@@ -12,49 +12,23 @@ def _update_min_energy(energy,mat,ub,lb,delta):
        ub and lb bounds are provided to shrink the mat matrix when required (out of bounds, or partial update)
     """
     # Numpyfy everithing
-    ub=np.array(ub)
-    lb=np.array(lb)
+    ub = np.array(ub)
+    lb = np.array(lb)
     delta=np.array(delta,dtype=int)
-    # Create energy (e) and mat (m) indices 
+    # Create energy indices
     eub=ub + delta
     elb=lb + delta
-    #print eub,elb,energy.shape
-    eslab,mslab=matching_slabs(energy,mat,elb,eub)
-    #mub=ub-lb
-    #mub=mat.shape
-    #mlb=np.array([0,0,0])
-    #umask=eub > bord
-    #lmask=elb < 0
-    #mub[umask]-=eub[umask] - bord[umask]
-    #mlb[lmask]-=elb[lmask]
-    #eub[umask]=bord[umask]
-    #elb[lmask]=0
+    eslab,mslab = matching_slabs(energy,mat,elb,eub)
     # Obtain a reduced view of the matrices
     eview=energy[eslab]
     mview=mat[mslab]
-    #energy[elb[0]:eub[0],elb[1]:eub[1],elb[2]:eub[2]]
-    #mview=mat[mlb[0]:mub[0],mlb[1]:mub[1],mlb[2]:mub[2]]
-    #mview=mview.copy()
-    # Select those that are lower in mat than in energy
-    #print elb, eub, mlb, mub
-    #print eview.shape,mview.shape
-    # Update them in the energy matrix.
-    #try:
     cmat=mview < eview
-    #except ValueError:
-    #   print energy.shape
-    #   print elb,eub
-    #   print eview.shape
-    #   print mview.shape
-    #   print mat.shape
-    #   print eslab,mslab
     eview[cmat]=mview[cmat]
 
 
 def _update_energies_sym(residual,energy,ev,ef,lb,ub):
       """Update the energies, only from the lb to the ub points. 
       """
-      #TODO: I do now know if get_slice actually states that we are making a copy...
       lb=fix_limits(residual, lb)
       ub=fix_limits(residual, ub)
       mcb=residual[slab(residual, lb, ub)]
@@ -74,7 +48,7 @@ def _precision_from_delta(delta,clev):
     P=np.diag(sq_delta)
     return(-2*np.log(clev)*P)
 
-def scatpix_detect(data,threshold=None,noise=None,upper=None,lower=None,full_output=False):
+def scat_pix_detect(data,threshold=None,noise=None,upper=None,lower=None,full_output=False):
     """ Obtain an homogeneous representation using the scattered pixels over a threshold.
 
     This function generates an homogeneous representation by using only those pixels above the threshold. 
@@ -117,11 +91,58 @@ def scatpix_detect(data,threshold=None,noise=None,upper=None,lower=None,full_out
             residual[tuple(cen.astype(int))]-=tim*noise
             synthetic[tuple(cen.astype(int))]=tim*noise
     positions=np.array(positions)
-    rep=Table([positions],names=['center'])
+    #rep=Table([positions],names=['center'])
     if full_output:
-        return rep,synthetic,residual
-    return rep
+        return positions,synthetic,residual
+    return positions
 
+def scat_kernel_detect(data,kernel,threshold=None,delta=None,noise=None,upper=None,lower=None,full_output=False,sym=False,verbose = False):
+    residual = np.nan_to_num(data)
+    energy = residual.copy()
+    if full_output:
+        synthetic = np.zeros(residual.shape)
+        elist = []
+    if sym != False:
+        #(ev, ef) = _eighth_mould(P, delta)
+        (ev,ef) = sym
+        _update_energies_sym(residual, energy, ev, ef, lb=(0, 0, 0), ub=residual.shape)
+    else:
+        log.error("Non symetrical kernels not supported yet")
+        return
+    positions = []
+    niter = 0
+    delta = np.array(delta)
+    while True:
+        niter += 1
+        idx = np.unravel_index(energy.argmax(), energy.shape)
+        max_ener = energy[idx]
+        if verbose and niter % 1000 == 0:
+            log.info("Iteration: " + str(niter))
+            log.info("Maximum energy E = " + str(max_ener) + " SNR = " + str(max_ener / noise))
+        if max_ener < noise:
+            if verbose:
+                log.info("Criterion Met: Energy < Noise Level ")
+            break
+        if (max_ener < threshold):
+            if verbose:
+                log.info("Criterion Met: SNR=" + str(max_ener / noise) + "<" + str(threshold / noise))
+            break
+        ub = idx + delta + 1
+        lb = idx - delta
+        add(residual, -noise * kernel, lb, ub)
+        if full_output:
+            add(synthetic, noise * kernel, lb, ub)
+            elist.append(max_ener)
+        _update_energies_sym(residual, energy, ev, ef, lb, ub)
+        positions.append(idx)
+    positions = np.array(positions)
+    if full_output:
+        return positions, synthetic, residual, energy, elist
+    return positions
+
+
+
+# TODO: Candidate for deprecation
 def bubble_detect(data,meta=None,noise=None,threshold=None,delta=None,gamma=0.1,full_output=False,verbose=False):
     if delta is None:
         if meta is None:
@@ -143,7 +164,7 @@ def bubble_detect(data,meta=None,noise=None,threshold=None,delta=None,gamma=0.1,
     if full_output:
         synthetic=np.zeros(residual.shape)
         elist=[]
-    (ev,ef)= _eighth_mould(P, delta)
+    (ev,ef)= eighth_mould(P, delta)
     _update_energies_sym(residual,energy,ev,ef,lb=(0,0,0),ub=residual.shape)
     positions=[]
     niter=0
@@ -154,16 +175,7 @@ def bubble_detect(data,meta=None,noise=None,threshold=None,delta=None,gamma=0.1,
         max_ener = energy[idx]
         if verbose and niter%1000==0:
             log.info("Iteration: "+str(niter))
-            log.info("Maximum energy E = "+str(max_ener)+" SNR = "+str(max_ener/noise))   #at "+str(idx))
-            #fig = plt.figure(figsize=(20,5))
-            #ax = fig.add_subplot(121)
-            #ax.imshow(integrate(residual).data, origin='lower')
-            #ax.set_title('Residual')
-            #ax = fig.add_subplot(122)
-            #ax.imshow(integrate(synthetic).data, origin='lower')
-            #ax.set_title('Denoised')
-            #plt.show()
-       
+            log.info("Maximum energy E = "+str(max_ener)+" SNR = "+str(max_ener/noise))
         if max_ener < noise:
             if verbose:
                 log.info("Criterion Met: Energy < Noise Level ")
@@ -185,6 +197,9 @@ def bubble_detect(data,meta=None,noise=None,threshold=None,delta=None,gamma=0.1,
     if full_output:
         return rep,synthetic,residual,energy,elist
     return rep
+
+
+
 
     # DO THIS FOR BUBBLE
 def synthesize_bubbles(syn,pos,mould,nlevel,delta):
