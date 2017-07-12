@@ -1,5 +1,5 @@
 ###### Requirements with Version Specifiers ######
-distributed
+distributed >= 1.16
 dask >= 0.14.1
 numpy>=1.11.2
 astropy>=1.2
@@ -9,6 +9,3 @@ scipy>=0.18
 scikit-image>=0.13
 numpydoc
 pycupid >= 0.1.0
-distributed >= 1.16
-tqdm >= 4.14.0
-astroquery >= 0.3.4

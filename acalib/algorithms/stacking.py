@@ -3,6 +3,7 @@ from .algorithm import Algorithm
 
 from numpy import mean
 from scipy.stats import signaltonoise
+import scipy.ndimage as scnd
 from astropy.nddata import NDData,NDDataRef
 
 class Stacking(Algorithm):
@@ -13,7 +14,7 @@ class Stacking(Algorithm):
     def default_params(self):
         pass
 
-    def run(self, template_data, data_cont):
+    def run(self, template_data, images):
         """
             Run the stacking algorithm given a template image and a container of images.
 
@@ -21,26 +22,35 @@ class Stacking(Algorithm):
             ----------
             template_data : (M,N) numpy.ndarray
                 Astronomical image.
-            data_cont : acalib.container
-                An images set container
+            images : list of (M,N) numpy.ndarray
+                A list of images.
 
             Returns
             -------
             result : (M,N) numpy.ndarray
                 Image stacked
         """
-        if template_data is NDData or template_data is NDDataRef:
+        if type(template_data) is NDData or type(template_data) is NDDataRef:
             template_data = template_data.data
 
-        for i in range(len(data_cont.images)):
-            if data_cont.images[i] is not NDData or data_cont.images[i] is not NDDataRef:
-                data_cont.images[i] = NDDataRef(data_cont.images[i])
+        for i in range(len(images)):
+            if type(images[i]) is not NDData or type(images[i]) is not NDDataRef:
+                images[i] = NDDataRef(images[i])
 
-        tprops = acalib.core.image_analysis.fits_props(template_data)
-        scaled = acalib.core.transform.scale(data_cont, tprops['major'])
+        tprops = acalib.core.transform.fits_props(template_data)
+
+        # TODO: Replace with core.transform.scale once it stops using
+        # a acalib.container.
+        majorAxisTemplate = tprops['major']
+        scaledData = []
+        for i in range(len(images)):
+            prop = acalib.core.transform.fits_props(images[i].data)
+            sc = majorAxisTemplate / prop['major']
+            scaledData.append(scnd.zoom(prop['orig'], sc))
+        scaled = scaledData
+
         rotated, angles = acalib.core.transform.rotate(scaled, tprops['angle'])
         aligned = acalib.core.transform.crop_and_align(rotated, angles)
-        result = mean(aligned , axis=0)
+        result = mean(aligned,axis=0)
 
-        
         return result
