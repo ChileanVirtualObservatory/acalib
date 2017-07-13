@@ -83,8 +83,8 @@ class TestIndexing(unittest.TestCase):
 
 	#TODO make a better unit test
 	def test_run(self):
-		result = self.idx.run(self.data).images
-		np.testing.assert_equal(len(result),6)
+		result = self.idx.run(self.data)
+		np.testing.assert_equal(len(result),2)
 
 
 class TestStacking(unittest.TestCase):
