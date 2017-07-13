@@ -19,7 +19,7 @@ class Stacking(Algorithm):
     def default_params(self):
         pass
 
-    def run(self, template_data, images, display_tranformations=False):
+    def run(self, template_data, images):
         """
             Run the stacking algorithm given a template image and a container of images.
 
@@ -95,16 +95,5 @@ class Stacking(Algorithm):
             delta_y = int(numpy.round(tprops['centroid'][0]-data7.shape[0]//2))
             delta_x = int(numpy.round(tprops['centroid'][1]-data7.shape[1]//2))
             blit_add(template_data,data7,(delta_y,delta_x))
-
-            # Display partial results:
-            if display_tranformations:
-                f, axarr = plt.subplots(3,2,figsize=(10,10))
-                axarr[0,0].imshow(data2,cmap='gray')
-                axarr[0,1].imshow(data3,cmap='gray')
-                axarr[1,0].imshow(data5,cmap='gray')
-                axarr[1,1].imshow(data6,cmap='gray')
-                axarr[2,0].imshow(data7,cmap='gray')
-                axarr[2,1].imshow(template_data,cmap='gray')
-                plt.show()
 
         return template_data
