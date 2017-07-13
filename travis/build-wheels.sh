@@ -1,25 +1,22 @@
 #!/bin/bash
-set -e -x
-VERSIONS=(cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m)
+VERSIONS=(2.7 3.4 3.5 3.6)
+DIST=`uname`
+if [ "$DIST" = "Linux" ];then
+	PLATAFORM=manylinux1_x86_64
+else
+	PLATAFORM=TMP
+fi
 
-yum update -y
-yum groupinstall -y "Development Tools"
-yum install -y csh libXext-devel libXau-devel libX11-devel libXt-devel libxml2-devel ncurses-devel texlive-multirow python-devel Cython
- 
-# Compile wheels
-for PYBIN in ${VERSIONS[@]}; do
-    PYBIN=/opt/python/$PYBIN/bin/
-    "${PYBIN}/pip" install -r /io/requirements.txt
-    "${PYBIN}/pip" wheel /io/ -w wheelhouse/
+for VERSION in ${VERSIONS[@]}; do
+echo "Looking for py$VERSION environment"
+ (source activate py$VERSION 2>/dev/null && echo "Environment found" && python /workspace/setup.py bdist_wheel --plat-name $PLATAFORM && source deactivate)  || (echo "Environment py$VERSION not found, creating" && conda create -y --name py$VERSION python=$VERSION numpy cython && source activate py$VERSION && python /workspace/setup.py bdist_wheel --plat-name $PLATAFORM && source deactivate)
+  if [ "$PLATAFORM" = "TMP" ]; then
+  	before="TMP.whl"
+  	after="macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl"
+  	cd /workspace/dist
+  	head=`ls *-TMP.whl| cut -f1-4 -d"-"`
+  	mv *-TMP.whl $head-$after
+  	cd ..
+  fi
 done
-
-# Bundle external shared libraries into the wheels
-for whl in wheelhouse/*.whl; do
-    auditwheel repair "$whl" -w /io/wheelhouse/
-done
-
-for PYBIN in ${VERSIONS[@]}; do
-    PYBIN=/opt/python/$PYBIN/bin/
-    "${PYBIN}/pip" install python-manylinux-demo --no-index -f /io/wheelhouse
-    (cd "$HOME"; "${PYBIN}/python" /io/testing/run_test.py)
-done
+pip install twine
