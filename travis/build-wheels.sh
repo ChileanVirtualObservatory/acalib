@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e -x
-VERSIONS=(cp27-cp27m cp27-cp27mu cp33-cp33m cp34-cp34m cp35-cp35m cp36-cp36m)
+VERSIONS=(cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m)
 # Compile wheels
 for PYBIN in ${VERSIONS[@]}; do
     PYBIN=/opt/python/$PYBIN/bin/ 
