@@ -6,7 +6,7 @@ matrix:
     - sudo: required
       services:
         - docker
-      env: DOCKER_IMAGE=generic_builder
+      env: DOCKER_IMAGE=csrg/generic_builder
 
 install:
   - sudo docker pull $DOCKER_IMAGE
