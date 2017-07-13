@@ -4,7 +4,8 @@
 void differenceImpl(double* cumulativeSum, double* difference, int n)
 {
     difference[0] = cumulativeSum[0];
-    for(int i = 1; i < n; i++)
+    int i;
+    for(i = 1; i < n; i++)
     {
         difference[i] = cumulativeSum[i] - difference[i-1];
     }
@@ -12,7 +13,8 @@ void differenceImpl(double* cumulativeSum, double* difference, int n)
 
 void segmentationImpl(double* diff, double* boxing, int n)
 {
-    for(int i = 1; i < n-1; i++)
+    int i;
+    for(i = 1; i < n-1; i++)
     {
         boxing[i] = 1;
         int A = diff[i] < diff[i-1];
@@ -28,11 +30,12 @@ void segmentationImpl(double* diff, double* boxing, int n)
 
 void erosionImpl(double* boxing, double* blocking, int n)
 {
-    for(int i = 0; i < n; i++)
+    int i;
+    for(i = 0; i < n; i++)
     {
         blocking[i] = 0;
     }
-    for(int i = 1; i < n-1; i++)
+    for(i = 1; i < n-1; i++)
     {
         blocking[i] = boxing[i];
         int A = boxing[i-1] == 0;
@@ -44,7 +47,7 @@ void erosionImpl(double* boxing, double* blocking, int n)
         }
     }
     memcpy(boxing, blocking, n*sizeof(double));
-    for(int i = 1; i < n-1; i++)
+    for(i = 1; i < n-1; i++)
     {
         int A = blocking[i-1] == 0;
         int B = blocking[i] == 1;

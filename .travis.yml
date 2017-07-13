@@ -1,3 +1,4 @@
+languague: python
 notifications:
   email: false
 
@@ -15,3 +16,7 @@ install:
 
 script:
   - sudo docker run -e PATH=$PATH --rm -v `pwd`:/workspace $DOCKER_IMAGE /workspace/travis/build-wheels.sh
+
+after_success:
+  - pip install twine
+  - (twine upload dist/* -u $USER -p $PASSWORD --skip-existing  || echo "Not last release")
