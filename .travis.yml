@@ -6,10 +6,12 @@ matrix:
     - sudo: required
       services:
         - docker
-      env: DOCKER_IMAGE=csrg/generic_builder
+      env:
+        - DOCKER_IMAGE=csrg/generic_builder
+        - PATH=/opt/conda/bin:$PATH
 
 install:
   - sudo docker pull $DOCKER_IMAGE
 
 script:
-  - sudo docker run --rm -v `pwd`:/workspace $DOCKER_IMAGE /workspace/travis/build-wheels.sh
+  - sudo docker run -e $PATH --rm -v `pwd`:/workspace $DOCKER_IMAGE /workspace/travis/build-wheels.sh
