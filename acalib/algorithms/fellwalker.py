@@ -3,11 +3,11 @@ import acalib
 import pycupid
 from astropy.nddata import *
 from .algorithm import Algorithm
+from .. import core
 
-# TODO: this algorithm is print verbose... remove this!
 
 # storing unusable pixels for now (-1)
-def _struct_builder(caa):
+def _struct_builder(data, caa):
     dims = caa.shape
     clumps = dict()
 
@@ -28,7 +28,18 @@ def _struct_builder(caa):
                         clumps[caa[i,j,k]].append((i,j,k))
                     else:
                         clumps[caa[i,j,k]] = [(i,j,k)]
-    return clumps
+
+    peaks = {}
+    for i,pl in clumps.items():
+        peaks[i] = None
+        max_value = -float("inf")
+        # for pixel position in pixel list
+        for pp in pl:
+            if data[pp] > max_value:
+                max_value = data[pp]
+                peaks[i] = pp
+
+    return clumps,peaks
 
 
 @support_nddata
@@ -64,7 +75,7 @@ class FellWalker(Algorithm):
             self.config['VELORES'] =  2.0
 
     def run(self, data):
-        if isinstance(data,NDData):
+        if type(data) is NDData or type(data) is NDDataRef:
             if len(data.data.shape) > 4:
                 raise Exception("Algorithm only support 2D and 3D Matrices")
         else:
@@ -81,12 +92,12 @@ class FellWalker(Algorithm):
             rms = self.config['RMS']
 
         # computing the CAA through CUPID's fellwalker clumping algorithm
-        caa = _fellwalker(data, self.config,rms = rms)
+        caa = _fellwalker(data, self.config, rms=rms)
 
         # computing asocciated structures
         if caa is not None:
-            clumps = _struct_builder(caa.data)
+            clumps,peaks = _struct_builder(caa.data)
 
-            return caa,clumps
+            return caa,clumps,peaks
         else:
-            return None,None
+            return None,None,None

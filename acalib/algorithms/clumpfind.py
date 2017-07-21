@@ -1,11 +1,9 @@
-from .. import core
 import numpy as np
 import pycupid
-
 from astropy.nddata import *
 from .algorithm import Algorithm
+from .. import core
 
-# TODO: this algorithm is print verbose... remove this!
 
 # storing unusable pixels for now (-1)
 def _struct_builder(caa):
@@ -74,7 +72,7 @@ class ClumpFind(Algorithm):
 
 
     def run(self, data):
-        if isinstance(data,NDData):
+        if type(data) is NDData or type(data) is NDDataRef:
             if len(data.data.shape) > 4:
                 raise Exception("Algorithm only support 2D and 3D Matrices")
         else:
@@ -97,4 +95,5 @@ class ClumpFind(Algorithm):
             clumps = _struct_builder(caa.data)
 
             return caa,clumps
-        else:            return None,None
+        else:
+            return None,None
