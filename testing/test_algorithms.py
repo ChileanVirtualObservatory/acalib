@@ -76,8 +76,8 @@ class TestFW(unittest.TestCase):
 		assert(caa.max() == 4)
 
 
-class TestIndexing(unittest.TestCase):
-	idx = acaalgo.Indexing({"RANDOM_STATE":1234})
+class TestRoiSE(unittest.TestCase):
+	idx = acaalgo.RoiSE({"RANDOM_STATE":1234})
 
 	data = download_and_load()
 

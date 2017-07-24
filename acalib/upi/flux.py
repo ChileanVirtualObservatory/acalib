@@ -1,11 +1,14 @@
-from astropy.nddata import support_nddata, NDDataRef
+from astropy.nddata import support_nddata
+from astropy.units import Quantity
 from acalib import core
 import numpy as np
 
+from acalib.upi.data import Data
 from acalib.upi.axes import opening, features, axes_units
 
+
 @support_nddata
-def noise_level(data,mask=None,unit=None):
+def rms(data, mask=None, unit=None):
     """
         Compute the RMS of data.
 
@@ -23,13 +26,13 @@ def noise_level(data,mask=None,unit=None):
             RMS of data
     """
 
-
-    #TODO: check photutils background estimation for using that if possible
+    # TODO: check photutils background estimation for using that if possible
     if unit is None:
-        return core.rms(data,mask)
+        return core.rms(data, mask)
     else:
-        return core.rms(data,mask)*unit
+        return core.rms(data, mask) * unit
 
+#TODO: candidate for deprecation
 @support_nddata
 def standarize(data, wcs=None, unit=None, mask=None, meta=None):
     """
@@ -52,10 +55,10 @@ def standarize(data, wcs=None, unit=None, mask=None, meta=None):
     if mask is not None:
         data = core.fix_mask(data, mask)
     (res, a, b) = core.standarize(data)
-    res = NDDataRef(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
-    return (res, a, b)
+    res = Data(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
+    return res, a, b
 
-
+#TODO: candidate for deprecation
 @support_nddata
 def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
     """
@@ -83,11 +86,11 @@ def unstandarize(data, a, b, wcs=None, unit=None, mask=None, meta=None):
     if mask is not None:
         data = core.fix_mask(data, mask)
     res = core.unstandarize(data, a, b)
-    return NDDataRef(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
+    return Data(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
 
-
+#TODO: candidate for deprecation
 @support_nddata
-def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=None):
+def add(data, flux, lower=None, upper=None, wcs=None, unit=None, meta=None, mask=None):
     """
         Create a new data with the new flux added.
 
@@ -114,12 +117,12 @@ def add(data, flux, lower=None, upper=None,wcs=None,unit=None,meta=None,mask=Non
 
     """
 
-    #Please use the OO version data.add(flux) for modifying the data itself.
+    # Please use the OO version data.add(flux) for modifying the data itself.
     res = data.copy()
     core.add(res, flux, lower, upper)
-    return NDDataRef(res, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
+    return Data(res, uncertainty=None, mask=mask, wcs=wcs, meta=meta, unit=unit)
 
-
+#TODO: candidate for deprecation --> need to move to algorithms
 @support_nddata
 def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
     """
@@ -140,10 +143,12 @@ def denoise(data, wcs=None, mask=None, unit=None, threshold=0.0):
         NDDataRef: Data denoised
 
     """
-    newdata = core.denoise(data, threshold.value)
-    return NDDataRef(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
+    if isinstance(threshold,Quantity):
+        threshold=threshold.value
+    newdata = core.denoise(data, threshold)
+    return Data(newdata, uncertainty=None, mask=mask, wcs=wcs, meta=None, unit=unit)
 
-
+#TODO: really needed as UPI?
 @support_nddata
 def world_gaussian(data, mu, P, peak, cutoff, wcs=None):
     """

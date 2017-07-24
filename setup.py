@@ -43,7 +43,7 @@ def setup_package():
 
     setup(
         name = "acalib",
-        version = "0.1.1",
+        version = "0.5.0",
         description = "Advanced Computing for Astronomy Library",
         url = "https://github.com/ChileanVirtualObservatory/ACALIB",
         author = "CSRG",
@@ -63,7 +63,7 @@ def setup_package():
         setup_requires = ['numpy>=1.8', 'cython>=0.18'],
         install_requires = ['numpy>=1.11.2', 'astropy>=1.2', 'cython>=0.18',
                             'matplotlib>=1.5', 'scipy>=0.18',
-                            'scikit-image>=0.13', 'urllib3', 'pycupid', 'dask', 'distributed']
+                            'scikit-image>=0.13', 'urllib3', 'pycupid', 'dask', 'distributed', 'ipyvolume']
 
     )
 

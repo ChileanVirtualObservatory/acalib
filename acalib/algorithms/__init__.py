@@ -1,7 +1,8 @@
-from .fellWalker import FellWalker
-from .clumpFind import ClumpFind
+from .fellwalker import FellWalker
+from .clumpfind import ClumpFind
 from .gms import GMS
-from .indexing import Indexing
+from .roise import RoiSE
 from .stacking import Stacking
+from .represent import HRep
 
-__all__ = ['FellWalker','Indexing', 'ClumpFind', 'Stacking', 'GMS']
+__all__ = ['FellWalker','RoiSE', 'ClumpFind', 'Stacking', 'GMS','HRep']

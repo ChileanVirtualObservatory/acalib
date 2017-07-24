@@ -1,16 +1,10 @@
 import scipy.ndimage as scnd
 import numpy as np
 
+from .utils import matching_slabs, fix_mask
+from .image_analysis import fits_props
 
-from skimage.filters import threshold_otsu
-from skimage.measure import label
-from skimage.segmentation import clear_border
-from skimage.measure import regionprops
-
-
-from . import utils
-
-
+# TODO: rename this to something like "serial scaler"
 def scale(inputCont, majorAxisTemplate):
     """
     Performs an scale of the images in the container acording to the indicated mayor axis.
@@ -200,49 +194,27 @@ def denoise(data, threshold):
     return newdata
 
 
-def fits_props(img):
+# TODO: Candidate for deprecation
+def integrate(data, mask=None, axis=(0)):
     """
-    Extracts properties information of the astronomical data cube.
+    Sums the slices of a cube of data given an axis.
 
     Parameters
     ----------
-    img : numpy.ndarray
+    data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
         Astronomical data cube.
+
+    mask : numpy.ndarray (default = None)
+
+    axis : int (default=(0))
 
     Returns
     -------
-    result : dict
-        Dictionary with properties of the image: *centroid*, *major*, *minor*, *ratio*, *angle*, *area*, *img*, *clr*, *label*, *orig*.
+     A numpy array with the integration results.
+
     """
-    flt = threshold_otsu(img)
-    otsu = img >= flt
-    clr = clear_border(otsu)
-
-    # label image regions
-    label_image, nlabel = label(clr, return_num=True)
-    borders = np.logical_xor(otsu, clr)
-    label_image[borders] = -1
-
-    props = regionprops(label_image)
-
-    ratios = []
-    areas = []
-
-    for i in props:
-        if i.major_axis_length > 0:
-            ratios.append(i.minor_axis_length / i.major_axis_length)
-            areas.append(i.area)
-        else:
-            ratios.append(0)
-            areas.append(0)
-
-    if len(props) > 1:
-        pos = np.argmax(areas)
-    else:
-        pos = 0
-
-    properties = {'centroid': props[pos].centroid, 'major': props[pos].major_axis_length,
-                  'minor': props[pos].minor_axis_length, 'ratio': ratios[pos],
-                  'angle': props[pos].orientation, 'area': props[pos].area, 'img': props[pos].image,
-                  'clr': clr, 'label': label_image, 'orig': img}
-    return properties
+    if mask is not None:
+        data = fix_mask(data, mask)
+    newdata = np.sum(data, axis=axis)
+    mask = np.isnan(newdata)
+    return newdata

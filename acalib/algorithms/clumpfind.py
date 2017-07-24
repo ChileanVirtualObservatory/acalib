@@ -1,8 +1,8 @@
 import numpy as np
-import acalib
 import pycupid
 from astropy.nddata import *
 from .algorithm import Algorithm
+from .. import core
 
 
 # storing unusable pixels for now (-1)
@@ -31,7 +31,7 @@ def _struct_builder(caa):
 
 
 @support_nddata
-def _fellwalker(data, config, wcs=None, mask=None, unit=None, rms=0.0):
+def _clumpfind(data, config, wcs=None, mask=None, unit=None, rms=0.0):
     cube = data
     if len(data.shape) == 4:
         if data.shape[0] == 1:
@@ -42,8 +42,8 @@ def _fellwalker(data, config, wcs=None, mask=None, unit=None, rms=0.0):
         if data.shape[0] == 1:
             cube = data[0,:,:]
 
-    ret = pycupid.fellwalker(cube, rms,config=config)
 
+    ret = pycupid.clumpfind(cube, rms,config=config)
     if ret is not None:
         ret[ret == ret.min()] = 0
         if wcs:
@@ -54,13 +54,22 @@ def _fellwalker(data, config, wcs=None, mask=None, unit=None, rms=0.0):
         return None
 
 
-class FellWalker(Algorithm):
+class ClumpFind(Algorithm):
 
     def default_params(self):
         if 'FWHMBEAM' not in self.config:
             self.config['FWHMBEAM'] = 2.0
         if 'VELORES' not in self.config:
-            self.config['VELORES'] =  2.0
+            self.config['VELORES'] = 2.0
+        if 'ALLOWEDGE' not in self.config:
+            self.config['ALLOWEDGE'] = 0
+        if 'NAXIS' not in self.config:
+            self.config['NAXIS'] = 2
+        if 'IDLALG' not in self.config:
+            self.config['IDLALG'] = 0
+        if 'MINPIX' not in self.config:
+            self.config['MINPIX'] = 10
+
 
     def run(self, data):
         if type(data) is NDData or type(data) is NDDataRef:
@@ -70,17 +79,16 @@ class FellWalker(Algorithm):
             if len(data.shape) > 4:
                 raise Exception("Algorithm only support 2D and 3D Matrices")
         # if rms not in config, estimate it
-
         if 'RMS' not in self.config:
             if type(data) == NDData or type(data)== NDDataRef:
-                rms = acalib.rms(data.data)
+                rms = core.rms(data.data)
             else:
-                rms = acalib.rms(data)
+                rms = core.rms(data)
         else:
             rms = self.config['RMS']
 
-        # computing the CAA through CUPID's fellwalker clumping algorithm
-        caa = _fellwalker(data, self.config,rms = rms)
+        # computing the CAA through clumpfind clumping algorithm
+        caa = _clumpfind(data, self.config, rms=rms)
 
         # computing asocciated structures
         if caa is not None:

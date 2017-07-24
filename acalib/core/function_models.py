@@ -1,3 +1,4 @@
+import numpy
 import numpy as np
 
 
@@ -63,3 +64,21 @@ def create_mould(P, delta):
     mould = gaussian_function(np.zeros(n), P, feat, 1)
     mould = mould.reshape(*elms)
     return mould
+
+
+def eighth_mould(P,delta):
+    """This function creates an eighth of a symetrical Gaussian mould with precision matrix P, using the already computed values of delta
+    """
+    n=len(delta)
+    ax=[]
+    elms=[]
+    for i in range(n):
+        lin=np.linspace(0,delta[i],delta[i]+1)
+        elms.append(len(lin))
+        ax.append(lin)
+    grid=np.meshgrid(*ax,indexing='ij')
+    feat=np.empty((n,np.product(elms)))
+    for i in range(n):
+        feat[i]=grid[i].ravel()
+    mould=gaussian_function(np.zeros(n),P,feat,1)
+    return mould,feat.T

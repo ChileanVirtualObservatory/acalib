@@ -55,7 +55,7 @@ class Indexing(Algorithm):
             List of ROI with the cube slice, segmented images for each resolution and ROI table.
         """
 
-        if type(cube) is NDData or type(cube) is NDDataRef:
+        if isinstance(cube,NDData):
             if cube.wcs:
                 wcs = cube.wcs
             else:
@@ -76,7 +76,7 @@ class Indexing(Algorithm):
 
         pp_slices = []
         for slice in slices:
-            pp_slice = acalib.core.vel_stacking(cube, slice)
+            pp_slice = vel_stacking(cube, slice)
             labeled_images = gms.run(pp_slice)
 
             if wcs is not None:
@@ -86,7 +86,7 @@ class Indexing(Algorithm):
                 freq_min = None
                 freq_max = None
 
-            table = acalib.core.measure_shape(pp_slice, labeled_images, freq_min, freq_max)
+            table = measure_shape(pp_slice, labeled_images, freq_min, freq_max)
             if len(table) > 0:
                 c.append(ROI(cube_slice=pp_slice, segmented_images=labeled_images,table=table))
 
