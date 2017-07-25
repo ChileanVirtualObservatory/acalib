@@ -231,15 +231,15 @@ def visualize_volume(data,wcs=None,unit=None):
     labels = ["{} [{}]".format(axe, str(unit)) for axe, unit in
               zip(upi.axes_names(data, wcs), upi.axes_units(data, wcs))]
 
-    ipvlab.xyzlabel(*labels)
+    ipvlab.xyzlabel(*labels[::-1])
 
     extent = upi.extent(data, wcs)
     minlim = extent[0]
     maxlim = extent[1]
 
-    ipvlab.xlim(minlim[0].value, maxlim[0].value)
+    ipvlab.xlim(minlim[2].value, maxlim[2].value)
     ipvlab.ylim(minlim[1].value, maxlim[1].value)
-    ipvlab.zlim(minlim[2].value, maxlim[2].value)
+    ipvlab.zlim(minlim[0].value, maxlim[0].value)
 
     ipvlab.style.use('dark')
 

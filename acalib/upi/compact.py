@@ -7,6 +7,7 @@ import acalib
 _clustering_method_dict = {'DBSCAN': lambda (param, rep): DBSCAN(eps=param).fit(rep),
                'KMEANS': lambda (param, rep): KMeans(n_clusters=param).fit(rep)}
 
+from graphviz import Digraph
 
 class HRTree():
 
@@ -35,31 +36,76 @@ class HRTree():
 
 
     def expand(self,node,method='KMEANS',param=2):
-        parent=self.find_dict(node, self.tree)
-        if parent == None:
+        parent=self.find_parent(node, self.tree)
+        if parent is None:
             log.error("No such node "+str(node)+" in the tree")
             return
-        if parent[node] != None:
+        if parent[node] is not None:
             log.error("Node "+str(node)+" already expanded, please remove the expansion first (tree.contract)")
             return
-        if self.enabled[node] == False:
+        if self.enabled[node] is False:
             log.error("Node " + str(node) + " is disabled, please enable it first (tree.enable)")
         mfunc = _clustering_method_dict[method]
         myrep = self.clumps[node]
-        clust=mfunc(param,myrep)
-        ###expand
+        clust = mfunc(param,myrep)
+        imax = max(clust.labels_)
+        parent[node]=dict()
+        self.display[node] = False
+        self.expand_method[node] = (method,param)
+        subtree=parent[node]
+        for i in range(imax):
+            new_rep = myrep[clust.labels_ == i]
+            self.clumps[self.nextnode] = new_rep
+            subtree[self.nextnode] = None
+            self.display[self.nextnode] = True
+            self.enabled[self.nextnode] = True
+            self.nextnode += 1
 
     def disable(self,node):
-        pass
+        self.enabled[node] = False
 
     def enable(self,node):
-        pass
+        self.enabled[node] = True
 
     def hide(self,node):
-        pass
+        self.display[node] = False
 
-    def reveañ(self,node):
-        pass
+    def unhide(self,node):
+        self.display[node] = True
+
+    def _contract_subtree(self, tree):
+        if tree is None:
+            return
+        for elm in tree:
+            if tree[elm] is not None:
+                del self.expand_method[elm]
+            self._contract_subtree(tree[elm])
+            del self.display[elm]
+            del self.enabled[elm]
+            del self.clumps[elm]
+            del tree[elm]
 
     def contract(self,node):
-        pass
+        parent = self.find_parent(node, self.tree)
+        if parent[node] is None:
+            log.error("Node " + str(node) + " not expanded, cannot contract")
+            return
+        del self.expand_method[node]
+        self._contract_subtree(parent[node])
+        self.display[node] = True
+
+    def find_parent(self, node, tree):
+        for elm in tree:
+            if elm == tree:
+                return tree
+            elif tree[elm] is not None:
+                par = self.find_parent(node,tree[elm])
+                if par is not None:
+                    return par
+        return None
+
+    def show(self):
+        n_colors = self._reachable_clumps()
+        # Create colors
+        graphical_tree = self._create_digraph(n_colors)
+        three_view_clumps = self._create_three_view(n_colors)
