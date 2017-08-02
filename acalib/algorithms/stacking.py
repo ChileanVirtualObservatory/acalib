@@ -33,8 +33,9 @@ class Stacking(Algorithm):
             Returns
             -------
             result : (M,N) numpy.ndarray
-                Image stacked
+                Image that adds all images after they are transformed so that their main object fits the position of the template_data.
         """
+        # Transform input:
         if type(template_data) is NDData or type(template_data) is NDDataRef:
             template_data = template_data.data
 
@@ -42,25 +43,17 @@ class Stacking(Algorithm):
             if type(images[i]) is not NDData or type(images[i]) is not NDDataRef:
                 images[i] = NDDataRef(images[i])
 
+        # Create a copy of template_data
         template_data = numpy.copy(template_data)
+        # Get main object properties on it
         tprops = acalib.core.transform.fits_props(template_data)
 
-        order = 1
+        ORDER = 1 # Interpolation order for image operations
+
         for i in range(len(images)):
             data1 = images[i].data
+            # Get main object properties
             props = acalib.core.transform.fits_props(data1)
-
-            def blit_add(dest, src, loc):
-                str_y = max(0,loc[0])
-                str_x = max(0,loc[1])
-                end_y = min(dest.shape[0],loc[0]+src.shape[0])
-                end_x = min(dest.shape[1],loc[1]+src.shape[1])
-                str_y_2 = max(0,-loc[0])
-                str_x_2 = max(0,-loc[1])
-                end_y_2 = str_y_2+end_y-str_y
-                end_x_2 = str_x_2+end_x-str_x
-                dest[str_y:end_y,str_x:end_x] += src[str_y_2:end_y_2,str_x_2:end_x_2]
-                return dest
 
             # Extend matrix so that the centroid is at the center of the image.
             max_img_dim = max(data1.shape[0]*2,data1.shape[1]*2)
@@ -71,29 +64,30 @@ class Stacking(Algorithm):
 
             # Rotate the image so that the larger radious is at 0 degrees:
             data3 = skimage.transform.rotate(data2,
-                numpy.rad2deg(-props['angle']),cval=0,order=order)
+                numpy.rad2deg(-props['angle']),cval=0,order=ORDER)
 
             # Rescale the image so that it meets the shape of the template:
             ysize = int(numpy.round(
                 data3.shape[0]*tprops['ratio']/props['ratio']))
             data4 = skimage.transform.resize(data3,(ysize,data3.shape[1]),
-                order=order)
+                order=ORDER)
             # Extend matrix so that the centroid is at the center of the image.
             data5 = numpy.zeros(data2.shape)
             cy = (data3.shape[0]-data4.shape[0])//2
-            blit_add(data5,data4,(cy,0))
+            data5 = acalib.core.transform.blit_add(data5,data4,(cy,0))
 
             # Rotate image again, now to match the angle of the template:
             data6 = skimage.transform.rotate(data5,
-                numpy.rad2deg(tprops['angle']),cval=0,order=order)
+                numpy.rad2deg(tprops['angle']),cval=0,order=ORDER)
 
             # Scale the image:
             main_ratio = tprops['major']/props['major']
             data7 = skimage.transform.rescale(data6,main_ratio,
-                order=order,cval=0, clip=False)
+                order=ORDER,cval=0, clip=False)
 
             delta_y = int(numpy.round(tprops['centroid'][0]-data7.shape[0]//2))
             delta_x = int(numpy.round(tprops['centroid'][1]-data7.shape[1]//2))
-            blit_add(template_data,data7,(delta_y,delta_x))
+            template_data = acalib.core.transform.blit_add(
+                template_data,data7,(delta_y,delta_x))
 
         return template_data
