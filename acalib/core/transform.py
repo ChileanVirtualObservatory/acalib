@@ -204,6 +204,8 @@ def fits_props(img):
     """
     Extracts properties information of the astronomical data cube.
 
+    Identifies astronomical objects applying a threshold, detects the larger one that doens't touch the border and returns its properties, approximating it as a (possibily rotated) ellipse.
+
     Parameters
     ----------
     img : numpy.ndarray
@@ -212,10 +214,11 @@ def fits_props(img):
     Returns
     -------
     result : dict
-        Dictionary with properties of the image: *centroid*, *major*, *minor*, *ratio*, *angle*, *area*, *img*, *clr*, *label*, *orig*.
+        Dictionary with properties of the larger object: *centroid*, *major*, *minor*, *ratio*, *angle*, *area*, *img*, *clr*, *label*, *orig*.
     """
     flt = threshold_otsu(img)
     otsu = img >= flt
+    # NOTE: v Not sure if this feature is necessary, if removed, update the documentation of this function.
     clr = clear_border(otsu)
 
     # label image regions
@@ -246,3 +249,43 @@ def fits_props(img):
                   'angle': props[pos].orientation, 'area': props[pos].area, 'img': props[pos].image,
                   'clr': clr, 'label': label_image, 'orig': img}
     return properties
+
+def blit_add(target, source, location=(0,0), operation=lambda t,s: t+s,
+        neutral=0):
+    """
+    Blits an image into another with the given operation (addition by default), allowing source pixels to be left outside the target.
+
+    Parameters
+    ----------
+    target : numpy.ndarray
+        Target image for the blit.
+    source : numpy.ndarray
+        Image that will be blitted.
+    location : tuple
+        (x,y) position where the source will be blitted
+    operation: function
+        function that receives the actual state of the target the source and returns the target modified.
+    neutral: int
+        The neutral element value for the pixels outside the source.
+
+    Returns
+    -------
+    target : numpy.ndarray
+        Resulting image after blitting.
+    """
+    # Find the common ranges of both the target and source.
+    str_y = max(0,location[0])
+    str_x = max(0,location[1])
+    end_y = min(target.shape[0],location[0]+source.shape[0])
+    end_x = min(target.shape[1],location[1]+source.shape[1])
+    str_y_2 = max(0,-location[0])
+    str_x_2 = max(0,-location[1])
+    end_y_2 = str_y_2+end_y-str_y
+    end_x_2 = str_x_2+end_x-str_x
+    # Create final source image of the same size than the target and has it on the right position but also the neutral element value outside.
+    final_source = np.ones(target.shape)*neutral
+    final_source[str_y:end_y,str_x:end_x] = \
+        source[str_y_2:end_y_2,str_x_2:end_x_2]
+    # Apply the operation
+    target = operation(target,final_source)
+    return target
