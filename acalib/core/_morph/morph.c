@@ -14,6 +14,10 @@ void differenceImpl(double* cumulativeSum, double* difference, int n)
 void segmentationImpl(double* diff, double* boxing, int n)
 {
     int i;
+	for(i = 0; i < n; i++)
+    {
+        boxing[i] = 0;
+    }
     for(i = 1; i < n-1; i++)
     {
         boxing[i] = 1;
