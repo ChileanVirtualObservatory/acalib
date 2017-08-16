@@ -148,20 +148,90 @@ def show_subcube(data,wcs=None,meta=None,mask=None,unit=None,lower=None,upper=No
     plt.show()
     #return(scube)
 
-# if data.ndim == 3:
-#         freq_ax=axes._get_axis(wcs,'FREQ')
-#         f_ini = ini[freq_ax]
-#         f_end = end[freq_ax]
-#         data=m0.data
-#         mask=m0.mask
-#         wcs=m0.wcs
-#         unit=m0.unit
-#
-#     freq_ax = axes._get_axis(wcs,'RA')
-#     freq_ax = axes._get_axis(wcs,'DEC')
-#
-#     tmp = data[slow:shigh, dlow:dhigh, rlow:rhigh]
-#
+def show_clumps(hrtree,node=0,print_numbers=True):
+    fig = plt.figure(figsize=(10, 10))
+    shape = hrtree.synth.data.shape
+    parent=hrtree.find_parent(node,hrtree.tree)
+    n_colors = hrtree.visible_clumps(parent,node)
+    gs = gridspec.GridSpec(2, 2,width_ratios=[shape[2] / shape[0], 1], height_ratios=[shape[1] / shape[0], 1])
+    tempXY = hrtree.synth.data.sum(axis=(0))
+    nax = plt.subplot(gs[0])
+    nax.imshow(tempXY, origin='lower', cmap=plt.cm.gray_r)
+    nax.get_xaxis().set_visible(False)
+    nax.get_yaxis().set_visible(False)
+
+    tempXZ = hrtree.synth.data.sum(axis=(1))
+    nax2 = plt.subplot(gs[2])
+    nax2.imshow(tempXZ, origin='lower', cmap=plt.cm.gray_r)
+    nax2.get_xaxis().set_visible(False)
+    nax2.get_yaxis().set_visible(False)
+
+    tempYZ = hrtree.synth.data.sum(axis=(2)).T
+    nax3 = plt.subplot(gs[1])
+    nax3.imshow(tempYZ, origin='lower', cmap=plt.cm.gray_r)
+    nax3.get_xaxis().set_visible(False)
+    nax3.get_yaxis().set_visible(False)
+
+    color = plt.cm.rainbow(np.linspace(0, 1, n_colors))
+
+    hrtree.t_n = 0
+    def plotme(key):
+        newSyn = np.zeros(shape)
+        newSyn = core.synthesize_bubbles(newSyn, hrtree.clumps[key], hrtree.kernel, hrtree.noise, hrtree.delta)
+        ct = nax.contour(newSyn.sum(axis=(0)), levels=[0.0], alpha=1.0, colors=[color[hrtree.t_n]])
+        if print_numbers:
+            plt.clabel(ct, fontsize=10, inline=1, fmt={0.0: str(key)})
+        ct = nax2.contour(newSyn.sum(axis=(1)), levels=[0.0], alpha=1.0, colors=[color[hrtree.t_n]])
+        if print_numbers:
+            plt.clabel(ct, fontsize=10, inline=1, fmt={0.0: str(key)})
+        ct = nax3.contour(newSyn.sum(axis=(2)).T, levels=[0.0], alpha=1.0, colors=[color[hrtree.t_n]])
+        if print_numbers:
+            plt.clabel(ct, fontsize=10, inline=1, fmt={0.0: str(key)})
+        hrtree.t_n += 1
+
+    def recu(tree):
+        for (key, val) in tree.items():
+            if hrtree.enabled[key]:
+                if hrtree.display[key]:
+                   plotme(key)
+                if isinstance(val, dict):
+                    recu(val)
+    if hrtree.enabled[node]:
+        if hrtree.display[node]:
+            plotme(node)
+    if isinstance(parent[node], dict):
+        recu(parent[node])
+
+    #i = 0
+    #for b in bco:
+    #    imask = (labels == b)
+    #    npos = sol[imask]
+    #    newSyn = np.zeros(shape)
+    #    newSyn = acalib.core.synthesize_bubbles(newSyn, npos, mould, noise, delta)
+    #    nax.contour(newSyn.sum(axis=(0)), levels=[0.0], alpha=1.0, colors=[color[i]])
+    #    nax2.contour(newSyn.sum(axis=(1)), levels=[0.0], alpha=1.0, colors=[color[i]])
+    #    nax3.contour(newSyn.sum(axis=(2)).T, levels=[0.0], alpha=1.0, colors=[color[i]])
+    #    i += 1
+    #plt.tight_layout()
+    plt.show()
+    #plt.figure()
+
+    # nax4=fig.add_subplot(1,3,3)
+    #nax4 = plt.subplot(111)
+    #i = 0
+    #for b in bco:
+    #    imask = (labels == b)
+    #    npos = sol[imask]
+    #    newSyn = np.zeros(shape)
+    #    newSyn = acalib.core.synthesize_bubbles(newSyn, npos, mould, noise, delta)
+    #    nax.contour(newSyn.sum(axis=(0)), levels=[0.0], alpha=1.0, colors=[color[i]])
+    #    nax2.contour(newSyn.sum(axis=(1)), levels=[0.0], alpha=1.0, colors=[color[i]])
+    #    nax3.contour(newSyn.sum(axis=(2)).T, levels=[0.0], alpha=1.0, colors=[color[i]])
+    #    nax4.plot(newSyn.sum(axis=(1, 2)), color=color[i])
+    #    i += 1
+    #plt.tight_layout()
+    #plt.show()
+    #return (bco)
 
 @support_nddata
 def visualize_image(data,wcs=None,unit=None,contour=False,cmap=None):
@@ -333,3 +403,4 @@ def show_image_grid(img_list,side,vmax,cmap=None):
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
     plt.show()
+
