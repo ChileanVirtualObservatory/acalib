@@ -4,8 +4,8 @@ from sklearn.cluster import DBSCAN,KMeans
 
 import acalib
 
-_clustering_method_dict = {'DBSCAN': lambda param, rep: DBSCAN(eps=param).fit(rep),
-               'KMEANS': lambda param, rep: KMeans(n_clusters=param).fit(rep)}
+_clustering_method_dict = {'DBSCAN': lambda (param, rep): DBSCAN(eps=param).fit(rep),
+               'KMEANS': lambda (param, rep): KMeans(n_clusters=param).fit(rep)}
 
 
 class HRTree():

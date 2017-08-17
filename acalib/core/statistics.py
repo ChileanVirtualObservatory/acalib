@@ -25,7 +25,7 @@ def rms(data, mask=None):
     rms = np.sqrt(mm.sum() * 1.0 / mm.size)
     return rms
 
-def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False,max_snr=3.0):
+def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False):
     """
     Heurustic that uses the inflexion point of the thresholded RMS to estimate where signal is dominant w.r.t. noise
 
@@ -57,7 +57,7 @@ def snr_estimation(data, mask=None, noise=None, points=1000, full_output=False,m
     n = []
     sdata = data[data > noise]
     for i in range(1, int(points)):
-        val = 1.0 + (max_snr-1.0) * i / points
+        val = 1.0 + 2.0 * i / points
         sdata = sdata[sdata > val * noise]
         if sdata.size < 2:
             break
