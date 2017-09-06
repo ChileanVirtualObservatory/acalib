@@ -1,6 +1,7 @@
 from astropy import nddata as ndd
 
-from acalib import upi, io
+from acalib import upi
+from acalib import io
 
 
 class Data(ndd.NDDataRef):
@@ -192,7 +193,7 @@ class Data(ndd.NDDataRef):
         """
         Generic function to visualize data, line-plot for 1D and image for 2D.
         """
-        io.graph.visualize(self)
+        io.visualize(self)
 
     def visualize_image(self, contour=False,cmap = None):
         io.visualize_image(self, contour=contour,cmap=cmap)
