@@ -5,7 +5,7 @@ from astropy.nddata import support_nddata, NDDataRef, NDData
 from collections import namedtuple
 
 
-class Indexing(Algorithm):
+class RoiSE(Algorithm):
     """
     Perform an unsupervised region of interest detection and extract shape features.
 
