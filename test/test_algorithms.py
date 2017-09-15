@@ -42,42 +42,42 @@ class TestGMS(unittest.TestCase):
 	def test_nddata(self):
 		assert(len(self.gms.run(self.data)) == 1)
 
-class TestCF(unittest.TestCase):
-	cf = acaalgo.ClumpFind()
+# class TestCF(unittest.TestCase):
+# 	cf = acaalgo.ClumpFind()
+#
+# 	data = download_and_load()
+# 	data2d = np.sum(data,axis=0)
+#
+# 	def test_nddata_3d(self):
+# 		caa = self.cf.run(self.data)[0]
+# 		assert(caa.min() == 0)
+# 		assert(caa.max() == 18)
+#
+# 	def test_nddata_2d(self):
+# 		caa = self.cf.run(self.data2d)[0]
+# 		assert(caa.min() == 0)
+# 		assert(caa.max() == 3)
+#
+#
+# class TestFW(unittest.TestCase):
+# 	fw = acaalgo.FellWalker()
+#
+# 	data = download_and_load()
+# 	data2d = np.sum(data,axis=0)
+#
+# 	def test_nddata_3d(self):
+# 		caa = self.fw.run(self.data)[0]
+# 		assert(caa.min() == 0)
+# 		assert(caa.max() == 10 )
+#
+# 	def test_nddata_2d(self):
+# 		caa = self.fw.run(self.data2d)[0]
+# 		assert(caa.min() == 0)
+# 		assert(caa.max() == 4)
+#
 
-	data = download_and_load()
-	data2d = np.sum(data,axis=0)
-
-	def test_nddata_3d(self):
-		caa = self.cf.run(self.data)[0]
-		assert(caa.min() == 0)
-		assert(caa.max() == 18)
-
-	def test_nddata_2d(self):
-		caa = self.cf.run(self.data2d)[0]
-		assert(caa.min() == 0)
-		assert(caa.max() == 3)
-
-
-class TestFW(unittest.TestCase):
-	fw = acaalgo.FellWalker()
-
-	data = download_and_load()
-	data2d = np.sum(data,axis=0)
-
-	def test_nddata_3d(self):
-		caa = self.fw.run(self.data)[0]
-		assert(caa.min() == 0)
-		assert(caa.max() == 10 )
-
-	def test_nddata_2d(self):
-		caa = self.fw.run(self.data2d)[0]
-		assert(caa.min() == 0)
-		assert(caa.max() == 4)
-
-
-class TestIndexing(unittest.TestCase):
-	idx = acaalgo.Indexing({"RANDOM_STATE":1234})
+class TestRoiSE(unittest.TestCase):
+	idx = acaalgo.RoiSE({"RANDOM_STATE":1234})
 
 	data = download_and_load()
 
@@ -100,7 +100,7 @@ class TestStacking(unittest.TestCase):
 	#TODO make a better unit test
 	def test_run(self):
 		result = self.st.run(self.template,self.imgs)
-		np.testing.assert_equal(result.shape,(99,99))
+		np.testing.assert_equal(result.shape,(100,100))
 
 if __name__ == '__main__':
 	unittest.main()

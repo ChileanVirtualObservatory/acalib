@@ -6,7 +6,7 @@ import os
 import glob
 
 import sys
-import subprocess 
+import subprocess
 
 def check_build():
     good_commands = ('develop', 'sdist', 'build', 'build_ext', 'build_py',
@@ -43,7 +43,7 @@ def setup_package():
 
     setup(
         name = "acalib",
-        version = "0.1.1",
+        version = "0.1.3",
         description = "Advanced Computing for Astronomy Library",
         url = "https://github.com/ChileanVirtualObservatory/ACALIB",
         author = "CSRG",
@@ -56,7 +56,7 @@ def setup_package():
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3.6'
             ],
-        
+
         zip_safe = False,
         packages = find_packages(),
         include_package_data = True,

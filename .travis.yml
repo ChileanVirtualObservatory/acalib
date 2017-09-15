@@ -1,22 +1,32 @@
-languague: python
-notifications:
-  email: false
+language: python
+email: false
+python:
+  - 2.7
+  - 3.5
+  - 3.6
 
-matrix:
-  include:
-    - sudo: required
-      services:
-        - docker
-      env:
-        - DOCKER_IMAGE=csrg/generic_builder
-        - PATH=/opt/conda/bin:$PATH
+os:
+  - linux
+
+before_install:
+  - sudo apt-get -qq update;
+  - sudo apt-get install -y libgfortran3;
 
 install:
-  - sudo docker pull $DOCKER_IMAGE
+  - pip install -r requirements.txt
+  - python setup.py build
+  - pip install .
 
 script:
-  - sudo docker run -e PATH=$PATH --rm -v `pwd`:/workspace $DOCKER_IMAGE /workspace/travis/build-wheels.sh
+  - python test/run_test.py
 
-after_success:
-  - pip install twine
-  - (twine upload dist/* -u $USER -p $PASSWORD --skip-existing  || echo "Not last release")
+deploy:
+  - provider: pypi
+    distribution: sdist bdist_wheel
+    user: "cvalenzu"
+    server:  https://test.pypi.org/legacy/
+    password:
+      secure: "BjPzB9Ka6bifHKYELbgxqNYzGVYqOnLfLYRFBRevPGBDd1ovN3X4tOkHJHScTlTyO6HE/AzRgZ13BR2nLZ/Mn98WvA/KkXJOuMznS3hrpc41swZlAuFiaMK4IS3EEqJZnqiVgADScaPlhrEJnol52GBgQv6t7ohZgzWf3umveA3mbO1XPLiSlfHAvEXY8L4TXysOpf4lc4kG66OCxSBiOaodx9ALpSbk7K1wJSlsIZndbsXwWSbKrzLXVrOHEOz9KmMYy6KKoYTo1gN5mELg8OHOmXa43EN5sl+a//VKyKk3drpWlPhgYZ7Sj6PbR9LfDagc2UO5I1g7I+OEVJA1OgtO6XMbUXQBLQuzATVJRfu/Pt4QofGl0iGSRA5MLMem/66xSCGbyFj6JKiogRXhE4GV1x34ujqBIvHGRa6SmPAJO3A4VreHKNSQj6PIgI4tCohEx7J3jvyTSmwxY1Kz2JGSdQYfVMg65nPA3jzuPBh6Mb8lAcfseWvM2V19v9xnyLL43DuhW8Eg8EzUP4DIerYKQ44MCWWWofPsDmTii1HrMCpf3dGWcFEh57MRmIXbUSLSpDONlryyq3xmvte7MBvvkUR2uI65G0wdd1KOQxTyImd4FbgMbqkUADIEy8enBhmxd1DnOIenv3bgIQU8lZGUzBJeEMER4HdF81H9A98="
+    on:
+      branch: master
+      tags: false
