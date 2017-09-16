@@ -6,7 +6,7 @@ import os
 import glob
 
 import sys
-import subprocess 
+import subprocess
 
 def check_build():
     good_commands = ('develop', 'sdist', 'build', 'build_ext', 'build_py',
@@ -56,14 +56,14 @@ def setup_package():
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3.6'
             ],
-        
+
         zip_safe = False,
         packages = find_packages(),
         include_package_data = True,
         setup_requires = ['numpy>=1.8', 'cython>=0.18'],
         install_requires = ['numpy>=1.11.2', 'astropy>=1.2', 'cython>=0.18',
                             'matplotlib>=1.5', 'scipy>=0.18',
-                            'scikit-image>=0.13', 'urllib3', 'pycupid', 'dask', 'distributed', 'ipyvolume']
+                            'scikit-image>=0.13', 'urllib3', 'pycupid', 'dask', 'distributed', 'ipyvolume', 'tqdm', 'astroquery', 'graphviz',]
 
     )
 
