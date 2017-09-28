@@ -3,7 +3,7 @@ from .algorithm import Algorithm
 from .gms import GMS
 from astropy.nddata import support_nddata, NDDataRef, NDData
 from collections import namedtuple
-
+from astropy.table import Column
 
 class RoiSE(Algorithm):
     """
@@ -77,7 +77,7 @@ class RoiSE(Algorithm):
 
         pp_slices = []
         for slice in slices:
-            pp_slice = vel_stacking(cube, slice)
+            pp_slice = acalib.core.image_analysis.vel_stacking(cube, slice)
             labeled_images = gms.run(pp_slice)
 
             if wcs is not None:
@@ -87,8 +87,17 @@ class RoiSE(Algorithm):
                 freq_min = None
                 freq_max = None
 
-            table = measure_shape(pp_slice, labeled_images, freq_min, freq_max)
+            table = acalib.core.image_analysis.measure_shape(pp_slice, labeled_images, freq_min, freq_max)
             if len(table) > 0:
+                if hasattr(cube, 'meta'):
+
+                            rest_freq = cube.meta['RESTFRQ']
+                            OBJECT      = cube.meta['OBJECT']
+
+                            fits_name = Column(OBJECT, name = 'Name')
+                            freq = Column(rest_freq, name = 'Rest Frequency')
+                            table.add_column(fits_name, index = 0)
+                            table.add_column(fits_name, index = 0)
                 c.append(ROI(cube_slice=pp_slice, segmented_images=labeled_images,table=table))
 
         if wcs:

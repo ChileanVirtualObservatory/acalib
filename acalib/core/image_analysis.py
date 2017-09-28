@@ -5,6 +5,8 @@ from skimage.measure import label,regionprops
 from skimage.segmentation import clear_border
 from .utils import fix_mask, slab
 
+from astropy.table import Table
+
 from ._morph import differenceImpl, segmentationImpl, erosionImpl
 
 from acalib.core import *
@@ -82,6 +84,34 @@ def get_shape(data, intensity_image, wcs=None):
                                 obj.mean_intensity))
 
     return objs_properties
+
+
+def measure_shape(data, labeled_images, min_freq=None, max_freq=None, wcs=None):
+    """ Measure a few statistics from labeled images """
+    # TODO: Document this function
+    objects = list()
+    intensity_image = data
+    for image in labeled_images:
+        objs_properties = get_shape(image, intensity_image)
+        objects.extend(objs_properties)
+
+    if len(objects) == 0:
+        return Table()
+
+    names = ["CentroidRa", "CentroidDec", "MajorAxisLength", "MinorAxisLength",
+             "Area", "Eccentricity", "Solidity", "FilledPercentaje", "MaxIntensity", "MinIntensity", "AverageIntensity"]
+
+    meta = {"name": "Object Shapes"}
+
+    if min_freq is not None:
+        meta["min_freq_hz"] = min_freq
+
+    if max_freq is not None:
+        meta["max_freq_hz"] = max_freq
+
+    t = Table(rows=objects, names=names, meta=meta)
+    return t
+
 
 def pixel_processing(pixels):
     pixels = pixels.astype(np.float64)
@@ -206,3 +236,33 @@ def kernel_shift(back, kernel, x, y):
                 back[rowInit + row][colInit + col] = kernel[row][col]
 
     return back
+
+def vel_stacking(data,data_slice,wcs=None,uncertainty=None, mask=None, meta=None, unit=None):
+    """
+    Create an image collapsing the frecuency axis
+
+    Parameters
+    ----------
+    data : numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
+        Astronomical 2D image
+
+    slice : slice object
+        Sector to be collapsed
+
+    Returns
+    -------
+    image (NDDataRef): 2D-Array with the stacked cube.
+
+    """
+    if len(data.shape) != 3:
+        log.error("Cube needs to be a 3D array")
+        raise ValueError("Cube needs to be a 3D array")
+    dims = data.shape
+    subcube = data[data_slice, :,:]
+    stacked = np.sum(subcube,axis=0)
+    if wcs:
+        wcs = wcs.dropaxis(2)
+
+        return NDDataRef(stacked, uncertainty=uncertainty, mask=mask,wcs=wcs, meta=meta, unit=unit)
+    else:
+        return stacked
