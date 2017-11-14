@@ -199,6 +199,8 @@ def integrate(data, mask=None, axis=(0)):
     """
     Sums the slices of a cube of data given an axis.
 
+    Identifies astronomical objects applying a threshold, detects the larger one that doens't touch the border and returns its properties, approximating it as a (possibily rotated) ellipse.
+
     Parameters
     ----------
     data : (M,N,Z) numpy.ndarray or astropy.nddata.NDData or astropy.nddata.NDDataRef
