@@ -23,8 +23,9 @@ def build_and_move(path):
     rel_module = path
     module_dir = os.path.join(cwd, rel_module)
     os.chdir(module_dir)
-    subprocess.call(["python","setup.py", "build"])
-
+    ret = subprocess.call(["python","setup.py", "build"])
+    if ret != 0:
+        exit(ret)
     for fbuilded in glob.glob("build/lib*/*.so"):
         dest_directory = os.getcwd() + '/' + os.path.basename(fbuilded)
         copyfile(fbuilded, dest_directory)
